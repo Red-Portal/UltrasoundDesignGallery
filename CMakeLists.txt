@@ -63,11 +63,6 @@ if(ENABLE_TESTING)
   add_subdirectory(test)
 endif()
 
-if(ENABLE_FUZZING)
-  message("Building Fuzz Tests, using fuzzing sanitizer https://www.llvm.org/docs/LibFuzzer.html")
-  add_subdirectory(fuzz_test)
-endif()
-
 add_executable(usgallery src/main.cpp)
 target_include_directories(usgallery PUBLIC ${SFML_INCLUDE_DIRS})
 target_link_libraries(usgallery
@@ -82,7 +77,6 @@ target_link_libraries(usgallery
     project_options
     project_warnings
     ImGui-SFML::ImGui-SFML)
-
 #CONAN_PKG::docopt.cpp
 #CONAN_PKG::fmt
 #CONAN_PKG::spdlog)

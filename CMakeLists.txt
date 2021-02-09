@@ -45,13 +45,13 @@ find_package(Blaze REQUIRED)
 find_package(Threads REQUIRED)
 
 add_library(gcem INTERFACE)
-target_include_directories(gcem INTERFACE "${PROJECT_SOURCE_DIR}/third_party/gcem/include")
+target_include_directories(gcem SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/gcem/include")
 
 add_library(stats INTERFACE)
-target_include_directories(stats INTERFACE "${PROJECT_SOURCE_DIR}/third_party/stats/include")
+target_include_directories(stats SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/stats/include")
 
 add_library(random123 INTERFACE)
-target_include_directories(random123 INTERFACE "${PROJECT_SOURCE_DIR}/third_party/random123/include")
+target_include_directories(random123 SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/random123/include")
 
 option(BUILD_SHARED_LIBS "Enable compilation of shared libraries" OFF)
 option(ENABLE_TESTING "Enable Test Builds" ON)
@@ -68,9 +68,9 @@ if(ENABLE_FUZZING)
   add_subdirectory(fuzz_test)
 endif()
 
-add_executable(intro src/main.cpp)
-target_include_directories(intro PUBLIC ${SFML_INCLUDE_DIRS})
-target_link_libraries(intro
+add_executable(usgallery src/main.cpp)
+target_include_directories(usgallery PUBLIC ${SFML_INCLUDE_DIRS})
+target_link_libraries(usgallery
     INTERFACE
     blaze::blaze
     Threads::threads
@@ -82,6 +82,7 @@ target_link_libraries(intro
     project_options
     project_warnings
     ImGui-SFML::ImGui-SFML)
+
 #CONAN_PKG::docopt.cpp
 #CONAN_PKG::fmt
 #CONAN_PKG::spdlog)

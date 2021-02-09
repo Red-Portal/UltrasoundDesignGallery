@@ -1,0 +1,9 @@
+[submodule "third_party/stats"]
+	path = third_party/stats
+	url = https://github.com/kthohr/stats
+[submodule "third_party/gcem"]
+	path = third_party/gcem
+	url = https://github.com/kthohr/gcem
+[submodule "third_party/random123"]
+	path = third_party/random123
+	url = https://github.com/DEShawResearch/random123

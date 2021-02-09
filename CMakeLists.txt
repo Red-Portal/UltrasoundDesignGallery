@@ -1,0 +1,87 @@
+
+cmake_minimum_required(VERSION 3.15)
+
+# Set the project name to your project name, my project isn't very descriptive
+project(us_gallery CXX)
+include(cmake/StandardProjectSettings.cmake)
+include(cmake/PreventInSourceBuilds.cmake)
+
+# Link this 'library' to set the c++ standard / compile-time options requested
+add_library(project_options INTERFACE)
+target_compile_features(project_options INTERFACE cxx_std_17)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+  option(ENABLE_BUILD_WITH_TIME_TRACE "Enable -ftime-trace to generate time tracing .json files on clang" OFF)
+  if(ENABLE_BUILD_WITH_TIME_TRACE)
+    target_compile_options(project_options INTERFACE -ftime-trace)
+  endif()
+endif()
+
+# Link this 'library' to use the warnings specified in CompilerWarnings.cmake
+add_library(project_warnings INTERFACE)
+
+# enable cache system
+include(cmake/Cache.cmake)
+
+# standard compiler warnings
+include(cmake/CompilerWarnings.cmake)
+set_project_warnings(project_warnings)
+
+# sanitizer options if supported by compiler
+include(cmake/Sanitizers.cmake)
+enable_sanitizers(project_options)
+
+# enable doxygen
+include(cmake/Doxygen.cmake)
+enable_doxygen()
+
+# allow for static analysis options
+include(cmake/StaticAnalyzers.cmake)
+
+# Dependencies
+find_package(SFML 2.5 COMPONENTS system window graphics network audio REQUIRED)
+find_package(ImGui-SFML REQUIRED)
+find_package(Blaze REQUIRED)
+find_package(Threads REQUIRED)
+
+add_library(gcem INTERFACE)
+target_include_directories(gcem INTERFACE "${PROJECT_SOURCE_DIR}/third_party/gcem/include")
+
+add_library(stats INTERFACE)
+target_include_directories(stats INTERFACE "${PROJECT_SOURCE_DIR}/third_party/stats/include")
+
+add_library(random123 INTERFACE)
+target_include_directories(random123 INTERFACE "${PROJECT_SOURCE_DIR}/third_party/random123/include")
+
+option(BUILD_SHARED_LIBS "Enable compilation of shared libraries" OFF)
+option(ENABLE_TESTING "Enable Test Builds" ON)
+option(ENABLE_FUZZING "Enable Fuzzing Builds" OFF)
+
+if(ENABLE_TESTING)
+  enable_testing()
+  message("Building Tests. Be sure to check out test/constexpr_tests for constexpr testing")
+  add_subdirectory(test)
+endif()
+
+if(ENABLE_FUZZING)
+  message("Building Fuzz Tests, using fuzzing sanitizer https://www.llvm.org/docs/LibFuzzer.html")
+  add_subdirectory(fuzz_test)
+endif()
+
+add_executable(intro src/main.cpp)
+target_include_directories(intro PUBLIC ${SFML_INCLUDE_DIRS})
+target_link_libraries(intro
+    INTERFACE
+    blaze::blaze
+    Threads::threads
+
+    PUBLIC
+    random123
+    gcem
+    stats
+    project_options
+    project_warnings
+    ImGui-SFML::ImGui-SFML)
+#CONAN_PKG::docopt.cpp
+#CONAN_PKG::fmt
+#CONAN_PKG::spdlog)

@@ -31,10 +31,11 @@
 
 namespace usvg
 {
+  template<typename CholType>
   inline double
   dmvnormal(blaze::DynamicVector<double> const& x,
 	    blaze::DynamicVector<double> const& mu,
-	    usvg::Cholesky<usvg::DenseChol> const& cov_chol,
+	    usvg::Cholesky<CholType> const& cov_chol,
 	    bool logdensity = false)
   {
     size_t n_dims = x.size();
@@ -62,11 +63,11 @@ namespace usvg
     return res;
   }
 
-  template <typename Rng>
+  template <typename Rng, typename CholType>
   inline blaze::DynamicVector<double>
   rmvnormal(Rng& prng,
 	    blaze::DynamicVector<double> const& mu,
-	    usvg::Cholesky<usvg::DenseChol> const& cov_chol)
+	    usvg::Cholesky<CholType> const& cov_chol)
   {
     size_t n_dims = mu.size();
     auto z        = rmvnormal(prng, n_dims);

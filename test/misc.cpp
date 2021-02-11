@@ -138,7 +138,7 @@ TEST_CASE("Diagonal log determinant", "[linear algebra]")
 }
 
 
-TEST_CASE("Multivariate normal density", "[mvnormal]")
+TEST_CASE("Dense covariance multivariate normal density", "[mvnormal]")
 {
   auto cov = blaze::DynamicMatrix<double>(
     {{3, 1, 1},
@@ -163,6 +163,28 @@ TEST_CASE("Multivariate normal density", "[mvnormal]")
   REQUIRE( usvg::dmvnormal(x, mu, cov_chol, true) == Approx(truth_logp) );
 }
 
+TEST_CASE("Diagonal covariance multivariate normal density", "[mvnormal]")
+{
+  auto cov = blaze::DynamicVector<double>({1.0, 2.0, 3.0});
+  auto mu  = blaze::DynamicVector<double>(
+    {-0.20617401141446381,
+     0.15186815822664115,
+     -0.03498553786495774});
+  auto x  = blaze::DynamicVector<double>(
+    {0.9040983839157295,
+     -0.29874050736604413,
+     -1.2570687585683156});
+
+  auto cov_chol = usvg::Cholesky<usvg::DiagonalChol>();
+  REQUIRE_NOTHROW( cov_chol = usvg::cholesky_nothrow(cov).value() );
+
+  double truth_p    = 0.010371181395210441;
+  REQUIRE( usvg::dmvnormal(x, mu, cov_chol) == Approx(truth_p) );
+
+  double truth_logp = -4.568724338908423;
+  REQUIRE( usvg::dmvnormal(x, mu, cov_chol, true) == Approx(truth_logp) );
+}
+
 TEST_CASE("Multivariate unit normal sampling", "[mvnormal]")
 {
   auto prng        = generate_seed(1);
@@ -182,7 +204,7 @@ TEST_CASE("Multivariate unit normal sampling", "[mvnormal]")
 	     6*1/sqrt(static_cast<double>(n_samples*n_dims))) );
 }
 
-TEST_CASE("Multivariate normal sampling", "[mvnormal]")
+TEST_CASE("Dense multivariate normal sampling", "[mvnormal]")
 {
   auto cov = blaze::DynamicMatrix<double>(
     {{16,  1,  1},
@@ -231,4 +253,52 @@ TEST_CASE("Multivariate normal sampling", "[mvnormal]")
   ++i;
   est = blaze::stddev(blaze::row(samples, i));
   REQUIRE( est == Approx(sqrt(cov(i,i))).margin(1.01) );
+}
+
+
+TEST_CASE("Diagonal multivariate normal sampling", "[mvnormal]")
+{
+  auto cov = blaze::DynamicVector<double>({16, 16, 16});
+  auto mu = blaze::DynamicVector<double>({1.0, 2.0, 3.0});
+
+  auto prng     = generate_seed(1);
+  auto cov_chol = usvg::Cholesky<usvg::DiagonalChol>();
+  REQUIRE_NOTHROW( cov_chol = usvg::cholesky_nothrow(cov).value() );
+
+  size_t n_samples = 4096;
+  size_t n_dims    = 3;
+  auto samples     = blaze::DynamicMatrix<double>(n_dims, n_samples);
+  for (size_t i = 0; i < n_samples; ++i)
+  {
+    blaze::column(samples, i) = usvg::rmvnormal(prng, mu, cov_chol);
+  }
+
+  /* check mean */
+  size_t i = 0;
+  auto est = blaze::mean(blaze::row(samples, i));
+  REQUIRE( est == Approx(mu[i]).margin(
+	     sqrt(cov[i]) / sqrt(static_cast<double>(n_samples)) * 6) );
+
+  ++i;
+  est = blaze::mean(blaze::row(samples, i));
+  REQUIRE( est == Approx(mu[i]).margin(
+	     sqrt(cov[i]) / sqrt(static_cast<double>(n_samples)) * 6) );
+
+  ++i;
+  est = blaze::mean(blaze::row(samples, i));
+  REQUIRE( est == Approx(mu[i]).margin(
+	     sqrt(cov[i]) / sqrt(static_cast<double>(n_samples)) * 6) );
+
+  /* check var */
+  i = 0;
+  est = blaze::stddev(blaze::row(samples, i));
+  REQUIRE( est == Approx(sqrt(cov[i])).margin(1.0) );
+
+  ++i;
+  est = blaze::stddev(blaze::row(samples, i));
+  REQUIRE( est == Approx(sqrt(cov[i])).margin(1.0) );
+
+  ++i;
+  est = blaze::stddev(blaze::row(samples, i));
+  REQUIRE( est == Approx(sqrt(cov[i])).margin(1.01) );
 }

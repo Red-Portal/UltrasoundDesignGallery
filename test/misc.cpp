@@ -28,12 +28,62 @@
 
 double const catch_eps = 1e-8;
 
-TEST_CASE("Inverse quadratic", "[linear algebra]")
+TEST_CASE("Dense Cholesky", "[linear algebra]")
 {
   auto A = blaze::DynamicMatrix<double>(
     {{3, 1, 1},
      {1, 3, 1},
      {1, 1, 3}});
+
+  auto chol = usvg::Cholesky<usvg::DenseChol>();
+  REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
+  REQUIRE( blaze::norm(chol.L*blaze::trans(chol.L) - A) < catch_eps );
+}
+
+TEST_CASE("Dense Cholesky non-PD matrix", "[linear algebra]")
+{
+  auto A = blaze::DynamicMatrix<double>(
+    {{1, 1, 1},
+     {1, 1, 1},
+     {1, 1, 1}});
+
+  auto L = std::optional<usvg::Cholesky<usvg::DenseChol>>();
+  REQUIRE_NOTHROW( L = usvg::cholesky_nothrow(A) );
+  REQUIRE( !L );
+}
+
+TEST_CASE("Diagonal Cholesky", "[linear algebra]")
+{
+  auto A    = blaze::DynamicVector<double>({3, 2, 1});
+  auto chol = usvg::Cholesky<usvg::DiagonalChol>();
+  REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
+  REQUIRE( blaze::norm(chol.L*chol.L - A) < catch_eps );
+
+  A    = blaze::DynamicVector<double>({0, 0, 0});
+  chol = usvg::Cholesky<usvg::DiagonalChol>();
+  REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
+  REQUIRE( blaze::norm(chol.L*chol.L - A) < catch_eps );
+}
+
+TEST_CASE("Diagonal Cholesky non-PD matrix", "[linear algebra]")
+{
+  auto deps = std::numeric_limits<double>::epsilon();
+  auto A    = blaze::DynamicVector<double>({0, 0, -deps});
+
+  auto L = std::optional<usvg::Cholesky<usvg::DiagonalChol>>();
+  REQUIRE_NOTHROW( L = usvg::cholesky_nothrow(A) );
+  REQUIRE( !L );
+}
+
+TEST_CASE("Dense inverse quadratic", "[linear algebra]")
+{
+  auto A = blaze::DynamicMatrix<double>(
+    {{3, 1, 1},
+     {1, 3, 1},
+     {1, 1, 3}});
+
+  auto chol = usvg::Cholesky<usvg::DenseChol>();
+  REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
 
   auto x     = blaze::DynamicVector<double>(
     {0.9040983839157295,
@@ -42,53 +92,51 @@ TEST_CASE("Inverse quadratic", "[linear algebra]")
   auto y     = blaze::solve(A, x);
   auto truth = blaze::dot(x, y);
 
-  auto L_buf = blaze::DynamicMatrix<double>(A.rows(), A.columns()); 
-  blaze::llh(A, L_buf);
-  auto L      = blaze::LowerMatrix<decltype(L_buf)>(blaze::decllow(L_buf));
-  
-  REQUIRE( usvg::invquad(L, x) == Approx(truth) );
+  REQUIRE( usvg::invquad(chol, x) == Approx(truth) );
 }
 
-
-TEST_CASE("Log determinant", "[linear algebra]")
+TEST_CASE("Dense log determinant", "[linear algebra]")
 {
   auto A = blaze::DynamicMatrix<double>(
     {{3, 1, 1},
      {1, 3, 1},
      {1, 1, 3}});
 
-  auto L_buf = blaze::DynamicMatrix<double>(A.rows(), A.columns()); 
-  blaze::llh(A, L_buf);
-  auto L = blaze::LowerMatrix<decltype(L_buf)>(blaze::decllow(L_buf));
-
+  auto chol = usvg::Cholesky<usvg::DenseChol>();
+  REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
   auto truth = log(blaze::det(A));
   
-  REQUIRE( usvg::logdet(L) == Approx(truth) );
+  REQUIRE( usvg::logdet(chol) == Approx(truth) );
 }
 
-TEST_CASE("Cholesky", "[linear algebra]")
+TEST_CASE("Diagonal inverse quadratic", "[linear algebra]")
 {
-  auto A = blaze::DynamicMatrix<double>(
-    {{3, 1, 1},
-     {1, 3, 1},
-     {1, 1, 3}});
+  auto A = blaze::DynamicVector<double>({1, 2, 3});
 
-  auto chol = usvg::Cholesky();
+  auto chol = usvg::Cholesky<usvg::DiagonalChol>();
   REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
-  REQUIRE( blaze::norm(chol.L*blaze::trans(chol.L) - A) < catch_eps );
+
+  auto x     = blaze::DynamicVector<double>(
+    {0.9040983839157295,
+     -0.29874050736604413,
+     -1.2570687585683156});
+  auto y     = x / A;
+  auto truth = blaze::dot(x, y);
+  
+  REQUIRE( usvg::invquad(chol, x) == Approx(truth) );
 }
 
-TEST_CASE("Cholesky non-PD matrix", "[linear algebra]")
+TEST_CASE("Diagonal log determinant", "[linear algebra]")
 {
-  auto A = blaze::DynamicMatrix<double>(
-    {{1, 1, 1},
-     {1, 1, 1},
-     {1, 1, 1}});
+  auto A    = blaze::DynamicVector<double>({1, 2, 3});
+  auto chol = usvg::Cholesky<usvg::DiagonalChol>();
+  REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
 
-  auto L = std::optional<usvg::Cholesky>();
-  REQUIRE_NOTHROW( L = usvg::cholesky_nothrow(A) );
-  REQUIRE( !L );
+  auto truth = log(prod(A));
+  
+  REQUIRE( usvg::logdet(chol) == Approx(truth) );
 }
+
 
 TEST_CASE("Multivariate normal density", "[mvnormal]")
 {
@@ -105,7 +153,7 @@ TEST_CASE("Multivariate normal density", "[mvnormal]")
      -0.29874050736604413,
      -1.2570687585683156});
 
-  auto cov_chol = usvg::Cholesky();
+  auto cov_chol = usvg::Cholesky<usvg::DenseChol>();
   REQUIRE_NOTHROW( cov_chol = usvg::cholesky_nothrow(cov).value() );
 
   double truth_p    = 0.0069349873998044214;
@@ -144,7 +192,7 @@ TEST_CASE("Multivariate normal sampling", "[mvnormal]")
     {1.0, 2.0, 3.0});
 
   auto prng     = generate_seed(1);
-  auto cov_chol = usvg::Cholesky();
+  auto cov_chol = usvg::Cholesky<usvg::DenseChol>();
   REQUIRE_NOTHROW( cov_chol = usvg::cholesky_nothrow(cov).value() );
 
   size_t n_samples = 4096;
@@ -152,7 +200,7 @@ TEST_CASE("Multivariate normal sampling", "[mvnormal]")
   auto samples     = blaze::DynamicMatrix<double>(n_dims, n_samples);
   for (size_t i = 0; i < n_samples; ++i)
   {
-    blaze::column(samples, i) = rmvnormal(prng, mu, cov_chol);
+    blaze::column(samples, i) = usvg::rmvnormal(prng, mu, cov_chol);
   }
 
   /* check mean */

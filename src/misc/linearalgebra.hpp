@@ -30,28 +30,34 @@
 
 namespace usvg
 {
-  template <typename DMat, typename DVec>
   inline double
-  invquad(blaze::LowerMatrix<DMat> const& A_chol, DVec const& x)
+  invquad(usvg::Cholesky<usvg::DenseChol> const& chol,
+	  blaze::DynamicVector<double> const& x)
   {
-    auto y = blaze::solve(A_chol, x);
+    auto y = blaze::solve(chol.L, x);
     return blaze::dot(y, y);
   }
 
-  template <typename DMat>
   inline double
-  logdet(blaze::LowerMatrix<DMat> const& A_chol)
+  invquad(usvg::Cholesky<usvg::DiagonalChol> const& chol,
+	  blaze::DynamicVector<double> const& x)
+  {
+    return blaze::dot(x / chol.A, x);
+  }
+
+  inline double
+  logdet(usvg::Cholesky<usvg::DenseChol> const& chol)
   /*
    * Compute log determinant using Cholesky decomposition
    * Summation uses Kahan's method.
    */
   {
-    size_t n_dims = A_chol.rows();
+    size_t n_dims = chol.L.rows();
     double L_diag = 0.0;
     double c      = 0.0;
     for (size_t i = 0; i < n_dims; ++i)
     {
-      double y = log(A_chol(i, i)) - c;
+      double y = log(chol.L(i, i)) - c;
       double t = L_diag + y;
       c        = (t - L_diag) - y;
       L_diag   = t;
@@ -59,81 +65,24 @@ namespace usvg
     return 2 * L_diag;
   }
 
-  inline bool
-  potrf_nothrow(blaze::DynamicMatrix<double>& A, char uplo)
+  inline double
+  logdet(usvg::Cholesky<usvg::DiagonalChol> const& chol)
+  /*
+   * Compute log determinant using Cholesky decomposition
+   * Summation uses Kahan's method.
+   */
   {
-    if( !blaze::isSquare( A ) )
+    size_t n_dims = chol.L.size();
+    double L_diag = 0.0;
+    double c      = 0.0;
+    for (size_t i = 0; i < n_dims; ++i)
     {
-      return false;
+      double y = log(chol.L[i]) - c;
+      double t = L_diag + y;
+      c        = (t - L_diag) - y;
+      L_diag   = t;
     }
-
-    if( uplo != 'L' && uplo != 'U' )
-    {
-      return false;
-    }
-
-    blaze::blas_int_t n   ( blaze::numeric_cast<blaze::blas_int_t>( A.rows()    ) );
-    blaze::blas_int_t lda ( blaze::numeric_cast<blaze::blas_int_t>( A.spacing() ) );
-    blaze::blas_int_t info( 0 );
-
-    if( n == 0 )
-    {
-      return true;
-    }
-
-    if( blaze::IsRowMajorMatrix_v<blaze::DynamicMatrix<double>> )
-    {
-      ( uplo == 'L' )?( uplo = 'U' ):( uplo = 'L' );
-    }
-
-    blaze::potrf( uplo, n, A.data(), lda, &info );
-
-    BLAZE_INTERNAL_ASSERT( info >= 0, "Invalid argument for Cholesky decomposition" );
-
-    if( info > 0 )
-    {
-      return false;
-    }
-    else
-    {
-      return true;
-    }
-  }
-
-  inline std::optional<usvg::Cholesky>
-  cholesky_nothrow(blaze::DynamicMatrix<double> const& A)
-  {
-    size_t n = A.rows();
-    auto L_buf   = blaze::DynamicMatrix<double>(n, n); 
-
-    if( blaze::IsRowMajorMatrix_v<blaze::DynamicMatrix<double>> )
-    {
-      for( size_t i = 0UL; i < n; ++i ) {
-	for( size_t j = 0UL; j <= i ; ++j ) {
-	  L_buf(i,j) = A(i,j);
-	}
-      }
-    }
-    else
-    {
-      for( size_t j = 0UL; j < n; ++j ) {
-	for( size_t i = j; i < n; ++i ) {
-	  L_buf(i,j) = A(i,j);
-	}
-      }
-    }
-
-    bool success = potrf_nothrow(L_buf, 'L');
-    if(success)
-    {
-      auto L = blaze::LowerMatrix<decltype(L_buf)>(
-	blaze::decllow(L_buf));
-      return Cholesky{A, L};
-    }
-    else
-    {
-      return std::nullopt;
-    }
+    return 2 * L_diag;
   }
 }
 

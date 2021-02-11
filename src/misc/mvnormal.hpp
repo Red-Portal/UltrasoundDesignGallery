@@ -34,14 +34,14 @@ namespace usvg
   inline double
   dmvnormal(blaze::DynamicVector<double> const& x,
 	    blaze::DynamicVector<double> const& mu,
-	    usvg::Cholesky const& cov_chol,
+	    usvg::Cholesky<usvg::DenseChol> const& cov_chol,
 	    bool logdensity = false)
   {
     size_t n_dims = x.size();
     double constexpr normalizer = log(2 * std::numbers::pi);
     double D    = static_cast<double>(n_dims);
-    double logp = (usvg::logdet(cov_chol.L)
-		   + usvg::invquad(cov_chol.L, mu - x)
+    double logp = (usvg::logdet(cov_chol)
+		   + usvg::invquad(cov_chol, mu - x)
 		   + D*normalizer)/-2;
     if(logdensity)
       return logp;
@@ -66,7 +66,7 @@ namespace usvg
   inline blaze::DynamicVector<double>
   rmvnormal(Rng& prng,
 	    blaze::DynamicVector<double> const& mu,
-	    usvg::Cholesky const& cov_chol)
+	    usvg::Cholesky<usvg::DenseChol> const& cov_chol)
   {
     size_t n_dims = mu.size();
     auto z        = rmvnormal(prng, n_dims);

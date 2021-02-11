@@ -30,13 +30,15 @@ target_link_libraries(catch_main PRIVATE project_options)
 
 add_executable(usgallery_tests
     gp.cpp
-    inference.cpp)
+    inference.cpp
+    misc.cpp)
 target_link_libraries(usgallery_tests
     INTERFACE
     blaze::blaze
     Threads::threads
 
     PRIVATE
+    BLAS::BLAS
     gcem
     stats
     random123

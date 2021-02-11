@@ -6,7 +6,7 @@
 * gcem
 * Blaze
 * SFML
-* ImgUI
+* Imgui
 
 ## License
 

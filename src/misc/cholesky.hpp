@@ -16,23 +16,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <catch2/catch.hpp>
+#ifndef __US_GALLERY_CHOLESKY_HPP__
+#define __US_GALLERY_CHOLESKY_HPP__
 
-#include "../src/inference/imh.hpp"
-#include "../src/misc/seed.hpp"
+#include <blaze/math/LowerMatrix.h>
+#include <blaze/math/DynamicMatrix.h>
 
-#include <iostream>
-
-TEST_CASE("Sampling from unit Gaussian", "[imh]")
+namespace usvg
 {
-  auto seed = generate_seed(1);
-  auto p    = [](double x){
-    return stats::dnorm(x, 0.0, 1.0);
+  struct Cholesky
+  {
+    blaze::DynamicMatrix<double> A;
+    blaze::LowerMatrix<blaze::DynamicMatrix<double>> L;
   };
-  size_t n_samples = 4096;
-  auto samples = infer::imh(seed, p, -3, 3, n_samples, 128, 2);
-
-  double sample_mean_margin = 1.0 / sqrt(static_cast<double>(n_samples)) * 10;
-  REQUIRE( blaze::mean(samples)   == Approx(0.0).margin(sample_mean_margin) );
-  REQUIRE( blaze::stddev(samples) == Approx(1.0).margin(0.1) );
 }
+
+#endif

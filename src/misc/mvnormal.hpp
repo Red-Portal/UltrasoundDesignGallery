@@ -27,13 +27,13 @@
 #include <blaze/math/DynamicVector.h>
 
 #include <numbers>
+#include <random>
 
 namespace usvg
 {
-  template <typename F>
   inline double
-  dmvnormal(blaze::DynamicVector<F> const& x,
-	    blaze::DynamicVector<F> const& mu,
+  dmvnormal(blaze::DynamicVector<double> const& x,
+	    blaze::DynamicVector<double> const& mu,
 	    usvg::Cholesky const& cov_chol,
 	    bool logdensity = false)
   {
@@ -49,11 +49,28 @@ namespace usvg
       return exp(logp);
   }
 
-  template <typename F>
-  inline blaze::DynamicVector<F>
-  rmvnormal()
+  template <typename Rng>
+  inline blaze::DynamicVector<double>
+  rmvnormal(Rng& prng, size_t n_dims) noexcept
   {
-  
+    auto res  = blaze::DynamicVector<double>(n_dims); 
+    auto dist = std::normal_distribution<double>(0.0, 1.0);
+    for (size_t i = 0; i < n_dims; ++i)
+    {
+      res[i] = dist(prng);
+    }
+    return res;
+  }
+
+  template <typename Rng>
+  inline blaze::DynamicVector<double>
+  rmvnormal(Rng& prng,
+	    blaze::DynamicVector<double> const& mu,
+	    usvg::Cholesky const& cov_chol)
+  {
+    size_t n_dims = mu.size();
+    auto z        = rmvnormal(prng, n_dims);
+    return cov_chol.L*z + mu;
   }
 }
 

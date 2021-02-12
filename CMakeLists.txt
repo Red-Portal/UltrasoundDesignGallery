@@ -55,7 +55,6 @@ find_package(SFML 2.5 COMPONENTS system window graphics network audio REQUIRED)
 find_package(ImGui-SFML REQUIRED)
 find_package(Blaze REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Boost REQUIRED)
 
 set(BLA_STATIC ON)
 find_package(BLAS REQUIRED)

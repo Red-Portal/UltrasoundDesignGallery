@@ -4,6 +4,3 @@
 [submodule "third_party/gcem"]
 	path = third_party/gcem
 	url = https://github.com/kthohr/gcem
-[submodule "third_party/random123"]
-	path = third_party/random123
-	url = https://github.com/DEShawResearch/random123

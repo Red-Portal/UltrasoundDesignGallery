@@ -41,7 +41,7 @@ target_link_libraries(usgallery_tests
     BLAS::BLAS
     gcem
     stats
-    random123
+    Random123
     project_warnings
     project_options catch_main)
 

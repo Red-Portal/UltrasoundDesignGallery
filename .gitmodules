@@ -4,3 +4,6 @@
 [submodule "third_party/gcem"]
 	path = third_party/gcem
 	url = https://github.com/kthohr/gcem
+[submodule "third_party/Random123"]
+	path = third_party/Random123
+	url = https://github.com/DEShawResearch/Random123-Boost

@@ -19,14 +19,14 @@
 #include <catch2/catch.hpp>
 
 #include "../src/inference/imh.hpp"
-#include "../src/misc/seed.hpp"
+#include "../src/misc/prng.hpp"
 #include "statistical_test.hpp"
 
 #include <iostream>
 
 TEST_CASE("Sampling from unit Gaussian", "[imh]")
 {
-  auto prng = generate_seed(1);
+  auto prng = usvg::Random123(1);
   auto p    = [](double x){
     return exp(-pow(x, 2)/2);
   };
@@ -35,21 +35,16 @@ TEST_CASE("Sampling from unit Gaussian", "[imh]")
 
   REQUIRE( !kolmogorov_smirnoff_test(0.05, normal_cdf,
 				     samples.begin(), samples.end()) );
-  // auto [values, freqs] = empcdf(samples);
-  // std::cout << values << std::endl;
-  // std::cout << freqs << std::endl;
-
-  // double sample_mean_margin = 1.0 / sqrt(static_cast<double>(n_samples)) * 10;
-  // REQUIRE( blaze::mean(samples)   == Approx(0.0).margin(sample_mean_margin) );
-  // REQUIRE( blaze::stddev(samples) == Approx(1.0).margin(0.1) );
 }
 
 TEST_CASE("Elliptical slice sampling", "[ess]")
 {
-  auto prng        = generate_seed(1);
+  auto prng        = usvg::Random123(1);
   size_t n_samples = 4096;
   size_t n_dims    = 3;
   auto samples     = blaze::DynamicMatrix<double>(n_dims, n_samples);
+
+  
 
   //REQUIRE( blaze::mean(samples)   == Approx(0.0).margin() );
   //REQUIRE( blaze::stddev(samples) == Approx(1.0).margin(0.1) );

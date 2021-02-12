@@ -55,6 +55,7 @@ find_package(SFML 2.5 COMPONENTS system window graphics network audio REQUIRED)
 find_package(ImGui-SFML REQUIRED)
 find_package(Blaze REQUIRED)
 find_package(Threads REQUIRED)
+find_package(Boost REQUIRED)
 
 set(BLA_STATIC ON)
 find_package(BLAS REQUIRED)
@@ -65,8 +66,8 @@ target_include_directories(gcem SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_pa
 add_library(stats INTERFACE)
 target_include_directories(stats SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/stats/include")
 
-add_library(random123 INTERFACE)
-target_include_directories(random123 SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/random123/include")
+add_library(Random123 INTERFACE)
+target_include_directories(Random123 SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/Random123")
 
 option(BUILD_SHARED_LIBS "Enable compilation of shared libraries" OFF)
 option(ENABLE_TESTING "Enable Test Builds" ON)
@@ -87,7 +88,7 @@ target_link_libraries(usgallery
 
     PUBLIC
     BLAS::BLAS
-    random123
+    Random123
     gcem
     stats
     project_options

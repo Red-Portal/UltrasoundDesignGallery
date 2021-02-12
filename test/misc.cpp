@@ -25,14 +25,14 @@
 #include "../src/misc/linearalgebra.hpp"
 #include "../src/misc/mvnormal.hpp"
 #include "../src/misc/uniform.hpp"
-#include "../src/misc/seed.hpp"
+#include "../src/misc/prng.hpp"
 #include "statistical_test.hpp"
 
 double const catch_eps = 1e-8;
 
 TEST_CASE("Null-hypothesis is true", "[statistical test]")
 {
-  auto prng    = generate_seed(1);
+  auto prng    = usvg::Random123();
   auto dist    = std::normal_distribution<double>(0.0, 1.0);
   auto samples = blaze::DynamicVector<double>(4096);
   std::generate(samples.begin(), samples.end(),
@@ -43,7 +43,7 @@ TEST_CASE("Null-hypothesis is true", "[statistical test]")
 
 TEST_CASE("Null-hypothesis is false", "[statistical test]")
 {
-  auto prng    = generate_seed(1);
+  auto prng    = usvg::Random123(1);
   auto samples = blaze::DynamicVector<double>(4096);
   std::generate(samples.begin(), samples.end(),
 		[&]{ return usvg::runiform(prng, -3, 3); });
@@ -210,7 +210,7 @@ TEST_CASE("Diagonal covariance multivariate normal density", "[mvnormal]")
 
 TEST_CASE("Multivariate unit normal sampling", "[mvnormal]")
 {
-  auto prng        = generate_seed(1);
+  auto prng        = usvg::Random123(1);
   size_t n_samples = 1024;
   size_t n_dims    = 16;
   auto samples     = blaze::DynamicMatrix<double>(n_dims, n_samples);
@@ -236,7 +236,7 @@ TEST_CASE("Dense multivariate normal sampling", "[mvnormal]")
   auto mean = blaze::DynamicVector<double>(
     {1.0, 2.0, 3.0});
 
-  auto prng     = generate_seed(1);
+  auto prng     = usvg::Random123(1);
   auto cov_chol = usvg::Cholesky<usvg::DenseChol>();
   REQUIRE_NOTHROW( cov_chol = usvg::cholesky_nothrow(cov).value() );
 
@@ -263,7 +263,7 @@ TEST_CASE("Diagonal multivariate normal sampling", "[mvnormal]")
   auto cov  = blaze::DynamicVector<double>({16, 16, 16});
   auto mean = blaze::DynamicVector<double>({1.0, 2.0, 3.0});
 
-  auto prng     = generate_seed(1);
+  auto prng     = usvg::Random123(1);
   auto cov_chol = usvg::Cholesky<usvg::DiagonalChol>();
   REQUIRE_NOTHROW( cov_chol = usvg::cholesky_nothrow(cov).value() );
 

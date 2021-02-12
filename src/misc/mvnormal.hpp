@@ -31,19 +31,33 @@
 
 namespace usvg
 {
+  template <typename CholType>
+  struct MvNormal
+  {
+    blaze::DynamicVector<double> mean;
+    usvg::Cholesky<CholType> cov_chol;
+
+    inline double pdf(blaze::DynamicVector<double>    const& x) const;
+
+    inline double logpdf(blaze::DynamicVector<double> const& x) const;
+
+    template <typename Rng>
+    inline double sample(Rng prng) const;
+  };
+
   template<typename CholType>
   inline double
   dmvnormal(blaze::DynamicVector<double> const& x,
-	    blaze::DynamicVector<double> const& mu,
+	    blaze::DynamicVector<double> const& mean,
 	    usvg::Cholesky<CholType> const& cov_chol,
 	    bool logdensity = false)
   {
-    size_t n_dims = x.size();
-    double constexpr normalizer = log(2 * std::numbers::pi);
-    double D    = static_cast<double>(n_dims);
-    double logp = (usvg::logdet(cov_chol)
-		   + usvg::invquad(cov_chol, mu - x)
-		   + D*normalizer)/-2;
+    size_t n_dims     = x.size();
+    double normalizer = log(2 * std::numbers::pi);
+    double D          = static_cast<double>(n_dims);
+    double logp       = (usvg::logdet(cov_chol)
+			 + usvg::invquad(cov_chol, mean - x)
+			 + D*normalizer)/-2;
     if(logdensity)
       return logp;
     else
@@ -66,12 +80,37 @@ namespace usvg
   template <typename Rng, typename CholType>
   inline blaze::DynamicVector<double>
   rmvnormal(Rng& prng,
-	    blaze::DynamicVector<double> const& mu,
+	    blaze::DynamicVector<double> const& mean,
 	    usvg::Cholesky<CholType> const& cov_chol)
   {
-    size_t n_dims = mu.size();
+    size_t n_dims = mean.size();
     auto z        = rmvnormal(prng, n_dims);
-    return cov_chol.L*z + mu;
+    return cov_chol.L*z + mean;
+  }
+
+  template <typename CholType>
+  inline double
+  MvNormal<CholType>::
+  pdf(blaze::DynamicVector<double>    const& x) const
+  {
+    return dmvnormal(x, this->mean, this->cov_chol.L);
+  }
+
+  template <typename CholType>
+  inline double
+  MvNormal<CholType>::
+  logpdf(blaze::DynamicVector<double> const& x) const
+  {
+    return dmvnormal(x, this->mean, this->cov_chol.L, true);
+  }
+
+  template <typename CholType>
+  template <typename Rng>
+  inline double
+  MvNormal<CholType>::
+  sample(Rng prng) const
+  {
+    return rmvnormal(prng, this->mean, this->cov_chol.L);
   }
 }
 

@@ -101,8 +101,8 @@ TEST_CASE("Dense prior elliptical slice sampling", "[ess]")
 
   size_t i = 0;
   auto row = blaze::row(samples, i);
-  auto cdf = [&](double x){
-    return normal_cdf((x -  post_mean[i]) / sqrt(post_cov(i,i)));
+  auto cdf = [&](double x_in){
+    return normal_cdf((x_in -  post_mean[i]) / sqrt(post_cov(i,i)));
   };
   REQUIRE( !kolmogorov_smirnoff_test(0.01, cdf, row.begin(), row.end()) );
 
@@ -170,8 +170,8 @@ TEST_CASE("Diagonal prior elliptical slice sampling", "[ess]")
 
   size_t i = 0;
   auto row = blaze::row(samples, i);
-  auto cdf = [&](double x){
-    return normal_cdf((x -  post_mean[i]) / sqrt(post_cov[i]));
+  auto cdf = [&](double x_in){
+    return normal_cdf((x_in -  post_mean[i]) / sqrt(post_cov[i]));
   };
   REQUIRE( !kolmogorov_smirnoff_test(0.01, cdf, row.begin(), row.end()) );
 

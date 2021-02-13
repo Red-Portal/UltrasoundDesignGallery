@@ -61,8 +61,6 @@
 #define STATS_ENABLE_BLAZE_WRAPPERS
 #include <stats.hpp>
 
-#include <Random123/philox.h>
-
 #include <imgui.h>
 #include <imgui-SFML.h>
 
@@ -72,9 +70,6 @@
 
 int main()
 {
-  auto rng = r123::Philox4x32();
-  (void)rng;
-
   sf::RenderWindow window(sf::VideoMode(640, 480), "");
   window.setVerticalSyncEnabled(true);
   ImGui::SFML::Init(window);
@@ -82,8 +77,6 @@ int main()
   sf::Color bgColor;
 
   blaze::DynamicMatrix<double> gamma_rvs = stats::rgamma<blaze::DynamicMatrix<double>>(100,50,3.0,2.0);
-
-
 
   float color[3] = { 0.f, 0.f, 0.f };
 

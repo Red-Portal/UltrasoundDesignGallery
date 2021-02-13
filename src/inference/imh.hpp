@@ -30,7 +30,7 @@ namespace usvg
 {
   template <typename Rng, typename Func>
   inline blaze::DynamicVector<double>
-  imh(Rng rng, Func f, double lb, double ub,
+  imh(Rng& rng, Func f, double lb, double ub,
       size_t n_samples, size_t n_burn, size_t n_thin)
   {
     auto samples = blaze::DynamicVector<double>(n_samples / n_thin);

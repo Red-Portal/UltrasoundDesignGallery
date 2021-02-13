@@ -26,6 +26,7 @@
 #include <blaze/math/LowerMatrix.h>
 #include <blaze/math/DynamicVector.h>
 
+#include <cmath>
 #include <numbers>
 #include <random>
 
@@ -42,10 +43,10 @@ namespace usvg
     inline double logpdf(blaze::DynamicVector<double> const& x) const;
 
     template <typename Rng>
-    inline double sample(Rng prng) const;
+    inline blaze::DynamicVector<double> sample(Rng& prng) const;
   };
 
-  template<typename CholType>
+  template <typename CholType>
   inline double
   dmvnormal(blaze::DynamicVector<double> const& x,
 	    blaze::DynamicVector<double> const& mean,
@@ -53,10 +54,10 @@ namespace usvg
 	    bool logdensity = false)
   {
     size_t n_dims     = x.size();
-    double normalizer = log(2 * std::numbers::pi);
+    double normalizer = log(2*std::numbers::pi);
     double D          = static_cast<double>(n_dims);
     double logp       = (usvg::logdet(cov_chol)
-			 + usvg::invquad(cov_chol, mean - x)
+			 + usvg::invquad(cov_chol, x - mean)
 			 + D*normalizer)/-2;
     if(logdensity)
       return logp;
@@ -84,7 +85,7 @@ namespace usvg
 	    usvg::Cholesky<CholType> const& cov_chol)
   {
     size_t n_dims = mean.size();
-    auto z        = rmvnormal(prng, n_dims);
+    auto z        = usvg::rmvnormal(prng, n_dims);
     return cov_chol.L*z + mean;
   }
 
@@ -93,7 +94,7 @@ namespace usvg
   MvNormal<CholType>::
   pdf(blaze::DynamicVector<double>    const& x) const
   {
-    return dmvnormal(x, this->mean, this->cov_chol.L);
+    return usvg::dmvnormal(x, this->mean, this->cov_chol);
   }
 
   template <typename CholType>
@@ -101,16 +102,16 @@ namespace usvg
   MvNormal<CholType>::
   logpdf(blaze::DynamicVector<double> const& x) const
   {
-    return dmvnormal(x, this->mean, this->cov_chol.L, true);
+    return usvg::dmvnormal(x, this->mean, this->cov_chol, true);
   }
 
   template <typename CholType>
   template <typename Rng>
-  inline double
+  inline blaze::DynamicVector<double>
   MvNormal<CholType>::
-  sample(Rng prng) const
+  sample(Rng& prng) const
   {
-    return rmvnormal(prng, this->mean, this->cov_chol.L);
+    return usvg::rmvnormal(prng, this->mean, this->cov_chol);
   }
 }
 

@@ -19,31 +19,77 @@
 #ifndef __US_GALLERY_ESS_HPP__
 #define __US_GALLERY_ESS_HPP__
 
+#include "../misc/mvnormal.hpp"
+#include "../misc/uniform.hpp"
+
 #include <blaze/math/DynamicMatrix.h>
 #include <blaze/math/DynamicVector.h>
 
 #include <algorithm>
+#include <iostream>
+#include <cmath>
 #include <random>
-#include <stats.hpp>
 
-namespace infer
+namespace usvg
 {
-  template <typename Rng, typename Loglike, typename Prior>
-  inline blaze::DynamicVector<double>
-  ess_transition(Rng rng,
-		 Loglike p,
-		 blaze::DynamicVector<double> const& prev_x,
-		 double prev_like,
-		 Prior  prior,
-		 blaze::DynamicVector<double> const& prior_mean,
-		 blaze::DynamicVector<double> const& prior_cov_chol,
-		 size_t n_samples,
-		 size_t n_burn)
+  template <typename Rng,
+	    typename Loglike,
+	    typename CholType>
+  inline std::tuple<blaze::DynamicVector<double>, double, size_t>
+  ess_transition(Rng& rng,
+		 Loglike loglike,
+		 blaze::DynamicVector<double> const& x_prev,
+		 double loglike_prev,
+		 usvg::MvNormal<CholType> const& prior)
+  /*
+   * Elliptical slice sampler Markov-chain kernel.
+   *
+   * Murray, Iain, Ryan Adams, and David MacKay. 
+   * "Elliptical slice sampling." 
+   * AISTATS, 2010.
+   *
+   * Nishihara, Robert, Iain Murray, and Ryan P. Adams. 
+   * "Parallel MCMC with generalized elliptical slice sampling." 
+   * JMLR 15.1 (2014): 2087-2112.
+   */
   {
-    size_t n_dims = prior_mean.size();
-    auto z  = stats::rnorm(n_dims, 1u);
-    auto nu = prior_cov_chol;
-    //auto samples = blaze::DynamicVector<double>(n_samples / n_thin);
+    auto const tau = 2*std::numbers::pi;
+    auto nu        = prior.sample(rng);
+    auto u         = usvg::runiform(rng);
+    auto logy      = loglike_prev + log(u);
+    auto theta     = usvg::runiform(rng, 0, tau);
+    auto theta_min = theta - tau;
+    auto theta_max = theta;
+
+    size_t n_props = 1;
+
+    while(true)
+    {
+      auto costh = cos(theta);
+      auto sinth = sin(theta);
+      auto a     = 1 - (costh + sinth);
+
+      auto x_prop       = costh*x_prev + sinth*nu + a*prior.mean;
+      auto loglike_prop = loglike(x_prop);
+
+      if(loglike_prop > logy)
+      { /* Accept */
+	return {x_prop, loglike_prop, n_props};
+      }
+      else
+      { /* Reject. Shrink bracket */
+	if(theta < 0)
+	{
+	  theta_min = theta;
+	}
+	else
+	{
+	  theta_max = theta;
+	}
+	theta = usvg::runiform(rng, theta_min, theta_max);
+	++n_props;
+      }
+    }
   }
 }
 

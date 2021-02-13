@@ -27,8 +27,6 @@
 #include <limits>
 #include <vector>
 
-#include <iostream>
-
 template <typename CdfFunc, typename It>
 inline bool
 kolmogorov_smirnoff_test(double alpha,
@@ -51,7 +49,6 @@ kolmogorov_smirnoff_test(double alpha,
 
   double D     = std::numeric_limits<double>::min();
   double N     = static_cast<double>(std::distance(begin, end));
-  double sqrtN = sqrt(N);
   size_t i     = 1;
   for (auto val : values)
   {
@@ -62,20 +59,32 @@ kolmogorov_smirnoff_test(double alpha,
     ++i;
   }
 
-  double p_thres = 0;
-  if(alpha == 0.1)
+  double D_thres = 0;
+  if(alpha == 0.1 && N == 512)
   {
-    p_thres = 1.22385 / sqrtN;
+    D_thres = 0.07582597540719833;
   }
-  else if(alpha == 0.05)
+  else if(alpha == 0.05 && N == 512)
   {
-    p_thres = 1.35810 / sqrtN;
+    D_thres = 0.08420182387958335;
   }
-  else if(alpha == 0.01)
+  else if(alpha == 0.01 && N == 512)
   {
-    p_thres = 1.62762 / sqrtN;
+    D_thres = 0.10100517595844977;
   }
-  return D > p_thres;
+  else if(alpha == 0.001 && N == 512)
+  {
+    D_thres = 0.12104537977466515;
+  }
+  else if(alpha == 0.0001 && N == 512)
+  {
+    D_thres = 0.13819077194988733;
+  }
+  else
+  {
+    throw std::invalid_argument("invalid KS setting");
+  }
+  return D > D_thres;
 }
 
 inline double

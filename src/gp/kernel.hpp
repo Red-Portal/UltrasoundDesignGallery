@@ -30,7 +30,7 @@ namespace usvg
 {
   struct Matern52
   {
-    double sigma2;
+    double sigma;
     blaze::DynamicVector<double> ardscales;
 
   template<typename VecLHSType,
@@ -55,9 +55,10 @@ namespace usvg
      * Matern 5/2 kernel
      * \sigma * (1 + \sqrt{5}*r + 5/3*r^2) exp(-\sqrt{5}r)
      */
-    auto r     = blaze::norm((x - y) / this->ardscales);
-    auto s     = sqrt(5)*r;
-    return this->sigma2 * (1 + s + s*s/3) * exp(-s);
+    auto r      = blaze::norm((x - y) / this->ardscales);
+    auto s      = sqrt(5)*r;
+    auto sigma2 = this->sigma * this->sigma;
+    return sigma2 * (1 + s + s*s/3) * exp(-s);
   }
 
   template<typename Kernel>

@@ -183,3 +183,4 @@ TEST_CASE("Diagonal prior elliptical slice sampling", "[ess]")
   row = blaze::row(samples, i);
   REQUIRE( !kolmogorov_smirnoff_test(0.01, cdf, row.begin(), row.end()) );
 }
+

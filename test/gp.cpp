@@ -41,8 +41,8 @@ TEST_CASE("Matern 5/2 kernel value", "[kernel]")
 
    */
   auto linescales = blaze::DynamicVector<double>({0.3468645418042131, 0.4089279965964634});
-  auto sigma2     = 0.6;
-  auto kernel     = usvg::Matern52{sigma2, linescales};
+  auto sigma      = sqrt(0.6);
+  auto kernel     = usvg::Matern52{sigma, linescales};
 
   auto x = blaze::DynamicVector<double>({1.124618098544101, -1.8477787735615157});
   auto y = blaze::DynamicVector<double>({1.0597907259031794, 0.20131396456561368});
@@ -68,8 +68,8 @@ TEST_CASE("Gram matrix computation", "[kernel]")
 
   auto linescales = blaze::DynamicVector<double>(
     {0.3468645418042131, 0.4089279965964634});
-  auto sigma2     = 0.6;
-  auto kernel     = usvg::Matern52{sigma2, linescales};
+  auto sigma      = sqrt(0.6);
+  auto kernel     = usvg::Matern52{sigma, linescales};
   auto datamatrix = blaze::DynamicMatrix<double>(
     {{1.0, 3.0, 5.0},
      {2.0, 4.0, 6.0}});
@@ -135,8 +135,8 @@ TEST_CASE("Latent Gaussian process prediction", "[dataset]")
      {2, -1, 1},
      {-1, 2, 1}});
   auto linescales = blaze::DynamicVector<double>({1.0, 1.0, 1.0});
-  auto sigma2     = 0.6;
-  auto kernel     = usvg::Matern52{sigma2, linescales};
+  auto sigma      = sqrt(0.6);
+  auto kernel     = usvg::Matern52{sigma, linescales};
 
   auto K = usvg::compute_gram_matrix(kernel, data);
   auto W = blaze::DynamicMatrix<double>(
@@ -174,5 +174,5 @@ TEST_CASE("Latent Gaussian process prediction", "[dataset]")
 
   blaze::invert(W);
   auto var_truth = kernel(x, x) - blaze::dot(k_star, blaze::solve(K + W, k_star));
-  REQUIRE( var == Approx(var_truth).margin(1e-3) );
+  REQUIRE( var == Approx(var_truth).margin(1e-2) );
 }

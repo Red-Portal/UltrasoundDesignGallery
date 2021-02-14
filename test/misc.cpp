@@ -160,6 +160,61 @@ TEST_CASE("Diagonal log determinant", "[linear algebra]")
   REQUIRE( usvg::logdet(chol) == Approx(truth) );
 }
 
+TEST_CASE("LU log determinant", "[linear algebra]")
+{
+  auto A = blaze::DynamicMatrix<double>(
+    {{3, 2, 1},
+     {1, 3, 1},
+     {1, 1, 3}});
+
+  auto lu = usvg::LU();
+  REQUIRE_NOTHROW( lu = usvg::lu(A) );
+  auto truth = log(blaze::det(A));
+  
+  REQUIRE( usvg::logdet(lu) == Approx(truth) );
+}
+
+TEST_CASE("Dense cholesky inversion", "[linear algebra]")
+{
+  auto A = blaze::DynamicMatrix<double>(
+    {{3, 1, 1},
+     {1, 3, 1},
+     {1, 1, 3}});
+
+  auto chol = usvg::Cholesky<usvg::DenseChol>();
+  REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
+
+  auto x     = blaze::DynamicVector<double>(
+    {0.9040983839157295,
+     -0.29874050736604413,
+     -1.2570687585683156});
+
+  auto b      = blaze::evaluate(A * x);
+  auto x_chol = usvg::solve(chol, b);
+
+  REQUIRE( blaze::norm(x_chol - x) < catch_eps );
+}
+
+TEST_CASE("Dense LU inversion", "[linear algebra]")
+{
+  auto A = blaze::DynamicMatrix<double>(
+    {{3, 2, 1},
+     {1, 3, 1},
+     {1, 1, 3}});
+
+  auto lu = usvg::LU();
+  REQUIRE_NOTHROW( lu = usvg::lu(A) );
+
+  auto x     = blaze::DynamicVector<double>(
+    {0.9040983839157295,
+     -0.29874050736604413,
+     -1.2570687585683156});
+
+  auto b    = blaze::evaluate(A * x);
+  auto x_lu = usvg::solve(lu, b);
+
+  REQUIRE( blaze::norm(x_lu - x) < catch_eps );
+}
 
 TEST_CASE("Dense covariance multivariate normal density", "[mvnormal]")
 {

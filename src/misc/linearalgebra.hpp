@@ -20,6 +20,7 @@
 #define __US_GALLERY_LINEARALGEBRA_HPP__
 
 #include "cholesky.hpp"
+#include "lu.hpp"
 
 #include <blaze/math/LowerMatrix.h>
 #include <blaze/math/DenseMatrix.h>
@@ -46,43 +47,86 @@ namespace usvg
   }
 
   inline double
-  logdet(usvg::Cholesky<usvg::DenseChol> const& chol)
+  logtrace(blaze::DynamicMatrix<double> const& A)
   /*
-   * Compute log determinant using Cholesky decomposition
-   * Summation uses Kahan's method.
+   * Compute log of matrix trace using Kahan's method.
    */
   {
-    size_t n_dims = chol.L.rows();
-    double L_diag = 0.0;
-    double c      = 0.0;
-    for (size_t i = 0; i < n_dims; ++i)
+    size_t n_dims  = A.rows();
+    double logdiag = 0.0;
+    double c       = 0.0;
+    for (size_t i  = 0; i < n_dims; ++i)
     {
-      double y = log(chol.L(i, i)) - c;
-      double t = L_diag + y;
-      c        = (t - L_diag) - y;
-      L_diag   = t;
+      double y = log(A(i, i)) - c;
+      double t = logdiag + y;
+      c        = (t - logdiag) - y;
+      logdiag  = t;
     }
-    return 2 * L_diag;
+    return logdiag;
   }
 
   inline double
-  logdet(usvg::Cholesky<usvg::DiagonalChol> const& chol)
+  logtrace(blaze::DynamicVector<double> const& A)
+  /*
+   * Compute log of diagonal matrix trace using Kahan's method.
+   */
+  {
+    size_t n_dims  = A.size();
+    double logdiag = 0.0;
+    double c       = 0.0;
+    for (size_t i  = 0; i < n_dims; ++i)
+    {
+      double y = log(A[i]) - c;
+      double t = logdiag + y;
+      c        = (t - logdiag) - y;
+      logdiag  = t;
+    }
+    return logdiag;
+  }
+
+  template<typename CholType>
+  inline double
+  logdet(usvg::Cholesky<CholType> const& chol)
   /*
    * Compute log determinant using Cholesky decomposition
    * Summation uses Kahan's method.
    */
   {
-    size_t n_dims = chol.L.size();
-    double L_diag = 0.0;
-    double c      = 0.0;
-    for (size_t i = 0; i < n_dims; ++i)
-    {
-      double y = log(chol.L[i]) - c;
-      double t = L_diag + y;
-      c        = (t - L_diag) - y;
-      L_diag   = t;
-    }
-    return 2 * L_diag;
+    auto L_diag = usvg::logtrace(chol.L);
+    return 2*L_diag;
+  }
+
+  inline double
+  logdet(usvg::LU const& lu)
+  /*
+   * Compute log determinant using Cholesky decomposition
+   * Summation uses Kahan's method.
+   */
+  {
+    auto L_diag = usvg::logtrace(lu.L);
+    auto U_diag = usvg::logtrace(lu.U);
+    return L_diag + U_diag;
+  }
+
+  template <typename CholType>
+  inline blaze::DynamicVector<double> 
+  solve(usvg::Cholesky<CholType> Achol,
+	blaze::DynamicVector<double> const& b)
+  {
+    auto Ux = blaze::evaluate(blaze::solve(Achol.L, b));
+    auto U  = blaze::declupp(blaze::trans(Achol.L));
+    auto x  = blaze::solve(U, Ux);
+    return x;
+  }
+
+  inline blaze::DynamicVector<double> 
+  solve(usvg::LU const& Alu,
+	blaze::DynamicVector<double> const& b)
+  {
+    auto Pb = blaze::evaluate(Alu.Pt * b);
+    auto Ux = blaze::evaluate(blaze::solve(Alu.L, Pb));
+    auto x  = blaze::solve(Alu.U, Ux);
+    return x;
   }
 }
 

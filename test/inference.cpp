@@ -18,30 +18,33 @@
 
 #include <catch2/catch.hpp>
 
-#include "../src/inference/ess.hpp"
 #include "../src/inference/imh.hpp"
 #include "../src/misc/linearalgebra.hpp"
 #include "../src/misc/mvnormal.hpp"
 #include "../src/misc/prng.hpp"
 #include "statistical_test.hpp"
+#include "elliptical_slice.hpp"
 
 TEST_CASE("Sampling from unit Gaussian", "[imh]")
 {
-  auto prng = usvg::Random123();
+  auto key  = GENERATE(range(0u, 8u));
+  auto prng = usvg::Random123(key);
   auto p    = [](double x){
     return exp(-x*x/2);
   };
   size_t n_samples = 512;
   auto samples = usvg::imh(prng, p, -3, 3, n_samples, 128, 1);
 
-  REQUIRE( !kolmogorov_smirnoff_test(0.01, normal_cdf,
+  REQUIRE( !kolmogorov_smirnoff_test(0.001, normal_cdf,
 				     samples.begin(), samples.end()) );
 }
 
 TEST_CASE("Dense prior elliptical slice sampling", "[ess]")
 {
-  auto prng        = usvg::Random123();
+  auto key         = GENERATE(range(0u, 8u));
+  auto prng        = usvg::Random123(key);
   size_t n_samples = 512;
+  size_t n_burn    = 128;
   auto like_mean   = blaze::DynamicVector<double>(
     {1.0, 2.0, 3.0});
   auto like_cov    = blaze::DynamicMatrix<double>(
@@ -62,37 +65,12 @@ TEST_CASE("Dense prior elliptical slice sampling", "[ess]")
   REQUIRE_NOTHROW( prior_chol = usvg::cholesky_nothrow(prior_cov).value() );
   auto prior_dist = usvg::MvNormal<usvg::DenseChol>{prior_mean, prior_chol};
 
-  size_t n_dims = prior_mean.size();
-  auto samples  = blaze::DynamicMatrix<double>(n_dims, n_samples);
-
   auto loglike = [&](blaze::DynamicVector<double> const& x){
     return usvg::invquad(like_dist.cov_chol, x - like_mean)/-2;
   };
-  auto x0 = prior_dist.sample(prng); 
-  auto p0 = loglike(x0); 
 
-  auto x = x0;
-  auto p = p0;
-
-  size_t n_burnin = 512;
-  for (size_t i = 0; i < n_burnin; ++i)
-  { /* burnin */
-    auto [x_prop, p_prop, n_props] = usvg::ess_transition(
-      prng, loglike, x, p, prior_dist);
-    x = x_prop;
-    p = p_prop;
-  }
-
-  size_t n_total_props = 0;
-  for (size_t i = 0; i < n_samples; ++i)
-  {
-    auto [x_prop, p_prop, n_props] = usvg::ess_transition(
-      prng, loglike, x, p, prior_dist);
-    x = x_prop;
-    p = p_prop;
-    n_total_props += n_props;
-    blaze::column(samples, i) = x;
-  }
+  auto x0      = prior_dist.sample(prng); 
+  auto samples = elliptical_slice(prng, n_samples, n_burn, x0, loglike, prior_dist);
 
   auto like_inv  = blaze::inv(like_cov);
   auto prior_inv = blaze::inv(prior_cov);
@@ -104,21 +82,24 @@ TEST_CASE("Dense prior elliptical slice sampling", "[ess]")
   auto cdf = [&](double x_in){
     return normal_cdf((x_in -  post_mean[i]) / sqrt(post_cov(i,i)));
   };
-  REQUIRE( !kolmogorov_smirnoff_test(0.01, cdf, row.begin(), row.end()) );
+  REQUIRE( !kolmogorov_smirnoff_test(0.001, cdf, row.begin(), row.end()) );
 
   ++i;
   row = blaze::row(samples, i);
-  REQUIRE( !kolmogorov_smirnoff_test(0.01, cdf, row.begin(), row.end()) );
+  REQUIRE( !kolmogorov_smirnoff_test(0.001, cdf, row.begin(), row.end()) );
 
   ++i;
   row = blaze::row(samples, i);
-  REQUIRE( !kolmogorov_smirnoff_test(0.01, cdf, row.begin(), row.end()) );
+  REQUIRE( !kolmogorov_smirnoff_test(0.001, cdf, row.begin(), row.end()) );
 }
 
 TEST_CASE("Diagonal prior elliptical slice sampling", "[ess]")
 {
-  auto prng        = usvg::Random123();
+  auto key         = GENERATE(range(0u, 8u));
+  auto prng        = usvg::Random123(key);
   size_t n_samples = 512;
+  size_t n_burn    = 512;
+
   auto like_mean   = blaze::DynamicVector<double>({1.0, 2.0, 3.0});
   auto like_cov    = blaze::DynamicVector<double>({ 1,  1,  1});
   auto like_chol = usvg::Cholesky<usvg::DiagonalChol>();
@@ -131,37 +112,12 @@ TEST_CASE("Diagonal prior elliptical slice sampling", "[ess]")
   REQUIRE_NOTHROW( prior_chol = usvg::cholesky_nothrow(prior_cov).value() );
   auto prior_dist = usvg::MvNormal<usvg::DiagonalChol>{prior_mean, prior_chol};
 
-  size_t n_dims = prior_mean.size();
-  auto samples  = blaze::DynamicMatrix<double>(n_dims, n_samples);
-
   auto loglike = [&](blaze::DynamicVector<double> const& x){
     return usvg::invquad(like_dist.cov_chol, x - like_mean) / -2;
   };
-  auto x0 = prior_dist.sample(prng); 
-  auto p0 = loglike(x0); 
 
-  auto x = x0;
-  auto p = p0;
-
-  size_t n_burnin = 512;
-  for (size_t i = 0; i < n_burnin; ++i)
-  { /* burnin */
-    auto [x_prop, p_prop, n_props] = usvg::ess_transition(
-      prng, loglike, x, p, prior_dist);
-    x = x_prop;
-    p = p_prop;
-  }
-
-  size_t n_total_props = 0;
-  for (size_t i = 0; i < n_samples; ++i)
-  {
-    auto [x_prop, p_prop, n_props] = usvg::ess_transition(
-      prng, loglike, x, p, prior_dist);
-    x = x_prop;
-    p = p_prop;
-    n_total_props += n_props;
-    blaze::column(samples, i) = x;
-  }
+  auto x0      = prior_dist.sample(prng); 
+  auto samples = elliptical_slice(prng, n_samples, n_burn, x0, loglike, prior_dist);
 
   auto like_inv  = 1 / like_cov;
   auto prior_inv = 1 / prior_cov;
@@ -173,14 +129,14 @@ TEST_CASE("Diagonal prior elliptical slice sampling", "[ess]")
   auto cdf = [&](double x_in){
     return normal_cdf((x_in -  post_mean[i]) / sqrt(post_cov[i]));
   };
-  REQUIRE( !kolmogorov_smirnoff_test(0.01, cdf, row.begin(), row.end()) );
+  REQUIRE( !kolmogorov_smirnoff_test(0.001, cdf, row.begin(), row.end()) );
 
   ++i;
   row = blaze::row(samples, i);
-  REQUIRE( !kolmogorov_smirnoff_test(0.01, cdf, row.begin(), row.end()) );
+  REQUIRE( !kolmogorov_smirnoff_test(0.001, cdf, row.begin(), row.end()) );
 
   ++i;
   row = blaze::row(samples, i);
-  REQUIRE( !kolmogorov_smirnoff_test(0.01, cdf, row.begin(), row.end()) );
+  REQUIRE( !kolmogorov_smirnoff_test(0.001, cdf, row.begin(), row.end()) );
 }
 

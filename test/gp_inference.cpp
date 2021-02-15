@@ -18,6 +18,7 @@
 
 #include <catch2/catch.hpp>
 
+#include "elliptical_slice.hpp"
 #include "../src/gp/gp_prior.hpp"
 #include "../src/gp/kernel.hpp"
 #include "../src/inference/ess.hpp"
@@ -27,6 +28,7 @@
 #include <blaze/math/Subvector.h>
 
 #include <limits>
+#include <ranges>
 
 template <typename Rng>
 inline blaze::DynamicMatrix<double>
@@ -42,13 +44,20 @@ generate_mvsamples(Rng& rng, size_t n_dims, size_t n_points)
 
 TEST_CASE("Identifiability check of GP hyperparameters using ESS", "[gp & ess]")
 {
-  auto linescales = blaze::DynamicVector<double>({1.0, 2.0, 3.0});
-  auto sigma      = 0.6;
-  auto kernel     = usvg::Matern52{sigma, linescales};
-  auto prng       = usvg::Random123();
-
+  auto key        = GENERATE(range(0u, 8u));
+  auto prng       = usvg::Random123(key);
   size_t n_points = 128;
-  size_t n_dims   = linescales.size();
+  size_t n_dims   = 3;
+
+  auto prior_mean = blaze::zero<double>(n_dims+1);
+  auto prior_var  = blaze::DynamicVector<double>(n_dims+1, 2.0);
+  auto prior_chol = usvg::Cholesky<usvg::DiagonalChol>();
+  REQUIRE_NOTHROW( prior_chol = usvg::cholesky_nothrow(prior_var).value() );
+  auto prior_dist = usvg::MvNormal<usvg::DiagonalChol>(prior_mean, prior_chol);
+
+  auto truth  = prior_dist.sample(prng);
+  auto kernel = usvg::Matern52{
+    exp(truth[0]), blaze::exp(blaze::subvector(truth, 1, n_dims))};
 
   auto data   = generate_mvsamples(prng, n_dims, n_points);
   auto K      = usvg::compute_gram_matrix(kernel, data);
@@ -71,52 +80,19 @@ TEST_CASE("Identifiability check of GP hyperparameters using ESS", "[gp & ess]")
       return std::numeric_limits<double>::min();
   };
 
-  auto x_init = blaze::DynamicVector<double>(1 + n_dims, 0.0);
-  auto p_init = mll(x_init);
+  size_t n_samples = 512;
+  size_t n_burnin  = 256;
+  auto x0          = prior_dist.sample(prng); 
+  auto samples     = elliptical_slice(prng, n_samples, n_burnin, x0, mll, prior_dist);
 
-  auto prior_mean = blaze::zero<double>(x_init.size());
-  auto prior_var  = blaze::DynamicVector<double>(x_init.size(), 2.0);
-  auto prior_chol = usvg::Cholesky<usvg::DiagonalChol>();
-  REQUIRE_NOTHROW( prior_chol = usvg::cholesky_nothrow(prior_var).value() );
-  auto prior_dist = usvg::MvNormal<usvg::DiagonalChol>(prior_mean, prior_chol);
+  for (size_t i = 0; i < n_dims+1; ++i)
+  { /* Posterior contraction and posterior z-score */
+    auto mu = blaze::mean(blaze::row(samples, i));
+    auto s  = blaze::stddev(blaze::row(samples, i));
+    auto z  = (mu - truth[i]) / s;
+    auto c = 1 - ((s*s)/prior_var[i]);
 
-  size_t n_samples = 1024;
-  size_t n_burnin  = 128;
-  auto samples     = blaze::DynamicMatrix<double>(1 + n_dims, n_samples);
-
-  auto x = x_init;
-  auto p = p_init;
-  for (size_t i = 0; i < n_burnin; ++i)
-  { /* burnin */
-    auto [x_prop, p_prop, n_props] = usvg::ess_transition(
-      prng, mll, x_init, p_init, prior_dist);
-    x = x_prop;
-    p = p_prop;
+    REQUIRE(abs(z) < 3);
+    REQUIRE(c      > 0.5);
   }
-
-  size_t n_total_props = 0;
-  for (size_t i = 0; i < n_samples; ++i)
-  {
-    auto [x_prop, p_prop, n_props] = usvg::ess_transition(
-      prng, mll, x, p, prior_dist);
-    x = x_prop;
-    p = p_prop;
-    n_total_props += n_props;
-    blaze::column(samples, i) = x;
-  }
-
-  auto sigma_est      = blaze::mean(exp(blaze::row(samples, 0)));
-  REQUIRE(sigma_est == Approx(sigma).epsilon(0.1));
-
-  size_t idx = 0;
-  auto linescale_est = blaze::mean(exp(blaze::row(samples, idx+1)));
-  REQUIRE(linescale_est == Approx(linescales[idx]).epsilon(0.2));
-
-  ++idx;
-  linescale_est = blaze::mean(exp(blaze::row(samples, idx+1)));
-  REQUIRE(linescale_est == Approx(linescales[idx]).epsilon(0.2));
-
-  ++idx;
-  linescale_est = blaze::mean(exp(blaze::row(samples, idx+1)));
-  REQUIRE(linescale_est == Approx(linescales[idx]).epsilon(0.2));
 }

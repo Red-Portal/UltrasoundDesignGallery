@@ -28,14 +28,6 @@
 
 namespace usvg
 {
-  struct Hyperparams
-  {
-    double logstdlike;
-    double logstdkernel;
-    double logstdnoise;
-    blaze::DynamicVector<double> ardscales;
-  };
-
   template <typename KernelFunc>
   struct LatentGaussianProcess
   {

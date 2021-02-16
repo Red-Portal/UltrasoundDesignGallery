@@ -29,10 +29,18 @@ target_link_libraries(catch_main PUBLIC Catch2::Catch2)
 target_link_libraries(catch_main PRIVATE project_options)
 
 add_executable(usgallery_tests
-    gp.cpp
-    inference.cpp
-    gp_inference.cpp
-    misc.cpp)
+    statistical_test.cpp
+    inverse.cpp
+    invquad.cpp
+    logdet.cpp
+    mvnormal.cpp
+    kernel.cpp
+    dataset.cpp
+    imh.cpp
+    ess.cpp
+    gp_ess.cpp
+    laplace_bernoulli.cpp
+    )
 target_link_libraries(usgallery_tests
     INTERFACE
     blaze::blaze

@@ -17,6 +17,7 @@
  */
 
 #include <catch2/catch.hpp>
+#define BLAZE_USE_DEBUG_MODE 1
 
 #include <limits>
 
@@ -25,63 +26,6 @@
 #include "../src/gp/gp_prior.hpp"
 
 double const catch_eps = 1e-8;
-
-TEST_CASE("Matern 5/2 kernel value", "[kernel]")
-{
-  /* 
-   * Compared against Julia KernelFunctions.jl result
-
-   using KernelFunctions
-   ℓ = [0.3468645418042131, 0.4089279965964634]; σ² = 0.6
-   k = KernelFunctions.Matern52Kernel()
-   t = KernelFunctions.ARDTransform(1 ./ℓ)
-   k = σ²*KernelFunctions.transform(k, t)
-   x = [1.124618098544101, -1.8477787735615157]; y = [1.0597907259031794, 0.20131396456561368]
-   k(x, y)
-
-   */
-  auto linescales = blaze::DynamicVector<double>({0.3468645418042131, 0.4089279965964634});
-  auto sigma      = sqrt(0.6);
-  auto kernel     = usvg::Matern52{sigma, linescales};
-
-  auto x = blaze::DynamicVector<double>({1.124618098544101, -1.8477787735615157});
-  auto y = blaze::DynamicVector<double>({1.0597907259031794, 0.20131396456561368});
-
-  REQUIRE(kernel(x, y) == Approx(0.0004385141317002246));
-}
-
-TEST_CASE("Gram matrix computation", "[kernel]")
-{
-  /* 
-   * Compared against Julia KernelFunctions.jl result
-
-   using KernelFunctions
-   ℓ = [0.3468645418042131, 0.4089279965964634]; σ² = 0.6
-   k = KernelFunctions.Matern52Kernel()
-   t = KernelFunctions.ARDTransform(1 ./ℓ)
-   k = σ²*KernelFunctions.transform(k, t)
-   x = [1.124618098544101, -1.8477787735615157]; y = [1.0597907259031794, 0.20131396456561368]
-
-   data = [1.0 2.0; 3.0 4.0; 5.0 6.0]
-   kernelmatrix(k, data, obsdim=1)
-   */
-
-  auto linescales = blaze::DynamicVector<double>(
-    {0.3468645418042131, 0.4089279965964634});
-  auto sigma      = sqrt(0.6);
-  auto kernel     = usvg::Matern52{sigma, linescales};
-  auto datamatrix = blaze::DynamicMatrix<double>(
-    {{1.0, 3.0, 5.0},
-     {2.0, 4.0, 6.0}});
-  auto truth = blaze::DynamicMatrix<double>(
-    {{0.6,         3.08681e-6, 5.15601e-13},
-     {3.08681e-6,  0.6,        3.08681e-6},
-     {5.15601e-13, 3.08681e-6, 0.6}});
-
-  auto gram = usvg::compute_gram_matrix(kernel, datamatrix);
-  REQUIRE( blaze::norm(gram - truth) < catch_eps );
-}
-
 
 TEST_CASE("Data matrix construction", "[dataset]")
 {

@@ -16,20 +16,25 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __US_GALLERY_PRNG_HPP__
-#define __US_GALLERY_PRNG_HPP__
+#include <catch2/catch.hpp>
+#define BLAZE_USE_DEBUG_MODE 1
 
-#include <istream>
+#include "../src/inference/imh.hpp"
+#include "../src/misc/prng.hpp"
+#include "statistical_test.hpp"
 
-#include <boost/random/philox.hpp>
-#include <boost/random/counter_based_engine.hpp>
+#include <cmath>
 
-namespace usvg
+TEST_CASE("Sampling from unit Gaussian", "[imh]")
 {
-  using Philox        = boost::random::philox<4, uint64_t>;
-  using CounterEngine = boost::random::counter_based_engine<uint64_t, Philox, 32>; 
+  auto key  = GENERATE(range(0u, 8u));
+  auto prng = usvg::Random123(key);
+  auto p    = [](double x){
+    return exp(-x*x/2);
+  };
+  size_t n_samples = 512;
+  auto samples = usvg::imh(prng, p, -3, 3, n_samples, 128, 1);
 
-  using Random123 = CounterEngine;
+  REQUIRE( !kolmogorov_smirnoff_test(0.001, normal_cdf,
+				     samples.begin(), samples.end()) );
 }
-
-#endif

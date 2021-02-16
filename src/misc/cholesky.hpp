@@ -21,6 +21,7 @@
 
 #include <blaze/math/LowerMatrix.h>
 #include <blaze/math/DynamicMatrix.h>
+#include <blaze/math/SymmetricMatrix.h>
 
 namespace usvg
 {
@@ -34,16 +35,39 @@ namespace usvg
   template<>
   struct Cholesky<DenseChol>
   {
-    blaze::DynamicMatrix<double> A;
+    blaze::DynamicMatrix<double> _A;
+    blaze::SymmetricMatrix<blaze::DynamicMatrix<double>> A;
     blaze::LowerMatrix<blaze::DynamicMatrix<double>> L;
+
+    inline
+    Cholesky();
+
+    template <typename DenseMat, typename CholMat>
+    inline
+    Cholesky(DenseMat&& A_, CholMat&& L_);
   };
 
-  template<>
+  template <>
   struct Cholesky<DiagonalChol>
   {
     blaze::DynamicVector<double> A;
     blaze::DynamicVector<double> L;
   };
+
+  inline
+  Cholesky<DenseChol>::
+  Cholesky()
+    : _A(), A(), L()
+  { }
+
+  template <typename DenseMat, typename CholMat>
+  inline
+  Cholesky<DenseChol>::
+  Cholesky(DenseMat&& A_, CholMat&& L_)
+    : _A(std::forward<DenseMat>(A_)),
+      A(blaze::declsym(_A)),
+      L(std::forward<CholMat>(L_))
+  { }
 
   inline bool
   potrf_nothrow(blaze::DynamicMatrix<double>& A, char uplo)
@@ -114,7 +138,7 @@ namespace usvg
     {
       auto L = blaze::LowerMatrix<decltype(L_buf)>(
 	blaze::decllow(L_buf));
-      return Cholesky<DenseChol>{A, std::move(L)};
+      return Cholesky<DenseChol>(A, std::move(L));
     }
     else
     {

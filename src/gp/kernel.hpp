@@ -33,8 +33,8 @@ namespace usvg
     double sigma;
     blaze::DynamicVector<double> ardscales;
 
-  template<typename VecLHSType,
-	   typename VecRHSType>
+    template<typename VecLHSType,
+	     typename VecRHSType>
     inline double operator()(VecLHSType const& x,
 			     VecRHSType const& y) const noexcept;
   };

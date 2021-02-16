@@ -28,10 +28,43 @@ namespace usvg
   {
     /* PLU for column major (refer to the blaze docs.) */
     blaze::DynamicMatrix<double> A;
+    blaze::DynamicMatrix<double> _L;
+    blaze::DynamicMatrix<double> _U;
     blaze::LowerMatrix<blaze::DynamicMatrix<double>> L;
     blaze::UpperMatrix<blaze::DynamicMatrix<double>> U;
     blaze::DynamicMatrix<double> Pt;
+
+    inline
+    LU();
+
+    template <typename DenseMat,
+	      typename UMat,
+	      typename LMat,
+	      typename PMat>
+    inline
+    LU(DenseMat&& A_, LMat&& L_, UMat&& U_, PMat&& P_);
   };
+
+  inline
+  LU::
+  LU()
+    : A(), _L(), _U(), L(), U(), Pt()
+  { }
+
+    template <typename DenseMat,
+	      typename UMat,
+	      typename LMat,
+	      typename PMat>
+  inline
+  LU::
+  LU(DenseMat&& A_, LMat&& L_, UMat&& U_, PMat&& Pt_)
+    : A(std::forward<DenseMat>(A_)),
+      _L(std::forward<DenseMat>(L_)),
+      _U(std::forward<DenseMat>(U_)),
+      L(blaze::decllow(_L)),
+      U(blaze::declupp(_U)),
+      Pt(Pt_)
+  { }
 
   inline LU
   lu(blaze::DynamicMatrix<double> const& A)
@@ -43,10 +76,7 @@ namespace usvg
 
     lu(A, L_buf, U_buf, P);
 
-    return LU{A,
-      blaze::LowerMatrix<blaze::DynamicMatrix<double>>(blaze::decllow(L_buf)),
-      blaze::UpperMatrix<blaze::DynamicMatrix<double>>(blaze::declupp(U_buf)),
-      blaze::trans(P)};
+    return LU(A, L_buf, U_buf, blaze::trans(P));
   }
 }
 

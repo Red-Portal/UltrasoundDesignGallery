@@ -17,30 +17,20 @@
  */
 
 #include <catch2/catch.hpp>
+#define BLAZE_USE_DEBUG_MODE 1
 
-#include "elliptical_slice.hpp"
 #include "../src/gp/gp_prior.hpp"
 #include "../src/gp/kernel.hpp"
 #include "../src/inference/ess.hpp"
+#include "../src/misc/cholesky.hpp"
+#include "../src/misc/linearalgebra.hpp"
 #include "../src/misc/mvnormal.hpp"
 #include "../src/misc/prng.hpp"
+#include "elliptical_slice.hpp"
+#include "statistical_test.hpp"
+#include "utils.hpp"
 
-#include <blaze/math/Subvector.h>
-
-#include <limits>
-#include <ranges>
-
-template <typename Rng>
-inline blaze::DynamicMatrix<double>
-generate_mvsamples(Rng& rng, size_t n_dims, size_t n_points)
-{
-  auto data = blaze::DynamicMatrix<double>(n_dims, n_points);
-  for (size_t i = 0; i < n_points; ++i)
-  {
-    blaze::column(data, i) = usvg::rmvnormal(rng, n_dims);
-  }
-  return data;
-}
+#include <cmath>
 
 TEST_CASE("Identifiability check of GP hyperparameters using ESS", "[gp & ess]")
 {
@@ -59,23 +49,18 @@ TEST_CASE("Identifiability check of GP hyperparameters using ESS", "[gp & ess]")
   auto kernel = usvg::Matern52{
     exp(truth[0]), blaze::exp(blaze::subvector(truth, 1, n_dims))};
 
-  auto data   = generate_mvsamples(prng, n_dims, n_points);
-  auto K      = usvg::compute_gram_matrix(kernel, data);
-  auto K_chol = usvg::Cholesky<usvg::DenseChol>();
-  REQUIRE_NOTHROW( K_chol = usvg::cholesky_nothrow(K).value() );
+  auto data_x = generate_mvsamples(prng, n_dims, n_points);
+  auto data_y = sample_gp_prior(prng, kernel, data_x);
   
-  auto Z = usvg::rmvnormal(prng, n_points);
-  auto y = K_chol.L * Z;
-  
-  auto mll = [&data, n_dims, n_points, &y](
-    blaze::DynamicVector<double> const& x)->double{
-    auto _sigma      = exp(x[0]);
-    auto _linescales = exp(blaze::subvector(x, 1u, n_dims));
+  auto mll = [&data_x, &data_y, n_dims, n_points](
+    blaze::DynamicVector<double> const& theta)->double{
+    auto _sigma      = exp(theta[0]);
+    auto _linescales = exp(blaze::subvector(theta, 1u, n_dims));
     auto _kernel     = usvg::Matern52{_sigma, _linescales};
-    auto _K          = usvg::compute_gram_matrix(_kernel, data); 
+    auto _K          = usvg::compute_gram_matrix(_kernel, data_x); 
     auto zero_mean   = blaze::zero<double>(n_points);
     if(auto _K_chol = usvg::cholesky_nothrow(_K))
-      return usvg::dmvnormal(y, zero_mean, _K_chol.value(), true);
+      return usvg::dmvnormal(data_y, zero_mean, _K_chol.value(), true);
     else
       return std::numeric_limits<double>::min();
   };

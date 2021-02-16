@@ -53,8 +53,9 @@ include(cmake/StaticAnalyzers.cmake)
 # Dependencies
 find_package(SFML 2.5 COMPONENTS system window graphics network audio REQUIRED)
 find_package(ImGui-SFML REQUIRED)
-find_package(Blaze REQUIRED)
-find_package(Threads REQUIRED)
+find_package(Blaze      REQUIRED)
+find_package(Threads    REQUIRED)
+find_package(spdlog     REQUIRED)
 
 set(BLA_STATIC ON)
 find_package(BLAS REQUIRED)
@@ -84,6 +85,7 @@ target_link_libraries(usgallery
     INTERFACE
     blaze::blaze
     Threads::threads
+    spdlog::spdlog
 
     PUBLIC
     BLAS::BLAS
@@ -93,6 +95,3 @@ target_link_libraries(usgallery
     project_options
     project_warnings
     ImGui-SFML::ImGui-SFML)
-#CONAN_PKG::docopt.cpp
-#CONAN_PKG::fmt
-#CONAN_PKG::spdlog)

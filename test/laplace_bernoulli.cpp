@@ -72,9 +72,9 @@ binary_accuracy(blaze::DynamicVector<double> const& p,
   return static_cast<double>(correct) / static_cast<double>(y.size()); 
 }
 
-TEST_CASE("Laplace approximation of latent GP", "[gp & laplace]")
+TEST_CASE("Laplace approximation of latent GP", "[laplace]")
 {
-  auto key        = GENERATE(range(0u, 8u));
+  auto key        = 0u;//GENERATE(range(0u, 8u));
   auto prng       = usvg::Random123(key);
   size_t n_dims   = 8;
   size_t n_points = 128;
@@ -108,6 +108,10 @@ TEST_CASE("Laplace approximation of latent GP", "[gp & laplace]")
       }
       return {std::move(grad), std::move(neg_hess)};
     };
+
+  // auto console  = spdlog::stdout_color_mt("console");
+  // spdlog::set_level(spdlog::level::info);
+  // auto logger  = spdlog::get("console");
 
   auto f0           = blaze::zero<double>(p.size());
   auto [f, WK, Blu] = usvg::laplace_approximation(K_chol, f0, grad_hess);

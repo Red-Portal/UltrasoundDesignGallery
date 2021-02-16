@@ -19,14 +19,16 @@
 #ifndef __US_GALLERY_LAPLACE_HPP__
 #define __US_GALLERY_LAPLACE_HPP__
 
-#include <blaze/math/DynamicMatrix.h>
-#include <blaze/math/DynamicVector.h>
-
 #include "../misc/linearalgebra.hpp"
 #include "../misc/lu.hpp"
 #include "../misc/cholesky.hpp"
 
-#include <iostream>
+#include <blaze/math/DynamicMatrix.h>
+#include <blaze/math/DynamicVector.h>
+#include <spdlog/spdlog.h>
+
+#include <optional>
+#include <memory>
 
 namespace usvg
 {
@@ -39,8 +41,8 @@ namespace usvg
     usvg::Cholesky<CholType> const& K_chol,
     blaze::DynamicVector<double> const& f0,
     LoglikeGradHess loglike_grad_neghess,
-    size_t max_iter=20)
-
+    size_t max_iter = 20,
+    spdlog::logger* log = nullptr)
   /*
    * Variant of the Newton's method based mode-locating algorithm (GPML, Algorithm 3.1)
    * Utilizes the Woodburry identity for avoiding doing two matrix decompositions 
@@ -59,6 +61,11 @@ namespace usvg
     size_t n_dims = f0.size(); 
     auto f        = blaze::DynamicVector<double>(f0);
 
+    if(log)
+    {
+      log->info("{}   {}", "iter", "||f - f*||");
+    }
+
     auto Blu = LU();
     auto WK  = blaze::DynamicMatrix<double>();
     auto I   = blaze::IdentityMatrix<double>(n_dims);
@@ -75,13 +82,15 @@ namespace usvg
       auto a	   = b - BinvWKb;
       auto f_next  = K_chol.A*a;
 
-      auto delta_f = f - f_next;
+      auto delta_f = blaze::norm(f - f_next);
       f            = f_next;
 
-      std::cout << "iter = " << i
-		<< ", norm = " << blaze::norm(delta_f)
-		<< std::endl;
-      if(blaze::norm(delta_f) < 1e-3)
+      if(log)
+      {
+	log->info("{:>4}   {:g}", i, delta_f);
+      }
+
+      if(delta_f < 1e-3)
       {
 	break;
       }

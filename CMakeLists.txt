@@ -60,7 +60,12 @@ find_package(SFML 2.5 COMPONENTS system window graphics network audio REQUIRED)
 find_package(ImGui-SFML REQUIRED)
 find_package(Blaze      REQUIRED)
 find_package(Threads    REQUIRED)
+
+add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 find_package(spdlog     REQUIRED)
+
+add_compile_definitions(FMT_HEADER_ONLY)
+find_package(FMT        REQUIRED)
 
 set(BLA_STATIC ON)
 find_package(BLAS REQUIRED)
@@ -90,13 +95,12 @@ target_link_libraries(usgallery
     INTERFACE
     blaze::blaze
     Threads::threads
-    spdlog::spdlog
 
     PUBLIC
-    BLAS::BLAS
-    Random123
-    gcem
-    stats
     project_options
     project_warnings
+    fmt::fmt-header-only
+    spdlog::spdlog
+    BLAS::BLAS
+    Random123
     ImGui-SFML::ImGui-SFML)

@@ -58,9 +58,6 @@
 //   // fmt::print("Hello, from {}\n", "{fmt}");
 // }
 
-#define STATS_ENABLE_BLAZE_WRAPPERS
-#include <stats.hpp>
-
 #include <imgui.h>
 #include <imgui-SFML.h>
 
@@ -75,8 +72,6 @@ int main()
   ImGui::SFML::Init(window);
 
   sf::Color bgColor;
-
-  blaze::DynamicMatrix<double> gamma_rvs = stats::rgamma<blaze::DynamicMatrix<double>>(100,50,3.0,2.0);
 
   float color[3] = { 0.f, 0.f, 0.f };
 

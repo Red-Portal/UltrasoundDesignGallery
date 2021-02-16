@@ -22,10 +22,10 @@
 #include "../misc/linearalgebra.hpp"
 #include "../misc/lu.hpp"
 #include "../misc/cholesky.hpp"
+#include "../misc/debug.hpp"
 
 #include <blaze/math/DynamicMatrix.h>
 #include <blaze/math/DynamicVector.h>
-#include <spdlog/spdlog.h>
 
 #include <optional>
 #include <memory>
@@ -63,13 +63,15 @@ namespace usvg
 
     if(log)
     {
+      log->info("Starting laplace approximation: {}", usvg::file_name(__FILE__));
       log->info("{}   {}", "iter", "||f - f*||");
     }
 
-    auto Blu = LU();
-    auto WK  = blaze::DynamicMatrix<double>();
-    auto I   = blaze::IdentityMatrix<double>(n_dims);
-    for (size_t i = 0; i < max_iter; ++i)
+    size_t it = 0;
+    auto Blu  = LU();
+    auto WK   = blaze::DynamicMatrix<double>();
+    auto I    = blaze::IdentityMatrix<double>(n_dims);
+    for (it = 0; it < max_iter; ++it)
     {
       auto [gradT, W] = loglike_grad_neghess(f);
 
@@ -87,7 +89,7 @@ namespace usvg
 
       if(log)
       {
-	log->info("{:>4}   {:g}", i, delta_f);
+	log->info("{:>4}   {:g}", it, delta_f);
       }
 
       if(delta_f < 1e-3)
@@ -95,6 +97,16 @@ namespace usvg
 	break;
       }
     }
+
+    if(log && it == max_iter)
+    {
+      log->warn("Laplace approximation didn't converge within {} steps.", max_iter);
+    }
+    else if(log)
+    {
+      log->info("Laplace approximation converged.");
+    }
+
     return {std::move(f), std::move(WK), std::move(Blu)};
   }
 }

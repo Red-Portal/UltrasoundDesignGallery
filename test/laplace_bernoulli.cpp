@@ -109,10 +109,6 @@ TEST_CASE("Laplace approximation of latent GP", "[laplace]")
       return {std::move(grad), std::move(neg_hess)};
     };
 
-  // auto console  = spdlog::stdout_color_mt("console");
-  // spdlog::set_level(spdlog::level::info);
-  // auto logger  = spdlog::get("console");
-
   auto f0           = blaze::zero<double>(p.size());
   auto [f, WK, Blu] = usvg::laplace_approximation(K_chol, f0, grad_hess);
   auto acc          = binary_accuracy(sigmoid(f), data_y);

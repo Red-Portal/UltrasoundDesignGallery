@@ -15,15 +15,6 @@ find_package(Catch2 REQUIRED)
 include(CTest)
 include(Catch)
 
-#add_library(gcem INTERFACE)
-#target_include_directories(gcem SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/gcem/include")
-
-#add_library(stats INTERFACE)
-#target_include_directories(stats SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/stats/include")
-
-#add_library(random123 INTERFACE)
-#target_include_directories(random123 SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/random123/include")
-
 add_library(catch_main STATIC catch_main.cpp)
 target_link_libraries(catch_main PUBLIC Catch2::Catch2)
 target_link_libraries(catch_main PRIVATE project_options)

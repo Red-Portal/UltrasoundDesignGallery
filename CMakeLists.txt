@@ -40,8 +40,10 @@ include(cmake/CompilerWarnings.cmake)
 set_project_warnings(project_warnings)
 
 # sanitizer options if supported by compiler
-include(cmake/Sanitizers.cmake)
-enable_sanitizers(project_options)
+if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
+    include(cmake/Sanitizers.cmake)
+    enable_sanitizers(project_options)
+endif()
 
 # enable doxygen
 include(cmake/Doxygen.cmake)
@@ -49,6 +51,9 @@ enable_doxygen()
 
 # allow for static analysis options
 include(cmake/StaticAnalyzers.cmake)
+
+# Release mode options
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
 
 # Dependencies
 find_package(SFML 2.5 COMPONENTS system window graphics network audio REQUIRED)

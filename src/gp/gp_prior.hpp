@@ -65,7 +65,8 @@ namespace usvg
     auto  mean  = blaze::dot(k_star, alpha);
 
     auto WKkstar     = this->WK*k_star;
-    auto WpKinvkstar = this->K.A * (WKkstar - usvg::solve(this->IpWK, WKkstar));
+    auto IpWKinvb    = usvg::solve(this->IpWK, WKkstar);
+    auto WpKinvkstar = this->K.A * (WKkstar - IpWKinvb);
     auto kKpWk       = blaze::dot(WpKinvkstar, k_star);
     auto var         = k_self - kKpWk;
     return {mean, var};

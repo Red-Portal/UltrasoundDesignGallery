@@ -1,7 +1,7 @@
 function(enable_sanitizers project_name)
 
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
-    option(ENABLE_COVERAGE "Enable coverage reporting for gcc/clang" FALSE)
+    option(ENABLE_COVERAGE "Enable coverage reporting for gcc/clang" TRUE)
 
     if(ENABLE_COVERAGE)
       target_compile_options(${project_name} INTERFACE --coverage -O0 -g)
@@ -10,17 +10,17 @@ function(enable_sanitizers project_name)
 
     set(SANITIZERS "")
 
-    option(ENABLE_SANITIZER_ADDRESS "Enable address sanitizer" FALSE)
+    option(ENABLE_SANITIZER_ADDRESS "Enable address sanitizer" TRUE)
     if(ENABLE_SANITIZER_ADDRESS)
       list(APPEND SANITIZERS "address")
     endif()
 
-    option(ENABLE_SANITIZER_LEAK "Enable leak sanitizer" FALSE)
+    option(ENABLE_SANITIZER_LEAK "Enable leak sanitizer" TRUE)
     if(ENABLE_SANITIZER_LEAK)
       list(APPEND SANITIZERS "leak")
     endif()
 
-    option(ENABLE_SANITIZER_UNDEFINED_BEHAVIOR "Enable undefined behavior sanitizer" FALSE)
+    option(ENABLE_SANITIZER_UNDEFINED_BEHAVIOR "Enable undefined behavior sanitizer" TRUE)
     if(ENABLE_SANITIZER_UNDEFINED_BEHAVIOR)
       list(APPEND SANITIZERS "undefined")
     endif()
@@ -34,7 +34,7 @@ function(enable_sanitizers project_name)
       endif()
     endif()
 
-    option(ENABLE_SANITIZER_MEMORY "Enable memory sanitizer" FALSE)
+    option(ENABLE_SANITIZER_MEMORY "Enable memory sanitizer" TRUE)
     if(ENABLE_SANITIZER_MEMORY AND CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
       if("address" IN_LIST SANITIZERS
          OR "thread" IN_LIST SANITIZERS

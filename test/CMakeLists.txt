@@ -30,6 +30,7 @@ add_executable(usgallery_tests
     imh.cpp
     ess.cpp
     gp_ess.cpp
+    quadrature.cpp
     laplace_bernoulli.cpp
     )
 target_link_libraries(usgallery_tests

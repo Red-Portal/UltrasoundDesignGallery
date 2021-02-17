@@ -24,9 +24,7 @@
 #include "../src/misc/prng.hpp"
 #include "statistical_test.hpp"
 
-#include <limits>
 #include <cmath>
-#include <random>
 
 double const catch_eps = 1e-8;
 
@@ -75,6 +73,20 @@ TEST_CASE("Diagonal covariance multivariate normal density", "[mvnormal]")
 
   double truth_logp = -4.568724338908423;
   REQUIRE( usvg::dmvnormal(x, mean, cov_chol, true) == Approx(truth_logp) );
+}
+
+TEST_CASE("Unift multivariate normal density", "[mvnormal]")
+{
+  auto x  = blaze::DynamicVector<double>(
+    {0.9040983839157295,
+     -0.29874050736604413,
+     -1.2570687585683156});
+
+  double truth_p    = 0.01831112609097114;
+  REQUIRE( usvg::dmvnormal(x) == Approx(truth_p) );
+
+  double truth_logp = -4.000246420768439;
+  REQUIRE( usvg::dmvnormal(x, true) == Approx(truth_logp) );
 }
 
 TEST_CASE("Multivariate unit normal sampling", "[mvnormal]")

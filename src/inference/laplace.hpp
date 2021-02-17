@@ -55,9 +55,6 @@ namespace usvg
    *                           = K ( I - B^{-1} W K ) 
    */
   {
-      auto Kinv    = K_chol._A;
-      blaze::invert(Kinv);
-
     size_t n_dims = f0.size(); 
     auto f        = blaze::DynamicVector<double>(f0);
 

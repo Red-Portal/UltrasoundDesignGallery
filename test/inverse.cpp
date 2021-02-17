@@ -27,7 +27,7 @@
 
 double const catch_eps = 1e-8;
 
-TEST_CASE("Dense cholesky inversion", "[linear algebra]")
+TEST_CASE("Dense cholesky system solve", "[linear algebra]")
 {
   auto A = blaze::DynamicMatrix<double>(
     {{3, 1, 1},
@@ -48,7 +48,7 @@ TEST_CASE("Dense cholesky inversion", "[linear algebra]")
   REQUIRE( blaze::norm(x_chol - x) < catch_eps );
 }
 
-TEST_CASE("Dense LU inversion", "[linear algebra]")
+TEST_CASE("Dense LU system solve", "[linear algebra]")
 {
   auto A = blaze::DynamicMatrix<double>(
     {{3, 2, 1},
@@ -67,4 +67,19 @@ TEST_CASE("Dense LU inversion", "[linear algebra]")
   auto x_lu = usvg::solve(lu, b);
 
   REQUIRE( blaze::norm(x_lu - x) < catch_eps );
+}
+
+TEST_CASE("Cholesky LU inversion", "[linear algebra]")
+{
+  auto A = blaze::DynamicMatrix<double>(
+    {{3, 1, 1},
+     {1, 3, 1},
+     {1, 1, 3}});
+
+  auto chol = usvg::Cholesky<usvg::DenseChol>();
+  REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
+
+  auto Ainv = usvg::inverse(chol);
+
+  REQUIRE( blaze::norm(Ainv*A - blaze::IdentityMatrix<double>(3)) < catch_eps );
 }

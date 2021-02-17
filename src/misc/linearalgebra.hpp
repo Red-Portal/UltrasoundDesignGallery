@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2021  Ray Kim
  *
@@ -31,6 +30,27 @@
 
 namespace usvg
 {
+  template <typename CholType>
+  inline blaze::DynamicVector<double> 
+  solve(usvg::Cholesky<CholType> Achol,
+	blaze::DynamicVector<double> const& b)
+  {
+    auto Ux = blaze::evaluate(blaze::solve(Achol.L, b));
+    auto U  = blaze::declupp(blaze::trans(Achol.L));
+    auto x  = blaze::solve(U, Ux);
+    return x;
+  }
+
+  inline blaze::DynamicVector<double> 
+  solve(usvg::LU const& Alu,
+	blaze::DynamicVector<double> const& b)
+  {
+    auto Pb = blaze::evaluate(Alu.Pt * b);
+    auto Ux = blaze::evaluate(blaze::solve(Alu.L, Pb));
+    auto x  = blaze::solve(Alu.U, Ux);
+    return x;
+  }
+
   inline double
   invquad(usvg::Cholesky<usvg::DenseChol> const& chol,
 	  blaze::DynamicVector<double> const& x)
@@ -44,6 +64,36 @@ namespace usvg
 	  blaze::DynamicVector<double> const& x)
   {
     return blaze::dot(x / chol.A, x);
+  }
+
+  inline blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>
+  inverse(usvg::Cholesky<usvg::DenseChol> const& chol)
+  {
+    auto Linv = chol.L;
+    blaze::invert(Linv);
+    return blaze::trans(Linv) * Linv;
+  }
+
+  // inline blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>
+  // inverse(usvg::Cholesky<usvg::DiagonalChol> const& chol)
+  // {
+  //   return 1.0 / chol.A;
+  // }
+
+  inline double
+  invquad(usvg::LU const& IpWK,
+	  blaze::SymmetricMatrix<blaze::DynamicMatrix<double>> const& K,
+	  blaze::DynamicMatrix<double> const& WK,
+	  blaze::DynamicVector<double> const& x)
+  /*
+   * Note: ( K^{-1} + W )^{-1} = K ( I - ( I + W K )^{-1} W K ) 
+   *                           = K ( I - B^{-1} W K ) 
+   */
+  {
+    auto WKx       = WK * x;
+    auto BinvWKx   = usvg::solve(IpWK, WKx);
+    auto KinvWinvx = K * (x - BinvWKx);
+    return blaze::dot(x, KinvWinvx);
   }
 
   inline double
@@ -106,27 +156,6 @@ namespace usvg
     auto L_diag = usvg::logtrace(lu.L);
     auto U_diag = usvg::logtrace(lu.U);
     return L_diag + U_diag;
-  }
-
-  template <typename CholType>
-  inline blaze::DynamicVector<double> 
-  solve(usvg::Cholesky<CholType> Achol,
-	blaze::DynamicVector<double> const& b)
-  {
-    auto Ux = blaze::evaluate(blaze::solve(Achol.L, b));
-    auto U  = blaze::declupp(blaze::trans(Achol.L));
-    auto x  = blaze::solve(U, Ux);
-    return x;
-  }
-
-  inline blaze::DynamicVector<double> 
-  solve(usvg::LU const& Alu,
-	blaze::DynamicVector<double> const& b)
-  {
-    auto Pb = blaze::evaluate(Alu.Pt * b);
-    auto Ux = blaze::evaluate(blaze::solve(Alu.L, Pb));
-    auto x  = blaze::solve(Alu.U, Ux);
-    return x;
   }
 }
 

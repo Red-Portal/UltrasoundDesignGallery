@@ -21,8 +21,9 @@
 
 #include "gp_prior.hpp"
 
-#include <blaze/math/DenseVector.h>
-#include <blaze/math/DenseMatrix.h>
+#include <blaze/math/DynamicVector.h>
+#include <blaze/math/DynamicMatrix.h>
+#include <blaze/math/Subvector.h>
 
 #include <cmath>
 
@@ -33,11 +34,51 @@ namespace usvg
     double sigma;
     blaze::DynamicVector<double> ardscales;
 
+    inline Matern52();
+
+    inline Matern52(blaze::DynamicVector<double> const& theta);
+
+    inline Matern52(double sigma,
+		    blaze::DynamicVector<double> const& linescales);
+
     template<typename VecLHSType,
 	     typename VecRHSType>
     inline double operator()(VecLHSType const& x,
 			     VecRHSType const& y) const noexcept;
+
+    inline blaze::DynamicVector<double> vector() const;
   };
+
+  inline
+  Matern52::
+  Matern52()
+    : sigma(), ardscales()
+  {}
+
+  inline
+  Matern52::
+  Matern52(blaze::DynamicVector<double> const& theta)
+    : sigma(theta[0]),
+      ardscales(blaze::subvector(theta, 1, theta.size()-1))
+  {}
+
+  inline
+  Matern52::
+  Matern52(double sigma_, blaze::DynamicVector<double> const& linescales_)
+    : sigma(sigma_),
+      ardscales(linescales_)
+  {}
+
+  inline blaze::DynamicVector<double>
+  Matern52::
+  vector() const
+  {
+    size_t n_dims = ardscales.size();
+    auto theta    = blaze::DynamicVector<double>(1 + n_dims);
+    theta[0]      = sigma;
+    blaze::subvector(theta, 1, n_dims) = ardscales;
+    return theta;
+  }
 
   template<typename Kernel>
   inline blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>

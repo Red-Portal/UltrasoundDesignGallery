@@ -60,7 +60,6 @@ namespace usvg
     auto theta     = usvg::runiform(rng, 0, tau);
     auto theta_min = theta - tau;
     auto theta_max = theta;
-
     size_t n_props = 1;
 
     while(true)

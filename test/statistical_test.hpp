@@ -47,7 +47,7 @@ kolmogorov_smirnoff_test(double alpha,
   auto values = std::vector<double>(begin, end);
   std::sort(values.begin(), values.end());
 
-  double D     = std::numeric_limits<double>::min();
+  double D     = std::numeric_limits<double>::lowest();
   double N     = static_cast<double>(std::distance(begin, end));
   size_t i     = 1;
   for (auto val : values)

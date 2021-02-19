@@ -62,7 +62,7 @@ TEST_CASE("Identifiability check of GP hyperparameters using ESS", "[gp & ess]")
     if(auto _K_chol = usvg::cholesky_nothrow(_K))
       return usvg::dmvnormal(data_y, zero_mean, _K_chol.value(), true);
     else
-      return std::numeric_limits<double>::min();
+      return std::numeric_limits<double>::lowest();
   };
 
   size_t n_samples = 512;

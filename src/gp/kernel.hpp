@@ -36,10 +36,11 @@ namespace usvg
 
     inline Matern52();
 
-    inline Matern52(blaze::DynamicVector<double> const& theta);
-
-    inline Matern52(double sigma,
-		    blaze::DynamicVector<double> const& linescales);
+    template <typename VecType>
+    inline Matern52(VecType const& theta);
+    
+    template <typename VecType>
+    inline Matern52(double sigma, VecType const& linescales);
 
     template<typename VecLHSType,
 	     typename VecRHSType>
@@ -55,16 +56,18 @@ namespace usvg
     : sigma(), ardscales()
   {}
 
+  template <typename VecType>
   inline
   Matern52::
-  Matern52(blaze::DynamicVector<double> const& theta)
+  Matern52(VecType const& theta)
     : sigma(theta[0]),
       ardscales(blaze::subvector(theta, 1, theta.size()-1))
   {}
 
+  template <typename VecType>
   inline
   Matern52::
-  Matern52(double sigma_, blaze::DynamicVector<double> const& linescales_)
+  Matern52(double sigma_, VecType const& linescales_)
     : sigma(sigma_),
       ardscales(linescales_)
   {}

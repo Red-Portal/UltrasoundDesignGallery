@@ -80,21 +80,21 @@ namespace usvg
   //   return 1.0 / chol.A;
   // }
 
-  inline double
-  invquad(usvg::LU const& IpWK,
-	  blaze::SymmetricMatrix<blaze::DynamicMatrix<double>> const& K,
-	  blaze::DynamicMatrix<double> const& WK,
-	  blaze::DynamicVector<double> const& x)
-  /*
-   * Note: ( K^{-1} + W )^{-1} = K ( I - ( I + W K )^{-1} W K ) 
-   *                           = K ( I - B^{-1} W K ) 
-   */
-  {
-    auto WKx       = WK * x;
-    auto BinvWKx   = usvg::solve(IpWK, WKx);
-    auto KinvWinvx = K * (x - BinvWKx);
-    return blaze::dot(x, KinvWinvx);
-  }
+  // inline double
+  // invquad(usvg::LU const& IpWK,
+  // 	  blaze::SymmetricMatrix<blaze::DynamicMatrix<double>> const& K,
+  // 	  blaze::DynamicMatrix<double> const& WK,
+  // 	  blaze::DynamicVector<double> const& x)
+  // /*
+  //  * Note: ( K^{-1} + W )^{-1} = K ( I - ( I + W K )^{-1} W K ) 
+  //  *                           = K ( I - B^{-1} W K ) 
+  //  */
+  // {
+  //   auto WKx       = WK * x;
+  //   auto BinvWKx   = usvg::solve(IpWK, WKx);
+  //   auto KinvWinvx = K * (x - BinvWKx);
+  //   return blaze::dot(x, KinvWinvx);
+  // }
 
   inline double
   logtrace(blaze::DynamicMatrix<double> const& A)

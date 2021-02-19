@@ -93,20 +93,18 @@ TEST_CASE("Latent Gaussian process prediction", "[dataset]")
      -0.29874050736604413,
      -1.2570687585683156});
 
-  auto WK     = W*K;
   auto K_chol = usvg::Cholesky<usvg::DenseChol>();
   REQUIRE_NOTHROW( K_chol = usvg::cholesky_nothrow(K).value() );
   auto alpha  = usvg::solve(K_chol, f);
-  auto IpWK   = usvg::lu(blaze::IdentityMatrix<double>(WK.rows()) + WK);
-  
+
   auto gp = usvg::LatentGaussianProcess<usvg::Matern52>{
-    K_chol, alpha, data, WK, IpWK, kernel };
+    K_chol, alpha, kernel};
 
   auto x = blaze::DynamicVector<double>(
     {1.624602457143822,
      -0.3130882688487052,
      -0.8858236880999151});
-  auto [mean, var] = gp.predict(x);
+  auto [mean, var] = gp.predict(data, x);
   
   auto k_star   = blaze::DynamicVector<double>(3);
   for (size_t i = 0; i < 3; ++i)
@@ -117,6 +115,6 @@ TEST_CASE("Latent Gaussian process prediction", "[dataset]")
   REQUIRE( mean == Approx(mean_truth) );
 
   blaze::invert(W);
-  auto var_truth = kernel(x, x) - blaze::dot(k_star, blaze::solve(K + W, k_star));
+  auto var_truth = kernel(x, x) - blaze::dot(k_star, blaze::solve(K, k_star));
   REQUIRE( var == Approx(var_truth).margin(1e-2) );
 }

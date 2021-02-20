@@ -26,50 +26,58 @@
 #include <blaze/math/DynamicVector.h>
 #include <blaze/math/DynamicMatrix.h>
 
+#include <numbers>
+
 namespace usvg
 {
   template <typename KernelFunc>
   struct LatentGaussianProcess
   {
-    usvg::Cholesky<usvg::DenseChol> K;
+    usvg::Cholesky<usvg::DenseChol> cov_chol;
     blaze::DynamicVector<double>    alpha;
-    blaze::DynamicMatrix<double>    data;
-    blaze::DynamicMatrix<double>    WK;
-    usvg::LU                        IpWK; /* LU of (I + WK) */
     KernelFunc                      kernel;
     
     inline std::tuple<double, double>
-    predict(blaze::DynamicVector<double> const& x) const;
+    predict(blaze::DynamicMatrix<double> const& data,
+	    blaze::DynamicVector<double> const& x) const;
   };
 
   template <typename KernelFunc>
   inline std::tuple<double, double>
   LatentGaussianProcess<KernelFunc>::
-  predict(blaze::DynamicVector<double> const& x) const
+  predict(blaze::DynamicMatrix<double> const& data,
+	  blaze::DynamicVector<double> const& x) const
   /* 
    * Predictive mean and variance.
    * mean = k(x) K^{-1} f
    * var  = k(x, x) - k(x)^T (K + W^{-1})^{-1} k(x)
-   *
-   * ( K^{-1} + W )^{-1} = K ( I - ( I + W K )^{-1} ) W K 
-   * = K ( WK - (I + W K) \ WK )
    */
   {
-    size_t n_data = K.A.rows();
+    size_t n_data = data.rows();
     auto k_star   = blaze::DynamicVector<double>(n_data);
     for (size_t i = 0; i < n_data; ++i)
     {
-      k_star[i] = this->kernel(blaze::column(this->data, i), x);
+      k_star[i] = this->kernel(blaze::column(data, i), x);
     }
-    auto k_self = this->kernel(x, x);
-    auto  mean  = blaze::dot(k_star, alpha);
-
-    auto WKkstar     = this->WK*k_star;
-    auto IpWKinvb    = usvg::solve(this->IpWK, WKkstar);
-    auto WpKinvkstar = this->K.A * (WKkstar - IpWKinvb);
-    auto kKpWk       = blaze::dot(WpKinvkstar, k_star);
-    auto var         = k_self - kKpWk;
+    auto k_self   = this->kernel(x, x);
+    auto mean     = blaze::dot(k_star, alpha);
+    double gp_var = usvg::invquad(this->cov_chol, k_star);
+    auto var      = k_self - gp_var;
     return {mean, var};
+  }
+
+  inline std::tuple<double, blaze::DynamicVector<double>>
+  gp_loglike(blaze::DynamicVector<double> const& f,
+		usvg::Cholesky<usvg::DenseChol> const& cov_chol)
+  {
+    size_t n_dims     = f.size();
+    double normalizer = log(2*std::numbers::pi);
+    double D          = static_cast<double>(n_dims);
+    auto alpha        = usvg::solve(cov_chol, f);
+    double like = (blaze::dot(alpha, f)
+		   + usvg::logdet(cov_chol)
+		   + D*normalizer)/-2;
+    return {like, std::move(alpha)};
   }
 }
 

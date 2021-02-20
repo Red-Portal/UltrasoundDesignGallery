@@ -29,6 +29,7 @@
 #include <cmath>
 #include <numbers>
 #include <random>
+#include <iostream>
 
 namespace usvg
 {
@@ -78,7 +79,7 @@ namespace usvg
 
     blaze::LowerMatrix<blaze::DynamicMatrix<double>> cov_L;
      
-    blaze::LowerMatrix<blaze::DynamicMatrix<double>> IpLBL_L;
+    blaze::LowerMatrix<blaze::DynamicMatrix<double>> IpUBL_L;
 
     inline double logpdf(blaze::DynamicVector<double> const& x) const;
   };
@@ -150,10 +151,9 @@ namespace usvg
   unwhiten(usvg::MvNormal<usvg::LaplaceNormal> const& dist,
 	   blaze::DynamicVector<double> const& z)
   {
-    auto Lz       =  dist.cov_L * z;
-    auto x        =  blaze::solve(
-      blaze::declupp(
-	blaze::trans(dist.IpLBL_L)), Lz) + dist.mean;
+    auto cov_U = blaze::trans(dist.cov_L);
+    auto Ux    = cov_U * z;
+    auto x     = blaze::solve(dist.IpUBL_L, Ux) + dist.mean;
     return x;
   }
 
@@ -212,9 +212,11 @@ namespace usvg
   logpdf(blaze::DynamicVector<double> const& x) const
   {
     auto x_delta = x - this->mean;
-    auto z       = blaze::trans(this->IpLBL_L)*blaze::solve(this->cov_L, x_delta);
+    auto IpUBL_U = blaze::trans(this->IpUBL_L);
+    auto z       = IpUBL_U * blaze::solve(this->cov_L, x_delta);
 
-    double logdetcov  = 2*(usvg::logtrace(this->cov_L) - usvg::logtrace(this->IpLBL_L));
+    double logdetcov  = 2*(usvg::logtrace(this->cov_L)
+			   - usvg::logtrace(this->IpUBL_L));
     size_t n_dims     = x.size();
     double normalizer = log(2*std::numbers::pi);
     double D          = static_cast<double>(n_dims);

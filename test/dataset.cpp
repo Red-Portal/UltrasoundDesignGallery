@@ -52,10 +52,10 @@ TEST_CASE("Data matrix construction", "[dataset]")
   size_t n_dims   = 2; 
   size_t n_pseudo = 2;
   size_t n_data   = 2;
-  auto dataset     = usvg::Dataset(n_dims, n_pseudo);
+  auto dataset     = usdg::Dataset(n_dims, n_pseudo);
   auto data_matrix = blaze::DynamicMatrix<double>();
-  REQUIRE_NOTHROW( dataset.push_back(usvg::Datapoint{alpha1, betas1, xi1, x1}) );
-  REQUIRE_NOTHROW( dataset.push_back(usvg::Datapoint{alpha2, betas2, xi2, x2}) );
+  REQUIRE_NOTHROW( dataset.push_back(usdg::Datapoint{alpha1, betas1, xi1, x1}) );
+  REQUIRE_NOTHROW( dataset.push_back(usdg::Datapoint{alpha2, betas2, xi2, x2}) );
   REQUIRE_NOTHROW( data_matrix = dataset.data_matrix() );
 
   REQUIRE( data_matrix.rows()    == n_dims );
@@ -80,9 +80,9 @@ TEST_CASE("Latent Gaussian process prediction", "[dataset]")
      {-1, 2, 1}});
   auto linescales = blaze::DynamicVector<double>({1.0, 1.0, 1.0});
   auto sigma      = sqrt(0.6);
-  auto kernel     = usvg::Matern52{sigma, linescales};
+  auto kernel     = usdg::Matern52{sigma, linescales};
 
-  auto K = usvg::compute_gram_matrix(kernel, data);
+  auto K = usdg::compute_gram_matrix(kernel, data);
   auto W = blaze::DynamicMatrix<double>(
     {{  1, 0.1, 0.1},
      {0.1,   2, 0.1},
@@ -93,11 +93,11 @@ TEST_CASE("Latent Gaussian process prediction", "[dataset]")
      -0.29874050736604413,
      -1.2570687585683156});
 
-  auto K_chol = usvg::Cholesky<usvg::DenseChol>();
-  REQUIRE_NOTHROW( K_chol = usvg::cholesky_nothrow(K).value() );
-  auto alpha  = usvg::solve(K_chol, f);
+  auto K_chol = usdg::Cholesky<usdg::DenseChol>();
+  REQUIRE_NOTHROW( K_chol = usdg::cholesky_nothrow(K).value() );
+  auto alpha  = usdg::solve(K_chol, f);
 
-  auto gp = usvg::LatentGaussianProcess<usvg::Matern52>{
+  auto gp = usdg::LatentGaussianProcess<usdg::Matern52>{
     K_chol, alpha, kernel};
 
   auto x = blaze::DynamicVector<double>(

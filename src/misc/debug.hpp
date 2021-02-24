@@ -26,7 +26,7 @@
 // spdlog::set_level(spdlog::level::info);
 // auto logger  = spdlog::get("console");
 
-namespace usvg
+namespace usdg
 {
   constexpr const char*
   file_name(const char* path) {

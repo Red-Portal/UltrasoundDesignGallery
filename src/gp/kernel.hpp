@@ -19,15 +19,13 @@
 #ifndef __US_GALLERY_KERNEL_HPP__
 #define __US_GALLERY_KERNEL_HPP__
 
-#include "gp_prior.hpp"
-
 #include <blaze/math/DynamicVector.h>
 #include <blaze/math/DynamicMatrix.h>
 #include <blaze/math/Subvector.h>
 
 #include <cmath>
 
-namespace usvg
+namespace usdg
 {
   struct Matern52
   {
@@ -107,7 +105,6 @@ namespace usvg
 
   template<typename Kernel>
   inline blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>
-  
   compute_gram_matrix(Kernel const& k,
 		      blaze::DynamicMatrix<double> const& datamatrix)
   {
@@ -125,7 +122,6 @@ namespace usvg
     }
     return gram;
   }
-
 }
 
 #endif

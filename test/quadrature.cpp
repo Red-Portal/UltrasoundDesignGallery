@@ -31,6 +31,6 @@ TEST_CASE("Integrating over Gaussian pdf", "[quadrature]")
   auto f = [=](double x){
     return sqrt(2)*sigma*x + mu;
   };
-  REQUIRE( usvg::gauss_hermite(f) / sqrt(std::numbers::pi) == Approx(mu) );
+  REQUIRE( usdg::gauss_hermite(f) / sqrt(std::numbers::pi) == Approx(mu) );
 }
 

@@ -35,32 +35,32 @@
 TEST_CASE("Identifiability check of GP hyperparameters using ESS", "[gp & ess]")
 {
   auto key        = GENERATE(range(0u, 8u));
-  auto prng       = usvg::Random123(key);
+  auto prng       = usdg::Random123(key);
   size_t n_points = 128;
   size_t n_dims   = 3;
 
   auto prior_mean = blaze::zero<double>(n_dims+1);
   auto prior_var  = blaze::DynamicVector<double>(n_dims+1, 2.0);
-  auto prior_chol = usvg::Cholesky<usvg::DiagonalChol>();
-  REQUIRE_NOTHROW( prior_chol = usvg::cholesky_nothrow(prior_var).value() );
-  auto prior_dist = usvg::MvNormal<usvg::DiagonalChol>(prior_mean, prior_chol);
+  auto prior_chol = usdg::Cholesky<usdg::DiagonalChol>();
+  REQUIRE_NOTHROW( prior_chol = usdg::cholesky_nothrow(prior_var).value() );
+  auto prior_dist = usdg::MvNormal<usdg::DiagonalChol>(prior_mean, prior_chol);
 
   auto truth  = prior_dist.sample(prng);
-  auto kernel = usvg::Matern52{
+  auto kernel = usdg::Matern52{
     exp(truth[0]), blaze::exp(blaze::subvector(truth, 1, n_dims))};
 
   auto data_x = generate_mvsamples(prng, n_dims, n_points);
-  auto data_y = sample_gp_prior(prng, kernel, data_x);
+  auto data_y = usdg::sample_gp_prior(prng, kernel, data_x);
   
   auto mll = [&data_x, &data_y, n_dims, n_points](
     blaze::DynamicVector<double> const& theta)->double{
     auto _sigma      = exp(theta[0]);
     auto _linescales = exp(blaze::subvector(theta, 1u, n_dims));
-    auto _kernel     = usvg::Matern52{_sigma, _linescales};
-    auto _K          = usvg::compute_gram_matrix(_kernel, data_x); 
+    auto _kernel     = usdg::Matern52{_sigma, _linescales};
+    auto _K          = usdg::compute_gram_matrix(_kernel, data_x); 
     auto zero_mean   = blaze::zero<double>(n_points);
-    if(auto _K_chol = usvg::cholesky_nothrow(_K))
-      return usvg::dmvnormal(data_y, zero_mean, _K_chol.value(), true);
+    if(auto _K_chol = usdg::cholesky_nothrow(_K))
+      return usdg::dmvnormal(data_y, zero_mean, _K_chol.value(), true);
     else
       return std::numeric_limits<double>::lowest();
   };

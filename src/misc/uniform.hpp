@@ -22,7 +22,7 @@
 #include <cmath>
 #include <random>
 
-namespace usvg
+namespace usdg
 {
   inline double
   duniform(double,

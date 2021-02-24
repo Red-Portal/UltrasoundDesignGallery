@@ -30,7 +30,7 @@
 #include <optional>
 #include <memory>
 
-namespace usvg
+namespace usdg
 {
   template <typename LoglikeGradHess>
   inline std::tuple<blaze::DynamicVector<double>,
@@ -58,7 +58,7 @@ namespace usvg
 
     if(log)
     {
-      log->info("Starting Laplace approximation: {}", usvg::file_name(__FILE__));
+      log->info("Starting Laplace approximation: {}", usdg::file_name(__FILE__));
       log->info("{}   {}", "iter", "||f - f*||");
     }
 
@@ -73,9 +73,9 @@ namespace usvg
       auto b	   = W*f + gradT;
       auto WK	   = W*K;
       auto B	   = I + WK;
-      auto Blu	   = usvg::lu(B);
+      auto Blu	   = usdg::lu(B);
       auto WKb	   = WK*b;
-      auto BinvWKb = usvg::solve(Blu, WKb);
+      auto BinvWKb = usdg::solve(Blu, WKb);
       auto a	   = b - BinvWKb;
       auto f_next  = K*a;
 

@@ -9,7 +9,7 @@
 
 #include <blaze/math/DynamicVector.h>
 
-namespace usvg
+namespace usdg
 {
   template <typename Func>
   inline double

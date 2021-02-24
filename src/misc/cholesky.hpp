@@ -23,7 +23,7 @@
 #include <blaze/math/DynamicMatrix.h>
 #include <blaze/math/SymmetricMatrix.h>
 
-namespace usvg
+namespace usdg
 {
   struct DenseChol {};
 
@@ -87,7 +87,7 @@ namespace usvg
     }
   }
 
-  inline std::optional<usvg::Cholesky<usvg::DenseChol>>
+  inline std::optional<usdg::Cholesky<usdg::DenseChol>>
   cholesky_nothrow(blaze::DynamicMatrix<double> const& A)
   {
     size_t n   = A.rows();
@@ -125,7 +125,7 @@ namespace usvg
     }
   }
 
-  inline std::optional<usvg::Cholesky<usvg::DiagonalChol>>
+  inline std::optional<usdg::Cholesky<usdg::DiagonalChol>>
   cholesky_nothrow(blaze::DynamicVector<double> const& A)
   {
     size_t n_dims = A.size();

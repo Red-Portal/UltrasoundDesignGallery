@@ -30,7 +30,7 @@
 TEST_CASE("gradient", "[finitediff]")
 {
   auto key  = GENERATE(range(0u, 8u));
-  auto prng = usvg::Random123(key);
+  auto prng = usdg::Random123(key);
   auto dist = std::normal_distribution<double>(0, 1);
   size_t n  = 128;
 
@@ -51,7 +51,7 @@ TEST_CASE("gradient", "[finitediff]")
 TEST_CASE("hessian", "[finitediff]")
 {
   auto key  = GENERATE(range(0u, 8u));
-  auto prng = usvg::Random123(key);
+  auto prng = usdg::Random123(key);
   auto dist = std::normal_distribution<double>(0, 1);
   size_t n  = 128;
 
@@ -64,14 +64,14 @@ TEST_CASE("hessian", "[finitediff]")
     return blaze::dot(x_in, A*x_in);
   };
 
-  auto g_truth = blaze::evaluate(A + blaze::trans(A));
-  auto g       = finitediff_hessian(f, x);
+  auto H_truth = blaze::evaluate(A + blaze::trans(A));
+  auto H       = finitediff_hessian(f, x);
 
   /* diagonal */
-  REQUIRE(blaze::norm(blaze::diagonal(g) - blaze::diagonal(g_truth)) < 1e-4);
+  REQUIRE(blaze::norm(blaze::diagonal(H) - blaze::diagonal(H_truth)) < 1e-4);
   
   /* off-diagonal */
-  blaze::diagonal(g)       = 0;
-  blaze::diagonal(g_truth) = 0;
-  REQUIRE(blaze::norm(g - g_truth) < 1e-4);
+  blaze::diagonal(H)       = 0;
+  blaze::diagonal(H_truth) = 0;
+  REQUIRE(blaze::norm(H - H_truth) < 1e-4);
 }

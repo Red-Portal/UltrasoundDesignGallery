@@ -29,22 +29,22 @@ TEST_CASE("Dense log determinant", "[linear algebra]")
      {1, 3, 1},
      {1, 1, 3}});
 
-  auto chol = usvg::Cholesky<usvg::DenseChol>();
-  REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
+  auto chol = usdg::Cholesky<usdg::DenseChol>();
+  REQUIRE_NOTHROW( chol = usdg::cholesky_nothrow(A).value() );
   auto truth = log(blaze::det(A));
   
-  REQUIRE( usvg::logdet(chol) == Approx(truth) );
+  REQUIRE( usdg::logdet(chol) == Approx(truth) );
 }
 
 TEST_CASE("Diagonal log determinant", "[linear algebra]")
 {
   auto A    = blaze::DynamicVector<double>({1, 2, 3});
-  auto chol = usvg::Cholesky<usvg::DiagonalChol>();
-  REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
+  auto chol = usdg::Cholesky<usdg::DiagonalChol>();
+  REQUIRE_NOTHROW( chol = usdg::cholesky_nothrow(A).value() );
 
   auto truth = log(prod(A));
   
-  REQUIRE( usvg::logdet(chol) == Approx(truth) );
+  REQUIRE( usdg::logdet(chol) == Approx(truth) );
 }
 
 TEST_CASE("LU log determinant", "[linear algebra]")
@@ -54,9 +54,9 @@ TEST_CASE("LU log determinant", "[linear algebra]")
      {1, 3, 1},
      {1, 1, 3}});
 
-  auto lu = usvg::LU();
-  REQUIRE_NOTHROW( lu = usvg::lu(A) );
+  auto lu = usdg::LU();
+  REQUIRE_NOTHROW( lu = usdg::lu(A) );
   auto truth = log(blaze::det(A));
   
-  REQUIRE( usvg::logdet(lu) == Approx(truth) );
+  REQUIRE( usdg::logdet(lu) == Approx(truth) );
 }

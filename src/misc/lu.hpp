@@ -22,7 +22,7 @@
 #include <blaze/math/LowerMatrix.h>
 #include <blaze/math/DynamicMatrix.h>
 
-namespace usvg
+namespace usdg
 {
   struct LU
   {

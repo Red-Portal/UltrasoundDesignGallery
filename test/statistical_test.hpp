@@ -87,10 +87,4 @@ kolmogorov_smirnoff_test(double alpha,
   return D > D_thres;
 }
 
-inline double
-normal_cdf(double x)
-{
-    return std::erfc(-x/std::sqrt(2))/2;
-}
-
 #endif

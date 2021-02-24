@@ -30,7 +30,7 @@
 #include <cmath>
 #include <random>
 
-namespace usvg
+namespace usdg
 {
   template <typename Rng,
 	    typename Loglike,
@@ -40,7 +40,7 @@ namespace usvg
 		 Loglike loglike,
 		 blaze::DynamicVector<double> const& x_prev,
 		 double loglike_prev,
-		 usvg::MvNormal<CholType> const& prior)
+		 usdg::MvNormal<CholType> const& prior)
   /*
    * Elliptical slice sampler Markov-chain kernel.
    *
@@ -55,9 +55,9 @@ namespace usvg
   {
     auto const tau = 2*std::numbers::pi;
     auto nu        = prior.sample(rng);
-    auto u         = usvg::runiform(rng);
+    auto u         = usdg::runiform(rng);
     auto logy      = loglike_prev + log(u);
-    auto theta     = usvg::runiform(rng, 0, tau);
+    auto theta     = usdg::runiform(rng, 0, tau);
     auto theta_min = theta - tau;
     auto theta_max = theta;
     size_t n_props = 1;
@@ -85,7 +85,7 @@ namespace usvg
 	{
 	  theta_max = theta;
 	}
-	theta = usvg::runiform(rng, theta_min, theta_max);
+	theta = usdg::runiform(rng, theta_min, theta_max);
 	++n_props;
       }
     }

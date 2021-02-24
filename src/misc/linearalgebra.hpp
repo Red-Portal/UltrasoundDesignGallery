@@ -28,11 +28,11 @@
 
 #include <optional>
 
-namespace usvg
+namespace usdg
 {
   template <typename CholType>
   inline blaze::DynamicVector<double> 
-  solve(usvg::Cholesky<CholType> Achol,
+  solve(usdg::Cholesky<CholType> Achol,
 	blaze::DynamicVector<double> const& b)
   {
     auto Ux = blaze::evaluate(blaze::solve(Achol.L, b));
@@ -42,7 +42,7 @@ namespace usvg
   }
 
   inline blaze::DynamicVector<double> 
-  solve(usvg::LU const& Alu,
+  solve(usdg::LU const& Alu,
 	blaze::DynamicVector<double> const& b)
   {
     auto Pb = blaze::evaluate(Alu.Pt * b);
@@ -52,7 +52,7 @@ namespace usvg
   }
 
   inline double
-  invquad(usvg::Cholesky<usvg::DenseChol> const& chol,
+  invquad(usdg::Cholesky<usdg::DenseChol> const& chol,
 	  blaze::DynamicVector<double> const& x)
   {
     auto y = blaze::solve(chol.L, x);
@@ -60,14 +60,14 @@ namespace usvg
   }
 
   inline double
-  invquad(usvg::Cholesky<usvg::DiagonalChol> const& chol,
+  invquad(usdg::Cholesky<usdg::DiagonalChol> const& chol,
 	  blaze::DynamicVector<double> const& x)
   {
     return blaze::dot(x / chol.A, x);
   }
 
   inline blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>
-  inverse(usvg::Cholesky<usvg::DenseChol> const& chol)
+  inverse(usdg::Cholesky<usdg::DenseChol> const& chol)
   {
     auto Linv = chol.L;
     blaze::invert(Linv);
@@ -136,25 +136,25 @@ namespace usvg
 
   template<typename CholType>
   inline double
-  logdet(usvg::Cholesky<CholType> const& chol)
+  logdet(usdg::Cholesky<CholType> const& chol)
   /*
    * Compute log determinant using Cholesky decomposition
    * Summation uses Kahan's method.
    */
   {
-    auto L_diag = usvg::logtrace(chol.L);
+    auto L_diag = usdg::logtrace(chol.L);
     return 2*L_diag;
   }
 
   inline double
-  logdet(usvg::LU const& lu)
+  logdet(usdg::LU const& lu)
   /*
    * Compute log determinant using Cholesky decomposition
    * Summation uses Kahan's method.
    */
   {
-    auto L_diag = usvg::logtrace(lu.L);
-    auto U_diag = usvg::logtrace(lu.U);
+    auto L_diag = usdg::logtrace(lu.L);
+    auto U_diag = usdg::logtrace(lu.U);
     return L_diag + U_diag;
   }
 }

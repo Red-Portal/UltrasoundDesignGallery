@@ -24,7 +24,7 @@
 #include <boost/random/philox.hpp>
 #include <boost/random/counter_based_engine.hpp>
 
-namespace usvg
+namespace usdg
 {
   using Philox        = boost::random::philox<4, uint64_t>;
   using CounterEngine = boost::random::counter_based_engine<uint64_t, Philox, 32>; 

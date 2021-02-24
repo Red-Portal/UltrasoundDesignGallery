@@ -34,8 +34,8 @@ TEST_CASE("Dense inverse quadratic", "[linear algebra]")
      {1, 3, 1},
      {1, 1, 3}});
 
-  auto chol = usvg::Cholesky<usvg::DenseChol>();
-  REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
+  auto chol = usdg::Cholesky<usdg::DenseChol>();
+  REQUIRE_NOTHROW( chol = usdg::cholesky_nothrow(A).value() );
 
   auto x     = blaze::DynamicVector<double>(
     {0.9040983839157295,
@@ -44,15 +44,15 @@ TEST_CASE("Dense inverse quadratic", "[linear algebra]")
   auto y     = blaze::solve(A, x);
   auto truth = blaze::dot(x, y);
 
-  REQUIRE( usvg::invquad(chol, x) == Approx(truth) );
+  REQUIRE( usdg::invquad(chol, x) == Approx(truth) );
 }
 
 TEST_CASE("Diagonal inverse quadratic", "[linear algebra]")
 {
   auto A = blaze::DynamicVector<double>({1, 2, 3});
 
-  auto chol = usvg::Cholesky<usvg::DiagonalChol>();
-  REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
+  auto chol = usdg::Cholesky<usdg::DiagonalChol>();
+  REQUIRE_NOTHROW( chol = usdg::cholesky_nothrow(A).value() );
 
   auto x     = blaze::DynamicVector<double>(
     {0.9040983839157295,
@@ -61,7 +61,7 @@ TEST_CASE("Diagonal inverse quadratic", "[linear algebra]")
   auto y     = x / A;
   auto truth = blaze::dot(x, y);
   
-  REQUIRE( usvg::invquad(chol, x) == Approx(truth) );
+  REQUIRE( usdg::invquad(chol, x) == Approx(truth) );
 }
 
 // TEST_CASE("Laplace approximation inverse quadratic", "[linear algebra]")

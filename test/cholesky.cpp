@@ -33,8 +33,8 @@ TEST_CASE("Dense Cholesky", "[linear algebra]")
      {1, 3, 1},
      {1, 1, 3}});
 
-  auto chol = usvg::Cholesky<usvg::DenseChol>();
-  REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
+  auto chol = usdg::Cholesky<usdg::DenseChol>();
+  REQUIRE_NOTHROW( chol = usdg::cholesky_nothrow(A).value() );
   REQUIRE( blaze::norm(chol.L*blaze::trans(chol.L) - A) < catch_eps );
 }
 
@@ -45,21 +45,21 @@ TEST_CASE("Dense Cholesky non-PD matrix", "[linear algebra]")
      {1, 1, 1},
      {1, 1, 1}});
 
-  auto L = std::optional<usvg::Cholesky<usvg::DenseChol>>();
-  REQUIRE_NOTHROW( L = usvg::cholesky_nothrow(A) );
+  auto L = std::optional<usdg::Cholesky<usdg::DenseChol>>();
+  REQUIRE_NOTHROW( L = usdg::cholesky_nothrow(A) );
   REQUIRE( !L );
 }
 
 TEST_CASE("Diagonal Cholesky", "[linear algebra]")
 {
   auto A    = blaze::DynamicVector<double>({3, 2, 1});
-  auto chol = usvg::Cholesky<usvg::DiagonalChol>();
-  REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
+  auto chol = usdg::Cholesky<usdg::DiagonalChol>();
+  REQUIRE_NOTHROW( chol = usdg::cholesky_nothrow(A).value() );
   REQUIRE( blaze::norm(chol.L*chol.L - A) < catch_eps );
 
   A    = blaze::DynamicVector<double>({0, 0, 0});
-  chol = usvg::Cholesky<usvg::DiagonalChol>();
-  REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
+  chol = usdg::Cholesky<usdg::DiagonalChol>();
+  REQUIRE_NOTHROW( chol = usdg::cholesky_nothrow(A).value() );
   REQUIRE( blaze::norm(chol.L*chol.L - A) < catch_eps );
 }
 
@@ -68,7 +68,7 @@ TEST_CASE("Diagonal Cholesky non-PD matrix", "[linear algebra]")
   auto deps = std::numeric_limits<double>::epsilon();
   auto A    = blaze::DynamicVector<double>({0, 0, -deps});
 
-  auto L = std::optional<usvg::Cholesky<usvg::DiagonalChol>>();
-  REQUIRE_NOTHROW( L = usvg::cholesky_nothrow(A) );
+  auto L = std::optional<usdg::Cholesky<usdg::DiagonalChol>>();
+  REQUIRE_NOTHROW( L = usdg::cholesky_nothrow(A) );
   REQUIRE( !L );
 }

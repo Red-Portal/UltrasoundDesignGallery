@@ -34,8 +34,8 @@ TEST_CASE("Dense cholesky system solve", "[linear algebra]")
      {1, 3, 1},
      {1, 1, 3}});
 
-  auto chol = usvg::Cholesky<usvg::DenseChol>();
-  REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
+  auto chol = usdg::Cholesky<usdg::DenseChol>();
+  REQUIRE_NOTHROW( chol = usdg::cholesky_nothrow(A).value() );
 
   auto x     = blaze::DynamicVector<double>(
     {0.9040983839157295,
@@ -43,7 +43,7 @@ TEST_CASE("Dense cholesky system solve", "[linear algebra]")
      -1.2570687585683156});
 
   auto b      = blaze::evaluate(A * x);
-  auto x_chol = usvg::solve(chol, b);
+  auto x_chol = usdg::solve(chol, b);
 
   REQUIRE( blaze::norm(x_chol - x) < catch_eps );
 }
@@ -55,8 +55,8 @@ TEST_CASE("Dense LU system solve", "[linear algebra]")
      {1, 3, 1},
      {1, 1, 3}});
 
-  auto lu = usvg::LU();
-  REQUIRE_NOTHROW( lu = usvg::lu(A) );
+  auto lu = usdg::LU();
+  REQUIRE_NOTHROW( lu = usdg::lu(A) );
 
   auto x     = blaze::DynamicVector<double>(
     {0.9040983839157295,
@@ -64,7 +64,7 @@ TEST_CASE("Dense LU system solve", "[linear algebra]")
      -1.2570687585683156});
 
   auto b    = blaze::evaluate(A * x);
-  auto x_lu = usvg::solve(lu, b);
+  auto x_lu = usdg::solve(lu, b);
 
   REQUIRE( blaze::norm(x_lu - x) < catch_eps );
 }
@@ -76,10 +76,10 @@ TEST_CASE("Cholesky LU inversion", "[linear algebra]")
      {1, 3, 1},
      {1, 1, 3}});
 
-  auto chol = usvg::Cholesky<usvg::DenseChol>();
-  REQUIRE_NOTHROW( chol = usvg::cholesky_nothrow(A).value() );
+  auto chol = usdg::Cholesky<usdg::DenseChol>();
+  REQUIRE_NOTHROW( chol = usdg::cholesky_nothrow(A).value() );
 
-  auto Ainv = usvg::inverse(chol);
+  auto Ainv = usdg::inverse(chol);
 
   REQUIRE( blaze::norm(Ainv*A - blaze::IdentityMatrix<double>(3)) < catch_eps );
 }

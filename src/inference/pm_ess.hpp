@@ -31,7 +31,7 @@
 #include <cmath>
 #include <iostream>
 
-namespace usvg
+namespace usdg
 {
   template <typename Rng,
 	    typename Loglike,
@@ -41,13 +41,13 @@ namespace usvg
 	   Loglike loglike,
 	   blaze::DynamicVector<double> const& u,
 	   double pm_prev,
-	   usvg::Cholesky<usvg::DenseChol> const& gram_chol,
-	   usvg::MvNormal<usvg::DiagonalChol> const& u_prior,
-	   usvg::MvNormal<CholType> const& dist_q_f)
+	   usdg::Cholesky<usdg::DenseChol> const& gram_chol,
+	   usdg::MvNormal<usdg::DiagonalChol> const& u_prior,
+	   usdg::MvNormal<CholType> const& dist_q_f)
   {
     auto target = [&](blaze::DynamicVector<double> const& u_in)->double{
-      auto f            = usvg::unwhiten(dist_q_f, u_in);
-      auto [p_f, alpha] = usvg::gp_loglike(f, gram_chol);
+      auto f            = usdg::unwhiten(dist_q_f, u_in);
+      auto [p_f, alpha] = usdg::gp_loglike(f, gram_chol);
       double pm_f       = loglike(f) + p_f - dist_q_f.logpdf(f);
       return pm_f;
     };
@@ -62,8 +62,8 @@ namespace usvg
 	    typename CholType>
   inline std::tuple<blaze::DynamicVector<double>,
 		    double,
-		    usvg::MvNormal<usvg::DenseChol>,
-		    usvg::Cholesky<usvg::DenseChol>,
+		    usdg::MvNormal<usdg::DenseChol>,
+		    usdg::Cholesky<usdg::DenseChol>,
 		    size_t>
   update_theta(Rng& prng,
 	       Loglike loglike,
@@ -72,21 +72,21 @@ namespace usvg
 	       blaze::DynamicVector<double> const& u,
 	       double pm_prev,
 	       blaze::DynamicMatrix<double> const& data,
-	       usvg::MvNormal<CholType> const& theta_prior,
+	       usdg::MvNormal<CholType> const& theta_prior,
 	       spdlog::logger* logger = nullptr)
   {
     size_t laplace_max_iter = 20;
     size_t n_dims           = u.size();
 
     auto identity  = blaze::IdentityMatrix<double>(n_dims);
-    auto dist_q_f  = usvg::MvNormal<usvg::DenseChol>();
-    auto gram_chol = usvg::Cholesky<usvg::DenseChol>();
+    auto dist_q_f  = usdg::MvNormal<usdg::DenseChol>();
+    auto gram_chol = usdg::Cholesky<usdg::DenseChol>();
     auto target = [&](blaze::DynamicVector<double> const& theta_in)->double
     {
       /* Note: (A + B)^{-1} = L (I + L^T B L)^{-1} L^T where A^{-1} = L L^T */
-      auto kernel        = usvg::Matern52(blaze::exp(theta_in));
-      auto gram          = usvg::compute_gram_matrix(kernel, data);
-      auto gram_chol_opt = usvg::cholesky_nothrow(gram);
+      auto kernel        = usdg::Matern52(blaze::exp(theta_in));
+      auto gram          = usdg::compute_gram_matrix(kernel, data);
+      auto gram_chol_opt = usdg::cholesky_nothrow(gram);
       if(!gram_chol_opt)
       {
 	return std::numeric_limits<double>::lowest();
@@ -102,7 +102,7 @@ namespace usvg
 	logger);
 
       auto IpUBL          = blaze::evaluate(identity + (blaze::trans(gram_chol.L)*W*gram_chol.L));
-      auto IpUBL_chol_opt = usvg::cholesky_nothrow(IpUBL);
+      auto IpUBL_chol_opt = usdg::cholesky_nothrow(IpUBL);
       if(!IpUBL_chol_opt)
       {
 	return std::numeric_limits<double>::lowest();
@@ -111,13 +111,13 @@ namespace usvg
 
       auto laplace_half     = blaze::solve(IpUBL_chol.L, blaze::trans(gram_chol.L));
       auto laplace_cov      = blaze::trans(laplace_half) * laplace_half;
-      auto laplace_chol_opt = usvg::cholesky_nothrow(laplace_cov);
+      auto laplace_chol_opt = usdg::cholesky_nothrow(laplace_cov);
       if(!laplace_chol_opt)
       {
 	return std::numeric_limits<double>::lowest();
       }
       auto& laplace_chol = laplace_chol_opt.value();
-      dist_q_f = usvg::MvNormal<usvg::DenseChol>{f_mode, std::move(laplace_chol)};
+      dist_q_f = usdg::MvNormal<usdg::DenseChol>{f_mode, std::move(laplace_chol)};
       laplace_chol_opt.reset();
 
       // auto smallest_diag = blaze::min(blaze::diagonal(gram_chol.L))
@@ -127,8 +127,8 @@ namespace usvg
       // 	return std::numeric_limits<double>::lowest();
       // }
       
-      auto f            = usvg::unwhiten(dist_q_f, u);
-      auto [p_f, alpha] = usvg::gp_loglike(f, gram_chol);
+      auto f            = usdg::unwhiten(dist_q_f, u);
+      auto [p_f, alpha] = usdg::gp_loglike(f, gram_chol);
       auto pm_f         = p_f + loglike(f) - dist_q_f.logpdf(f);
       return pm_f;
     };
@@ -148,12 +148,12 @@ namespace usvg
 	    typename CholType>
   inline std::tuple<blaze::DynamicMatrix<double>,
 		    blaze::DynamicMatrix<double>,
-		    std::vector<usvg::Cholesky<usvg::DenseChol>>>
+		    std::vector<usdg::Cholesky<usdg::DenseChol>>>
   pm_ess(Rng& prng,
 	 Loglike loglike,
 	 GradNegHessType loglike_grad_neghess,
 	 blaze::DynamicVector<double> const& theta_init,
-	 usvg::MvNormal<CholType> const& theta_prior,
+	 usdg::MvNormal<CholType> const& theta_prior,
 	 blaze::DynamicMatrix<double> const& data,
 	 size_t n_samples,
 	 size_t n_burn,
@@ -161,21 +161,21 @@ namespace usvg
   {
     size_t n_dims = data.columns();
     auto ones     = blaze::DynamicVector<double>(n_dims, 1.0);
-    auto u_prior  = MvNormal<usvg::DiagonalChol>{
+    auto u_prior  = MvNormal<usdg::DiagonalChol>{
       blaze::zero<double>(n_dims),
-      usvg::Cholesky<DiagonalChol>{ones, ones}};
-    auto u        = MvNormal<usvg::UnitNormal>(n_dims).sample(prng);
+      usdg::Cholesky<DiagonalChol>{ones, ones}};
+    auto u        = MvNormal<usdg::UnitNormal>(n_dims).sample(prng);
 
     auto theta_samples = blaze::DynamicMatrix<double>(theta_init.size(), n_samples);
     auto f_samples     = blaze::DynamicMatrix<double>(u.size(), n_samples);
-    auto gram_samples  = std::vector<usvg::Cholesky<usvg::DenseChol>>(n_samples);
+    auto gram_samples  = std::vector<usdg::Cholesky<usdg::DenseChol>>(n_samples);
 
     auto [theta, pm, dist_q_f, gram_chol, n_props] = update_theta(
       prng, loglike, loglike_grad_neghess, theta_init, u,
       std::numeric_limits<double>::lowest(), data, theta_prior, logger);
     if(logger)
     {
-      logger->info("Starting pseudo-marginal MCMC: {}", usvg::file_name(__FILE__));
+      logger->info("Starting pseudo-marginal MCMC: {}", usdg::file_name(__FILE__));
       logger->info("{:>4}  {:>6}  {:>10}  {:>15}", "iter", "update", "acceptance", "pseudo-marginal");
     }
 

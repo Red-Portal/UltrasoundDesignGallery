@@ -33,7 +33,7 @@ elliptical_slice(Rng& prng,
 		 size_t n_burnin,
 		 blaze::DynamicVector<double> const& x0,
 		 LoglikeFunc loglike,
-		 usvg::MvNormal<CholType> const& prior_dist)
+		 usdg::MvNormal<CholType> const& prior_dist)
 {
   size_t n_dims = x0.size();
   auto x        = x0;
@@ -42,7 +42,7 @@ elliptical_slice(Rng& prng,
 
   for (size_t i = 0; i < n_burnin; ++i)
   { /* burnin */
-    auto [x_prop, p_prop, n_props] = usvg::ess_transition(
+    auto [x_prop, p_prop, n_props] = usdg::ess_transition(
       prng, loglike, x, p, prior_dist);
     x = x_prop;
     p = p_prop;
@@ -51,7 +51,7 @@ elliptical_slice(Rng& prng,
   size_t n_total_props = 0;
   for (size_t i = 0; i < n_samples; ++i)
   {
-    auto [x_prop, p_prop, n_props] = usvg::ess_transition(
+    auto [x_prop, p_prop, n_props] = usdg::ess_transition(
       prng, loglike, x, p, prior_dist);
     x = x_prop;
     p = p_prop;

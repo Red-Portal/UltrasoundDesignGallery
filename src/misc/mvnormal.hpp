@@ -31,13 +31,13 @@
 #include <random>
 #include <iostream>
 
-namespace usvg
+namespace usdg
 {
   template <typename CovType>
   struct MvNormal
   {
     blaze::DynamicVector<double> mean;
-    usvg::Cholesky<CovType> cov_chol;
+    usdg::Cholesky<CovType> cov_chol;
 
     inline double pdf(blaze::DynamicVector<double>    const& x) const;
 
@@ -88,14 +88,14 @@ namespace usvg
   inline double
   dmvnormal(blaze::DynamicVector<double> const& x,
 	    blaze::DynamicVector<double> const& mean,
-	    usvg::Cholesky<CovType> const& cov_chol,
+	    usdg::Cholesky<CovType> const& cov_chol,
 	    bool logdensity = false)
   {
     size_t n_dims     = x.size();
     double normalizer = log(2*std::numbers::pi);
     double D          = static_cast<double>(n_dims);
-    double logp       = (usvg::logdet(cov_chol)
-			 + usvg::invquad(cov_chol, x - mean)
+    double logp       = (usdg::logdet(cov_chol)
+			 + usdg::invquad(cov_chol, x - mean)
 			 + D*normalizer)/-2;
     if(logdensity)
       return logp;
@@ -141,14 +141,14 @@ namespace usvg
 
   template <typename CovType>
   inline blaze::DynamicVector<double>
-  unwhiten(usvg::MvNormal<CovType> const& dist,
+  unwhiten(usdg::MvNormal<CovType> const& dist,
 	   blaze::DynamicVector<double> const& z)
   {
     return unwhiten(dist.mean, dist.cov_chol.L, z); 
   }
 
   inline blaze::DynamicVector<double>
-  unwhiten(usvg::MvNormal<usvg::LaplaceNormal> const& dist,
+  unwhiten(usdg::MvNormal<usdg::LaplaceNormal> const& dist,
 	   blaze::DynamicVector<double> const& z)
   {
     auto cov_U = blaze::trans(dist.cov_L);
@@ -161,10 +161,10 @@ namespace usvg
   inline blaze::DynamicVector<double>
   rmvnormal(Rng& prng,
 	    blaze::DynamicVector<double> const& mean,
-	    usvg::Cholesky<CovType> const& cov_chol)
+	    usdg::Cholesky<CovType> const& cov_chol)
   {
     size_t n_dims = mean.size();
-    auto z        = usvg::rmvnormal(prng, n_dims);
+    auto z        = usdg::rmvnormal(prng, n_dims);
     return unwhiten(mean, cov_chol.L, z);
   }
 
@@ -173,7 +173,7 @@ namespace usvg
   MvNormal<CovType>::
   pdf(blaze::DynamicVector<double>    const& x) const
   {
-    return usvg::dmvnormal(x, this->mean, this->cov_chol);
+    return usdg::dmvnormal(x, this->mean, this->cov_chol);
   }
 
   template <typename CovType>
@@ -181,7 +181,7 @@ namespace usvg
   MvNormal<CovType>::
   logpdf(blaze::DynamicVector<double> const& x) const
   {
-    return usvg::dmvnormal(x, this->mean, this->cov_chol, true);
+    return usdg::dmvnormal(x, this->mean, this->cov_chol, true);
   }
 
   template <typename CovType>
@@ -190,21 +190,21 @@ namespace usvg
   MvNormal<CovType>::
   sample(Rng& prng) const
   {
-    return usvg::rmvnormal(prng, this->mean, this->cov_chol);
+    return usdg::rmvnormal(prng, this->mean, this->cov_chol);
   }
 
   inline double
   MvNormal<UnitNormal>::
   pdf(blaze::DynamicVector<double>    const& x) const
   {
-    return usvg::dmvnormal(x, false);
+    return usdg::dmvnormal(x, false);
   }
 
   inline double
   MvNormal<UnitNormal>::
   logpdf(blaze::DynamicVector<double> const& x) const
   {
-    return usvg::dmvnormal(x, true);
+    return usdg::dmvnormal(x, true);
   }
 
   inline double
@@ -215,8 +215,8 @@ namespace usvg
     auto IpUBL_U = blaze::trans(this->IpUBL_L);
     auto z       = IpUBL_U * blaze::solve(this->cov_L, x_delta);
 
-    double logdetcov  = 2*(usvg::logtrace(this->cov_L)
-			   - usvg::logtrace(this->IpUBL_L));
+    double logdetcov  = 2*(usdg::logtrace(this->cov_L)
+			   - usdg::logtrace(this->IpUBL_L));
     size_t n_dims     = x.size();
     double normalizer = log(2*std::numbers::pi);
     double D          = static_cast<double>(n_dims);
@@ -229,7 +229,13 @@ namespace usvg
   MvNormal<UnitNormal>::
   sample(Rng& prng) const
   {
-    return usvg::rmvnormal(prng, this->n_dims);
+    return usdg::rmvnormal(prng, this->n_dims);
+  }
+
+  inline double
+  normal_cdf(double x)
+  {
+    return std::erfc(-x/std::sqrt(2))/2;
   }
 }
 

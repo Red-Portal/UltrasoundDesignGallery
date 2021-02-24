@@ -31,24 +31,9 @@ generate_mvsamples(Rng& rng, size_t n_dims, size_t n_points)
   auto data = blaze::DynamicMatrix<double>(n_dims, n_points);
   for (size_t i = 0; i < n_points; ++i)
   {
-    blaze::column(data, i) = usvg::rmvnormal(rng, n_dims);
+    blaze::column(data, i) = usdg::rmvnormal(rng, n_dims);
   }
   return data;
-}
-
-template <typename Rng>
-inline blaze::DynamicVector<double>
-sample_gp_prior(Rng& prng,
-		usvg::Matern52 const& kernel,
-		blaze::DynamicMatrix<double> const& points)
-{
-  auto K      = usvg::compute_gram_matrix(kernel, points);
-  auto K_chol = usvg::Cholesky<usvg::DenseChol>();
-  REQUIRE_NOTHROW( K_chol = usvg::cholesky_nothrow(K).value() );
-  
-  auto Z = usvg::rmvnormal(prng, K.rows());
-  auto y = K_chol.L * Z;
-  return y;
 }
 
 #endif

@@ -20,6 +20,7 @@
 #define BLAZE_USE_DEBUG_MODE 1
 
 #include "../src/inference/imh.hpp"
+#include "../src/misc/mvnormal.hpp"
 #include "../src/misc/prng.hpp"
 #include "statistical_test.hpp"
 
@@ -28,13 +29,13 @@
 TEST_CASE("Sampling from unit Gaussian", "[imh]")
 {
   auto key  = GENERATE(range(0u, 8u));
-  auto prng = usvg::Random123(key);
+  auto prng = usdg::Random123(key);
   auto p    = [](double x){
     return exp(-x*x/2);
   };
   size_t n_samples = 512;
-  auto samples = usvg::imh(prng, p, -3, 3, n_samples, 128, 1);
+  auto samples = usdg::imh(prng, p, -3, 3, n_samples, 128, 1);
 
-  REQUIRE( !kolmogorov_smirnoff_test(0.001, normal_cdf,
+  REQUIRE( !kolmogorov_smirnoff_test(0.001, usdg::normal_cdf,
 				     samples.begin(), samples.end()) );
 }

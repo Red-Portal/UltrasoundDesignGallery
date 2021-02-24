@@ -43,14 +43,14 @@ TEST_CASE("Dense covariance multivariate normal density", "[mvnormal]")
      -0.29874050736604413,
      -1.2570687585683156});
 
-  auto cov_chol = usvg::Cholesky<usvg::DenseChol>();
-  REQUIRE_NOTHROW( cov_chol = usvg::cholesky_nothrow(cov).value() );
+  auto cov_chol = usdg::Cholesky<usdg::DenseChol>();
+  REQUIRE_NOTHROW( cov_chol = usdg::cholesky_nothrow(cov).value() );
 
   double truth_p    = 0.0069349873998044214;
-  REQUIRE( usvg::dmvnormal(x, mean, cov_chol) == Approx(truth_p) );
+  REQUIRE( usdg::dmvnormal(x, mean, cov_chol) == Approx(truth_p) );
 
   double truth_logp = -4.971176042116139;
-  REQUIRE( usvg::dmvnormal(x, mean, cov_chol, true) == Approx(truth_logp) );
+  REQUIRE( usdg::dmvnormal(x, mean, cov_chol, true) == Approx(truth_logp) );
 }
 
 TEST_CASE("Diagonal covariance multivariate normal density", "[mvnormal]")
@@ -65,14 +65,14 @@ TEST_CASE("Diagonal covariance multivariate normal density", "[mvnormal]")
      -0.29874050736604413,
      -1.2570687585683156});
 
-  auto cov_chol = usvg::Cholesky<usvg::DiagonalChol>();
-  REQUIRE_NOTHROW( cov_chol = usvg::cholesky_nothrow(cov).value() );
+  auto cov_chol = usdg::Cholesky<usdg::DiagonalChol>();
+  REQUIRE_NOTHROW( cov_chol = usdg::cholesky_nothrow(cov).value() );
 
   double truth_p    = 0.010371181395210441;
-  REQUIRE( usvg::dmvnormal(x, mean, cov_chol) == Approx(truth_p) );
+  REQUIRE( usdg::dmvnormal(x, mean, cov_chol) == Approx(truth_p) );
 
   double truth_logp = -4.568724338908423;
-  REQUIRE( usvg::dmvnormal(x, mean, cov_chol, true) == Approx(truth_logp) );
+  REQUIRE( usdg::dmvnormal(x, mean, cov_chol, true) == Approx(truth_logp) );
 }
 
 TEST_CASE("Unift multivariate normal density", "[mvnormal]")
@@ -83,36 +83,36 @@ TEST_CASE("Unift multivariate normal density", "[mvnormal]")
      -1.2570687585683156});
 
   double truth_p    = 0.01831112609097114;
-  REQUIRE( usvg::dmvnormal(x) == Approx(truth_p) );
+  REQUIRE( usdg::dmvnormal(x) == Approx(truth_p) );
 
   double truth_logp = -4.000246420768439;
-  REQUIRE( usvg::dmvnormal(x, true) == Approx(truth_logp) );
+  REQUIRE( usdg::dmvnormal(x, true) == Approx(truth_logp) );
 }
 
 TEST_CASE("Multivariate unit normal sampling", "[mvnormal]")
 {
   auto key         = GENERATE(range(0u, 8u));
-  auto prng        = usvg::Random123(key);
+  auto prng        = usdg::Random123(key);
   size_t n_samples = 512;
   size_t n_dims    = 16;
   auto samples     = blaze::DynamicMatrix<double>(n_dims, n_samples);
 
   for (size_t i = 0; i < n_samples; ++i)
   {
-    blaze::column(samples, i) = usvg::rmvnormal(prng, n_dims);
+    blaze::column(samples, i) = usdg::rmvnormal(prng, n_dims);
   }
 
   size_t i = 0;
   auto row = blaze::row(samples, i);
-  REQUIRE( !kolmogorov_smirnoff_test(0.01, normal_cdf, row.begin(), row.end()) );
+  REQUIRE( !kolmogorov_smirnoff_test(0.01, usdg::normal_cdf, row.begin(), row.end()) );
 
   ++i;
   row = blaze::row(samples, i);
-  REQUIRE( !kolmogorov_smirnoff_test(0.01, normal_cdf, row.begin(), row.end()) );
+  REQUIRE( !kolmogorov_smirnoff_test(0.01, usdg::normal_cdf, row.begin(), row.end()) );
 
   ++i;
   row = blaze::row(samples, i);
-  REQUIRE( !kolmogorov_smirnoff_test(0.01, normal_cdf, row.begin(), row.end()) );
+  REQUIRE( !kolmogorov_smirnoff_test(0.01, usdg::normal_cdf, row.begin(), row.end()) );
 }
 
 TEST_CASE("Dense multivariate normal sampling", "[mvnormal]")
@@ -125,22 +125,22 @@ TEST_CASE("Dense multivariate normal sampling", "[mvnormal]")
     {1.0, 2.0, 3.0});
 
   auto key      = GENERATE(range(0u, 8u));
-  auto prng     = usvg::Random123(key);
-  auto cov_chol = usvg::Cholesky<usvg::DenseChol>();
-  REQUIRE_NOTHROW( cov_chol = usvg::cholesky_nothrow(cov).value() );
+  auto prng     = usdg::Random123(key);
+  auto cov_chol = usdg::Cholesky<usdg::DenseChol>();
+  REQUIRE_NOTHROW( cov_chol = usdg::cholesky_nothrow(cov).value() );
 
   size_t n_samples = 512;
   size_t n_dims    = 3;
   auto samples     = blaze::DynamicMatrix<double>(n_dims, n_samples);
   for (size_t i = 0; i < n_samples; ++i)
   {
-    blaze::column(samples, i) = usvg::rmvnormal(prng, mean, cov_chol);
+    blaze::column(samples, i) = usdg::rmvnormal(prng, mean, cov_chol);
   }
 
   size_t i = 0;
   auto row = blaze::row(samples, i);
   auto cdf = [&](double x){
-    return normal_cdf((x -  mean[i]) / sqrt(cov(i,i)));
+    return usdg::normal_cdf((x -  mean[i]) / sqrt(cov(i,i)));
   };
   REQUIRE( !kolmogorov_smirnoff_test(0.01, cdf, row.begin(), row.end()) );
 
@@ -159,22 +159,22 @@ TEST_CASE("Diagonal multivariate normal sampling", "[mvnormal]")
   auto mean = blaze::DynamicVector<double>({1.0, 2.0, 3.0});
 
   auto key      = GENERATE(range(0u, 8u));
-  auto prng     = usvg::Random123(key);
-  auto cov_chol = usvg::Cholesky<usvg::DiagonalChol>();
-  REQUIRE_NOTHROW( cov_chol = usvg::cholesky_nothrow(cov).value() );
+  auto prng     = usdg::Random123(key);
+  auto cov_chol = usdg::Cholesky<usdg::DiagonalChol>();
+  REQUIRE_NOTHROW( cov_chol = usdg::cholesky_nothrow(cov).value() );
 
   size_t n_samples = 512;
   size_t n_dims    = 3;
   auto samples     = blaze::DynamicMatrix<double>(n_dims, n_samples);
   for (size_t i = 0; i < n_samples; ++i)
   {
-    blaze::column(samples, i) = usvg::rmvnormal(prng, mean, cov_chol);
+    blaze::column(samples, i) = usdg::rmvnormal(prng, mean, cov_chol);
   }
 
   size_t i = 0;
   auto row = blaze::row(samples, i);
   auto cdf = [&](double x){
-    return normal_cdf((x -  mean[i]) / sqrt(cov[i]));
+    return usdg::normal_cdf((x -  mean[i]) / sqrt(cov[i]));
   };
   REQUIRE( !kolmogorov_smirnoff_test(0.01, cdf, row.begin(), row.end()) );
 
@@ -190,7 +190,7 @@ TEST_CASE("Diagonal multivariate normal sampling", "[mvnormal]")
 TEST_CASE("Laplace approximated normal sampling", "[mvnormal]")
 {
   auto key  = GENERATE(range(0u, 8u));
-  auto prng = usvg::Random123(key);
+  auto prng = usdg::Random123(key);
   auto K    = blaze::DynamicMatrix<double>(
     {{3.8908,    0.974802,  0.475912},
      {0.974802,  4.03892,   0.502967},
@@ -211,29 +211,29 @@ TEST_CASE("Laplace approximated normal sampling", "[mvnormal]")
      0.5300156020399001,
      0.7143122346336731});
 
-  auto cov_chol = usvg::Cholesky<usvg::DenseChol>();
-  REQUIRE_NOTHROW( cov_chol = usvg::cholesky_nothrow(K).value() );
+  auto cov_chol = usdg::Cholesky<usdg::DenseChol>();
+  REQUIRE_NOTHROW( cov_chol = usdg::cholesky_nothrow(K).value() );
 
   auto id         = blaze::IdentityMatrix<double>(3);
   auto IpLBL      = id + blaze::trans(cov_chol.L)*W*cov_chol.L;
-  auto IpLBL_chol = usvg::Cholesky<usvg::DenseChol>();
-  REQUIRE_NOTHROW( IpLBL_chol = usvg::cholesky_nothrow(IpLBL).value() );
+  auto IpLBL_chol = usdg::Cholesky<usdg::DenseChol>();
+  REQUIRE_NOTHROW( IpLBL_chol = usdg::cholesky_nothrow(IpLBL).value() );
 
-  auto dist = usvg::MvNormal<usvg::LaplaceNormal>{mean, cov_chol.L, IpLBL_chol.L};
+  auto dist = usdg::MvNormal<usdg::LaplaceNormal>{mean, cov_chol.L, IpLBL_chol.L};
   
   size_t n_samples = 512;
   size_t n_dims    = 3;
   auto samples     = blaze::DynamicMatrix<double>(n_dims, n_samples);
   for (size_t i = 0; i < n_samples; ++i)
   {
-    auto z = usvg::rmvnormal(prng, n_dims);
-    blaze::column(samples, i) = usvg::unwhiten(dist, z);
+    auto z = usdg::rmvnormal(prng, n_dims);
+    blaze::column(samples, i) = usdg::unwhiten(dist, z);
   }
 
   size_t i = 0;
   auto row = blaze::row(samples, i);
   auto cdf = [&](double x){
-    return normal_cdf((x -  mean[i]) / sqrt(KinvpWinv(i,i)));
+    return usdg::normal_cdf((x -  mean[i]) / sqrt(KinvpWinv(i,i)));
   };
   REQUIRE( !kolmogorov_smirnoff_test(0.01, cdf, row.begin(), row.end()) );
 
@@ -249,7 +249,7 @@ TEST_CASE("Laplace approximated normal sampling", "[mvnormal]")
 TEST_CASE("Laplace approximated normal density", "[mvnormal]")
 {
   auto key  = GENERATE(range(0u, 8u));
-  auto prng = usvg::Random123(key);
+  auto prng = usdg::Random123(key);
   auto K    = blaze::DynamicMatrix<double>(
     {{3.8908,    0.974802,  0.475912},
      {0.974802,  4.03892,   0.502967},
@@ -270,19 +270,19 @@ TEST_CASE("Laplace approximated normal density", "[mvnormal]")
      0.5300156020399001,
      0.7143122346336731});
 
-  auto K_chol = usvg::Cholesky<usvg::DenseChol>();
-  REQUIRE_NOTHROW( K_chol = usvg::cholesky_nothrow(K).value() );
+  auto K_chol = usdg::Cholesky<usdg::DenseChol>();
+  REQUIRE_NOTHROW( K_chol = usdg::cholesky_nothrow(K).value() );
 
   auto id         = blaze::IdentityMatrix<double>(3);
   auto IpUBL      = id + blaze::trans(K_chol.L)*W*K_chol.L;
-  auto IpUBL_chol = usvg::Cholesky<usvg::DenseChol>();
-  REQUIRE_NOTHROW( IpUBL_chol = usvg::cholesky_nothrow(IpUBL).value() );
-  auto dist       = usvg::MvNormal<usvg::LaplaceNormal>{mean, K_chol.L, IpUBL_chol.L};
+  auto IpUBL_chol = usdg::Cholesky<usdg::DenseChol>();
+  REQUIRE_NOTHROW( IpUBL_chol = usdg::cholesky_nothrow(IpUBL).value() );
+  auto dist       = usdg::MvNormal<usdg::LaplaceNormal>{mean, K_chol.L, IpUBL_chol.L};
 
-  auto cov_chol = usvg::Cholesky<usvg::DenseChol>();
-  REQUIRE_NOTHROW( cov_chol = usvg::cholesky_nothrow(KinvpWinv).value() );
-  auto true_dist =  usvg::MvNormal<usvg::DenseChol>{mean, cov_chol};
+  auto cov_chol = usdg::Cholesky<usdg::DenseChol>();
+  REQUIRE_NOTHROW( cov_chol = usdg::cholesky_nothrow(KinvpWinv).value() );
+  auto true_dist =  usdg::MvNormal<usdg::DenseChol>{mean, cov_chol};
 
-  auto x = usvg::rmvnormal(prng, 3);
+  auto x = usdg::rmvnormal(prng, 3);
   REQUIRE( dist.logpdf(x) == Approx(true_dist.logpdf(x)) );
 }

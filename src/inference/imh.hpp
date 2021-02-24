@@ -26,7 +26,7 @@
 #include <algorithm>
 #include <numbers>
 
-namespace usvg
+namespace usdg
 {
   template <typename Rng, typename Func>
   inline blaze::DynamicVector<double>
@@ -34,17 +34,17 @@ namespace usvg
       size_t n_samples, size_t n_burn, size_t n_thin)
   {
     auto samples = blaze::DynamicVector<double>(n_samples / n_thin);
-    double x     = usvg::runiform(rng, lb, ub);
-    double q_cur = usvg::duniform(x, lb, ub);
+    double x     = usdg::runiform(rng, lb, ub);
+    double q_cur = usdg::duniform(x, lb, ub);
     double p_cur = f(x);
 
     for (size_t i = 0; i < n_samples + n_burn; ++i)
     {
-      double x_prop = usvg::runiform(rng, lb, ub);
-      double q_prop = usvg::duniform(x_prop, lb, ub);
+      double x_prop = usdg::runiform(rng, lb, ub);
+      double q_prop = usdg::duniform(x_prop, lb, ub);
       double p_prop = f(x_prop);
       double alpha  = std::min(p_prop / p_cur * q_cur / q_prop, 1.0);
-      double u      = usvg::runiform(rng);
+      double u      = usdg::runiform(rng);
 
       if(u < alpha)
       {

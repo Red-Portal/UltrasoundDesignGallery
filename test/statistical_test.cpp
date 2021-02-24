@@ -1,5 +1,4 @@
 
-
 /*
  * Copyright (C) 2021  Ray Kim
  *
@@ -22,27 +21,28 @@
 
 #include "../src/misc/prng.hpp"
 #include "../src/misc/uniform.hpp"
+#include "../src/misc/mvnormal.hpp"
 #include "statistical_test.hpp"
 
 #include <random>
 
 TEST_CASE("Null-hypothesis is true", "[statistical test]")
 {
-  auto prng    = usvg::Random123();
+  auto prng    = usdg::Random123();
   auto dist    = std::normal_distribution<double>(0.0, 1.0);
   auto samples = blaze::DynamicVector<double>(512);
   std::generate(samples.begin(), samples.end(),
 		[&]{ return dist(prng); });
-  REQUIRE( !kolmogorov_smirnoff_test(0.01, normal_cdf,
+  REQUIRE( !kolmogorov_smirnoff_test(0.01, usdg::normal_cdf,
 				     samples.begin(), samples.end()) );
 }
 
 TEST_CASE("Null-hypothesis is false", "[statistical test]")
 {
-  auto prng    = usvg::Random123();
+  auto prng    = usdg::Random123();
   auto samples = blaze::DynamicVector<double>(512);
   std::generate(samples.begin(), samples.end(),
-		[&]{ return usvg::runiform(prng, -3, 3); });
-  REQUIRE( kolmogorov_smirnoff_test(0.01, normal_cdf,
+		[&]{ return usdg::runiform(prng, -3, 3); });
+  REQUIRE( kolmogorov_smirnoff_test(0.01, usdg::normal_cdf,
 				    samples.begin(), samples.end()) );
 }

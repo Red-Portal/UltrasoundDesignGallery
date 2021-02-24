@@ -19,21 +19,23 @@
 #ifndef __US_GALLERY_GP_PRIOR_HPP__
 #define __US_GALLERY_GP_PRIOR_HPP__
 
+#include "kernel.hpp"
 #include "../misc/cholesky.hpp"
 #include "../misc/lu.hpp"
 #include "../misc/linearalgebra.hpp"
+#include "../misc/mvnormal.hpp"
 
 #include <blaze/math/DynamicVector.h>
 #include <blaze/math/DynamicMatrix.h>
 
 #include <numbers>
 
-namespace usvg
+namespace usdg
 {
   template <typename KernelFunc>
   struct LatentGaussianProcess
   {
-    usvg::Cholesky<usvg::DenseChol> cov_chol;
+    usdg::Cholesky<usdg::DenseChol> cov_chol;
     blaze::DynamicVector<double>    alpha;
     KernelFunc                      kernel;
     
@@ -61,23 +63,38 @@ namespace usvg
     }
     auto k_self   = this->kernel(x, x);
     auto mean     = blaze::dot(k_star, alpha);
-    double gp_var = usvg::invquad(this->cov_chol, k_star);
+    double gp_var = usdg::invquad(this->cov_chol, k_star);
     auto var      = k_self - gp_var;
     return {mean, var};
   }
 
   inline std::tuple<double, blaze::DynamicVector<double>>
   gp_loglike(blaze::DynamicVector<double> const& f,
-		usvg::Cholesky<usvg::DenseChol> const& cov_chol)
+	     usdg::Cholesky<usdg::DenseChol> const& cov_chol)
   {
     size_t n_dims     = f.size();
     double normalizer = log(2*std::numbers::pi);
     double D          = static_cast<double>(n_dims);
-    auto alpha        = usvg::solve(cov_chol, f);
+    auto alpha        = usdg::solve(cov_chol, f);
     double like = (blaze::dot(alpha, f)
-		   + usvg::logdet(cov_chol)
+		   + usdg::logdet(cov_chol)
 		   + D*normalizer)/-2;
     return {like, std::move(alpha)};
+  }
+
+  template <typename Rng>
+  inline blaze::DynamicVector<double>
+  sample_gp_prior(Rng& prng,
+		  usdg::Matern52 const& kernel,
+		  blaze::DynamicMatrix<double> const& points)
+  {
+    auto K      = usdg::compute_gram_matrix(kernel, points);
+    auto K_chol = usdg::Cholesky<usdg::DenseChol>();
+    REQUIRE_NOTHROW( K_chol = usdg::cholesky_nothrow(K).value() );
+  
+    auto Z = usdg::rmvnormal(prng, K.rows());
+    auto y = K_chol.L * Z;
+    return y;
   }
 }
 

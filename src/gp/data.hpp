@@ -29,7 +29,7 @@
 #include <vector>
 #include <cassert>
 
-namespace usvg
+namespace usdg
 {
   struct Datapoint
   {
@@ -66,6 +66,12 @@ namespace usvg
 
     inline size_t
     dims() const noexcept;
+
+    inline size_t
+    num_pseudo() const noexcept;
+
+    inline size_t
+    num_data() const noexcept;
   };
 
   inline 
@@ -128,7 +134,7 @@ namespace usvg
     return res;
   }
 
-  inline usvg::Dataset&
+  inline usdg::Dataset&
   Dataset::
   push_back(Datapoint const& datapoint)
   {
@@ -142,6 +148,20 @@ namespace usvg
   dims() const noexcept
   {
     return _n_dims;
+  }
+
+  inline size_t
+  Dataset::
+  num_pseudo() const noexcept
+  {
+    return _n_pseudo;
+  }
+
+  inline size_t
+  Dataset::
+  num_data() const noexcept
+  {
+    return _data.size();
   }
 }
 

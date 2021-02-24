@@ -68,10 +68,10 @@ TEST_CASE("hessian", "[finitediff]")
   auto H       = finitediff_hessian(f, x);
 
   /* diagonal */
-  REQUIRE(blaze::norm(blaze::diagonal(H) - blaze::diagonal(H_truth)) < 1e-4);
+  REQUIRE(blaze::norm(blaze::diagonal(H) - blaze::diagonal(H_truth)) < 1e-3);
   
   /* off-diagonal */
   blaze::diagonal(H)       = 0;
   blaze::diagonal(H_truth) = 0;
-  REQUIRE(blaze::norm(H - H_truth) < 1e-4);
+  REQUIRE(blaze::norm(H - H_truth) < 1e-3);
 }

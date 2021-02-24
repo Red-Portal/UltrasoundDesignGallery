@@ -24,9 +24,12 @@
 #include "../src/gp/kernel.hpp"
 #include "../src/inference/ess.hpp"
 #include "../src/inference/laplace.hpp"
+#include "../src/inference/pm_ess.hpp"
 #include "../src/misc/mvnormal.hpp"
 #include "../src/misc/prng.hpp"
 #include "utils.hpp"
+
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 #include <blaze/math/Subvector.h>
 #include <blaze/math/SymmetricMatrix.h>
@@ -40,8 +43,9 @@ sigmoid(double x)
   return 1 / (1 + exp(-x));
 }
 
+template<typename VecType>
 inline blaze::DynamicVector<double>
-sigmoid(blaze::DynamicVector<double> const& x)
+sigmoid(VecType const& x)
 {
   size_t n_elem = x.size();
   auto p        = blaze::DynamicVector<double>(n_elem);
@@ -72,12 +76,12 @@ binary_accuracy(blaze::DynamicVector<double> const& p,
   return static_cast<double>(correct) / static_cast<double>(y.size()); 
 }
 
-TEST_CASE("Laplace approximation of latent GP", "[laplace]")
+TEST_CASE("laplace approximation of latent GP", "[laplace]")
 {
   auto key        = 0u;//GENERATE(range(0u, 8u));
   auto prng       = usvg::Random123(key);
-  size_t n_dims   = 8;
-  size_t n_points = 128;
+  size_t n_dims   = 4;
+  size_t n_points = 50;
 
   auto kernel = usvg::Matern52{1.0, blaze::DynamicVector<double>(n_dims, 0.5)};
   auto data_x = generate_mvsamples(prng, n_dims, n_points);
@@ -109,8 +113,82 @@ TEST_CASE("Laplace approximation of latent GP", "[laplace]")
       return {std::move(grad), std::move(neg_hess)};
     };
 
-  auto f0           = blaze::zero<double>(p.size());
-  auto [f, WK, Blu] = usvg::laplace_approximation(K_chol, f0, grad_hess);
-  auto acc          = binary_accuracy(sigmoid(f), data_y);
+  auto f0     = blaze::zero<double>(p.size());
+  auto [f, W] = usvg::laplace_approximation(K_chol.A, f0, grad_hess);
+  auto acc    = binary_accuracy(sigmoid(f), data_y);
   REQUIRE(acc >= 0.9);
+}
+
+TEST_CASE("pseudo-marginal MCMC for Bernoulli likelihood", "[laplace]")
+{
+  auto key        = 0u; //GENERATE(range(0u, 4u));
+  auto prng       = usvg::Random123(key);
+  size_t n_dims   = 4;
+  size_t n_points = 256;
+
+  auto kernel = usvg::Matern52{3.0, blaze::DynamicVector<double>(n_dims, 0.3)};
+  auto data_x = generate_mvsamples(prng, n_dims, n_points);
+  auto K      = usvg::compute_gram_matrix(kernel, data_x);
+  auto K_chol = usvg::Cholesky<usvg::DenseChol>();
+  REQUIRE_NOTHROW( K_chol = usvg::cholesky_nothrow(K).value() );
+
+  auto Z       = usvg::rmvnormal(prng, K.rows());
+  auto f_truth = K_chol.L * Z;
+  auto p       = sigmoid(f_truth);
+  auto data_y  = blaze::map(p, [&prng](double p_in)->double{
+    return p_in >= 0.5 ? 1.0 : -1.0;
+  });
+  auto data_t = blaze::evaluate((blaze::eval(data_y) + 1)/2);
+
+  auto grad_hess = [&data_t](blaze::DynamicVector<double> const& f_in)
+    ->std::tuple<blaze::DynamicVector<double>,
+		 blaze::DynamicMatrix<double>>
+    {
+      auto pi        = sigmoid(f_in);
+      auto grad      = blaze::evaluate(data_t - pi);
+      auto hess_diag = blaze::evaluate(pi * (pi - 1));
+      auto n_hess    = hess_diag.size();
+      auto neg_hess  = blaze::DynamicMatrix<double>(n_hess, n_hess, 0.0);
+      for (size_t i = 0; i < n_hess; ++i)
+      {
+	neg_hess(i,i) = -hess_diag[i];
+      }
+      return {std::move(grad), std::move(neg_hess)};
+    };
+
+  auto loglike = [&data_y](blaze::DynamicVector<double> const& f_in){
+    auto likes = -blaze::log(1 + blaze::exp(-1*data_y * f_in));
+    return blaze::sum(likes);
+  };
+
+  auto console  = spdlog::stdout_color_mt("console");
+  spdlog::set_level(spdlog::level::info);
+  auto logger  = spdlog::get("console");
+
+  size_t n_samples = 2000;
+  size_t n_burn    = 2000;
+
+  auto [theta_samples, f_samples, K_samples]= usvg::pm_ess(
+    prng,
+    loglike,
+    grad_hess,
+    blaze::zero<double>(n_dims+1),
+    usvg::MvNormal<usvg::DiagonalChol>{
+      blaze::zero<double>(n_dims+1),
+      usvg::cholesky_nothrow(
+	blaze::DynamicVector<double>(n_dims+1, 2.0)).value()},
+    data_x,
+    n_samples,
+    n_burn,
+    logger.get());
+
+  for (size_t i = 0; i < n_dims+1; ++i)
+    std::cout << blaze::mean(blaze::row(theta_samples, i)) << std::endl;
+
+  std::cout << theta_samples << std::endl;
+
+  // auto f0     = blaze::zero<double>(p.size());
+  // auto [f, W] = usvg::laplace_approximation(K_chol, f0, grad_hess);
+  // auto acc    = binary_accuracy(sigmoid(f), data_y);
+  // REQUIRE(acc >= 0.9);
 }

@@ -19,10 +19,10 @@
 #ifndef __US_GALLERY_LAPLACE_HPP__
 #define __US_GALLERY_LAPLACE_HPP__
 
-#include "../misc/linearalgebra.hpp"
-#include "../misc/lu.hpp"
 #include "../misc/cholesky.hpp"
 #include "../misc/debug.hpp"
+#include "../misc/linearalgebra.hpp"
+#include "../misc/lu.hpp"
 
 #include <blaze/math/DynamicMatrix.h>
 #include <blaze/math/DynamicVector.h>
@@ -32,13 +32,11 @@
 
 namespace usvg
 {
-  template <typename CholType,
-	    typename LoglikeGradHess>
+  template <typename LoglikeGradHess>
   inline std::tuple<blaze::DynamicVector<double>,
-		    blaze::DynamicMatrix<double>,
-		    usvg::LU>
+		    blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>>
   laplace_approximation(
-    usvg::Cholesky<CholType> const& K_chol,
+    blaze::SymmetricMatrix<blaze::DynamicMatrix<double>> const& K,
     blaze::DynamicVector<double> const& f0,
     LoglikeGradHess loglike_grad_neghess,
     size_t max_iter = 20,
@@ -60,26 +58,26 @@ namespace usvg
 
     if(log)
     {
-      log->info("Starting laplace approximation: {}", usvg::file_name(__FILE__));
+      log->info("Starting Laplace approximation: {}", usvg::file_name(__FILE__));
       log->info("{}   {}", "iter", "||f - f*||");
     }
 
     size_t it = 0;
-    auto Blu  = LU();
-    auto WK   = blaze::DynamicMatrix<double>();
+    auto W    = blaze::DynamicMatrix<double>();
     auto I    = blaze::IdentityMatrix<double>(n_dims);
     for (it = 0; it < max_iter; ++it)
     {
-      auto [gradT, W] = loglike_grad_neghess(f);
+      auto [gradT, W_] = loglike_grad_neghess(f);
+      W = W_;
 
       auto b	   = W*f + gradT;
-      WK	   = W*K_chol.A;
+      auto WK	   = W*K;
       auto B	   = I + WK;
-      Blu	   = usvg::lu(B);
+      auto Blu	   = usvg::lu(B);
       auto WKb	   = WK*b;
       auto BinvWKb = usvg::solve(Blu, WKb);
       auto a	   = b - BinvWKb;
-      auto f_next  = K_chol.A*a;
+      auto f_next  = K*a;
 
       auto delta_f = blaze::norm(f - f_next);
       f            = f_next;
@@ -89,7 +87,7 @@ namespace usvg
 	log->info("{:>4}   {:g}", it, delta_f);
       }
 
-      if(delta_f < 1e-3)
+      if(delta_f < 1e-2)
       {
 	break;
       }
@@ -104,7 +102,7 @@ namespace usvg
       log->info("Laplace approximation converged.");
     }
 
-    return {std::move(f), std::move(WK), std::move(Blu)};
+    return {std::move(f), std::move(W)};
   }
 }
 

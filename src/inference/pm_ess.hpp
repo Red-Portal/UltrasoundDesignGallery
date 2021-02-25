@@ -25,6 +25,7 @@
 #include "../misc/linearalgebra.hpp"
 #include "../misc/mvnormal.hpp"
 #include "ess.hpp"
+#include "laplace.hpp"
 
 #include <numbers>
 #include <vector>
@@ -58,7 +59,8 @@ namespace usdg
 
   template <typename Rng,
 	    typename Loglike,
-	    typename GradNegHessType,
+	    typename MakeGramFunc,
+	    typename GradNegHessFunc,
 	    typename CholType>
   inline std::tuple<blaze::DynamicVector<double>,
 		    double,
@@ -67,11 +69,11 @@ namespace usdg
 		    size_t>
   update_theta(Rng& prng,
 	       Loglike loglike,
-	       GradNegHessType loglike_grad_neghess,
+	       GradNegHessFunc loglike_grad_neghess,
+	       MakeGramFunc  make_gram_matrix,
 	       blaze::DynamicVector<double> const& theta,
 	       blaze::DynamicVector<double> const& u,
 	       double pm_prev,
-	       blaze::DynamicMatrix<double> const& data,
 	       usdg::MvNormal<CholType> const& theta_prior,
 	       spdlog::logger* logger = nullptr)
   {
@@ -84,8 +86,7 @@ namespace usdg
     auto target = [&](blaze::DynamicVector<double> const& theta_in)->double
     {
       /* Note: (A + B)^{-1} = L (I + L^T B L)^{-1} L^T where A^{-1} = L L^T */
-      auto kernel        = usdg::Matern52(blaze::exp(theta_in));
-      auto gram          = usdg::compute_gram_matrix(kernel, data);
+      auto gram          = make_gram_matrix(theta_in);
       auto gram_chol_opt = usdg::cholesky_nothrow(gram);
       if(!gram_chol_opt)
       {
@@ -143,23 +144,24 @@ namespace usdg
   }
 
   template <typename Rng,
-	    typename Loglike,
-	    typename GradNegHessType,
+	    typename LoglikeFunc,
+	    typename GradNegHessFunc,
+	    typename MakeGramFunc,
 	    typename CholType>
   inline std::tuple<blaze::DynamicMatrix<double>,
 		    blaze::DynamicMatrix<double>,
 		    std::vector<usdg::Cholesky<usdg::DenseChol>>>
   pm_ess(Rng& prng,
-	 Loglike loglike,
-	 GradNegHessType loglike_grad_neghess,
+	 LoglikeFunc loglike,
+	 GradNegHessFunc loglike_grad_neghess,
+	 MakeGramFunc make_gram_matrix,
 	 blaze::DynamicVector<double> const& theta_init,
 	 usdg::MvNormal<CholType> const& theta_prior,
-	 blaze::DynamicMatrix<double> const& data,
+	 size_t n_dims,
 	 size_t n_samples,
 	 size_t n_burn,
 	 spdlog::logger* logger = nullptr)
   {
-    size_t n_dims = data.columns();
     auto ones     = blaze::DynamicVector<double>(n_dims, 1.0);
     auto u_prior  = MvNormal<usdg::DiagonalChol>{
       blaze::zero<double>(n_dims),
@@ -171,8 +173,16 @@ namespace usdg
     auto gram_samples  = std::vector<usdg::Cholesky<usdg::DenseChol>>(n_samples);
 
     auto [theta, pm, dist_q_f, gram_chol, n_props] = update_theta(
-      prng, loglike, loglike_grad_neghess, theta_init, u,
-      std::numeric_limits<double>::lowest(), data, theta_prior, logger);
+      prng,
+      loglike,
+      loglike_grad_neghess,
+      make_gram_matrix,
+      theta_init,
+      u,
+      std::numeric_limits<double>::lowest(),
+      theta_prior,
+      logger);
+
     if(logger)
     {
       logger->info("Starting pseudo-marginal MCMC: {}", usdg::file_name(__FILE__));
@@ -205,11 +215,12 @@ namespace usdg
 	prng,
 	loglike,
 	loglike_grad_neghess,
+	make_gram_matrix,
 	theta,
 	u,
 	pm,
-	data,
-	theta_prior);
+	theta_prior,
+	logger);
       theta     = theta_;
       pm        = pm__;
       dist_q_f  = dist_q_f_;

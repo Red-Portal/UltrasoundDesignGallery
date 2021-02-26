@@ -90,7 +90,7 @@ namespace usdg
   {
     auto K      = usdg::compute_gram_matrix(kernel, points);
     auto K_chol = usdg::Cholesky<usdg::DenseChol>();
-    REQUIRE_NOTHROW( K_chol = usdg::cholesky_nothrow(K).value() );
+    K_chol      = usdg::cholesky_nothrow(K).value();
   
     auto Z = usdg::rmvnormal(prng, K.rows());
     auto y = K_chol.L * Z;

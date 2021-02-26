@@ -43,7 +43,7 @@ TEST_CASE("Identifiability check of GP hyperparameters using ESS", "[gp & ess]")
   auto prior_var  = blaze::DynamicVector<double>(n_dims+1, 2.0);
   auto prior_chol = usdg::Cholesky<usdg::DiagonalChol>();
   REQUIRE_NOTHROW( prior_chol = usdg::cholesky_nothrow(prior_var).value() );
-  auto prior_dist = usdg::MvNormal<usdg::DiagonalChol>(prior_mean, prior_chol);
+  auto prior_dist = usdg::MvNormal<usdg::DiagonalChol>{prior_mean, prior_chol};
 
   auto truth  = prior_dist.sample(prng);
   auto kernel = usdg::Matern52{

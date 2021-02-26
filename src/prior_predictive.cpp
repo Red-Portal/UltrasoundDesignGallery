@@ -37,7 +37,7 @@ generate_gp_sample(usdg::Random123& prng,
 {
   auto dist       = std::normal_distribution<double>(0, 1);
   auto uniformgen = blaze::generate(
-    n_dims, [&prng, &dist](size_t)->double { return usdg::runiform(prng); });
+    n_dims, [&prng](size_t)->double { return usdg::runiform(prng); });
 
   auto init_points = blaze::DynamicMatrix<double>(n_dims, n_init_points); 
   for (size_t i = 0; i < n_init_points; ++i)
@@ -62,7 +62,7 @@ generate_datapoint(usdg::Random123& prng,
 {
   auto dist       = std::normal_distribution<double>(0, 1);
   auto uniformgen = blaze::generate(
-    n_dims, [&prng, &dist](size_t)->double { return usdg::runiform(prng); });
+    n_dims, [&prng](size_t)->double { return usdg::runiform(prng); });
   auto noise_dist = std::normal_distribution<double>(0, sigma);
 
   auto x   = blaze::DynamicVector<double>(uniformgen);
@@ -162,10 +162,10 @@ prior_predictive_check(usdg::Random123& prng,
       return usdg::compute_gram_matrix(kernel, data_mat);
     };
 
-  size_t n_samples = 1000;
-  size_t n_burn    = 1000;
+  size_t n_samples = 128;
+  size_t n_burn    = 128;
 
-  auto [theta_samples, f_samples, K_samples]= usdg::pm_ess(
+  auto [theta_samples, f_samples, K_samples] = usdg::pm_ess(
     prng,
     loglike,
     grad_hess,
@@ -176,6 +176,8 @@ prior_predictive_check(usdg::Random123& prng,
     n_samples,
     n_burn,
     logger);
+
+  std::cout << theta_samples << std::endl;
 }
 
 int main()
@@ -192,7 +194,7 @@ int main()
   prior_var[0]    = 1.0; 
 
   auto prior_chol = usdg::cholesky_nothrow(prior_var).value();
-  auto prior_dist = usdg::MvNormal<usdg::DiagonalChol>(prior_mean, prior_chol);
+  auto prior_dist = usdg::MvNormal<usdg::DiagonalChol>{prior_mean, prior_chol};
 
   auto console  = spdlog::stdout_color_mt("console");
   spdlog::set_level(spdlog::level::info);

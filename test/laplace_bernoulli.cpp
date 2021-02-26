@@ -92,7 +92,7 @@ TEST_CASE("laplace approximation of latent GP", "[laplace]")
   auto Z       = usdg::rmvnormal(prng, K.rows());
   auto f_truth = K_chol.L * Z;
   auto p       = sigmoid(f_truth);
-  auto data_y  = blaze::map(p, [&prng](double p_in)->double{
+  auto data_y  = blaze::map(p, [](double p_in)->double{
     return p_in >= 0.5 ? 1.0 : -1.0;
   });
   auto data_t = blaze::evaluate((blaze::eval(data_y) + 1)/2);

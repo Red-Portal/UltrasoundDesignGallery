@@ -25,8 +25,6 @@
 #include <cmath>
 #include <random>
 
-double const catch_eps = 1e-8;
-
 TEST_CASE("Dense inverse quadratic", "[linear algebra]")
 {
   auto A = blaze::DynamicMatrix<double>(

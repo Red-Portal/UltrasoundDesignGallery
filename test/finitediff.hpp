@@ -36,7 +36,6 @@ finitediff_gradient(Func f, VecType const& x,
   size_t n_dims = x.size();
   auto g        = blaze::DynamicVector<double>(n_dims);
   auto delta    = blaze::DynamicVector<double>(x);
-
   for (size_t i = 0; i < n_dims; ++i)
   {
     double h   = sqrt(eps)*(1 + abs(x[i]));

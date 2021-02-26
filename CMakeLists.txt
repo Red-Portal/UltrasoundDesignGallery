@@ -115,7 +115,7 @@ target_link_libraries(usgallery
     Threads::threads
 
     PUBLIC
-    OpenMP::OpenMP_CXX
+    #OpenMP::OpenMP_CXX
     project_options
     project_warnings
     fmt::fmt-header-only

@@ -24,21 +24,51 @@
 #include "../misc/linearalgebra.hpp"
 #include "../misc/lu.hpp"
 
+#include "../../test/finitediff.hpp"
+
 #include <blaze/math/DynamicMatrix.h>
 #include <blaze/math/DynamicVector.h>
 
 #include <optional>
+#include <cmath>
 #include <memory>
+//#include <iostream>
 
 namespace usdg
 {
-  template <typename LoglikeGradHess>
+  template <typename CholType,
+	    typename Loglike>
+  inline double
+  joint_likelihood(usdg::Cholesky<CholType> const& K,
+		      Loglike loglike,
+		      blaze::DynamicVector<double> const& f)
+  {
+    return loglike(f) + usdg::invquad(K, f)/-2 + usdg::logdet(K)/-2;
+  }
+
+  template <typename CholType,
+	    typename LoglikeGradHess>
+  inline blaze::DynamicVector<double>
+  marginal_likelihood_gradient(usdg::Cholesky<CholType> const& K,
+			       LoglikeGradHess loglike_grad_neghess,
+			       blaze::DynamicVector<double> const& f)
+  {
+    auto [gradT, W] = loglike_grad_neghess(f);
+    auto alpha      = usdg::solve(K, f);
+    auto grad       = gradT - alpha;
+    return grad;
+  }
+
+  template <typename CholType,
+	    typename LoglikeGradHess,
+	    typename Loglike>
   inline std::tuple<blaze::DynamicVector<double>,
 		    blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>>
   laplace_approximation(
-    blaze::SymmetricMatrix<blaze::DynamicMatrix<double>> const& K,
-    blaze::DynamicVector<double> const& f0,
+    usdg::Cholesky<CholType> const& K,
+    size_t n_dims,
     LoglikeGradHess loglike_grad_neghess,
+    Loglike loglike,
     size_t max_iter = 20,
     spdlog::logger* log = nullptr)
   /*
@@ -49,48 +79,82 @@ namespace usdg
    * Reduces the stepsize whenever the marginal likelhood gets stuck
    * Algortihm 3.1 utilizes the fact that W is diagonal which is not for our case.
    *
-   * Note: ( K^{-1} + W )^{-1} = K ( I - ( I + W K )^{-1} W K ) 
-   *                           = K ( I - B^{-1} W K ) 
+   * Note: ( K^{-1} + W )^{-1} = ( K^{-1} ( I + K W )^{-1} )^{-1}
+   *                           =  ( I - K W )^{-1} K
+   *                           =  B^{-1} K
    */
   {
-    size_t n_dims = f0.size(); 
-    auto f        = blaze::DynamicVector<double>(f0);
-
     if(log)
     {
       log->info("Starting Laplace approximation: {}", usdg::file_name(__FILE__));
       log->info("{}   {}", "iter", "||f - f*||");
     }
-
-    size_t it = 0;
-    auto W    = blaze::DynamicMatrix<double>();
-    auto I    = blaze::IdentityMatrix<double>(n_dims);
+    auto f      = blaze::DynamicVector<double>(n_dims, 0.0);
+    auto f_next = blaze::DynamicVector<double>(f.size());
+    double psi  = joint_likelihood(K, loglike, f);
+    size_t it   = 0;
+    auto W      = blaze::DynamicMatrix<double>();
+    auto I      = blaze::IdentityMatrix<double>(n_dims);
     for (it = 0; it < max_iter; ++it)
     {
       auto [gradT, W_] = loglike_grad_neghess(f);
-      W = W_;
+      W = std::move(W_);
 
-      auto b	   = W*f + gradT;
-      auto WK	   = W*K;
-      auto B	   = I + WK;
+      auto alpha   = usdg::solve(K, f);
+      auto grad    = blaze::evaluate(gradT - alpha);
+      auto KW	   = K.A*W;
+      auto B	   = I + KW;
       auto Blu	   = usdg::lu(B);
-      auto WKb	   = WK*b;
-      auto BinvWKb = usdg::solve(Blu, WKb);
-      auto a	   = b - BinvWKb;
-      auto f_next  = K*a;
+      auto Kb	   = K.A*grad;
+      auto BinvKb  = usdg::solve(Blu, Kb);
+      auto p       = BinvKb;
 
-      auto delta_f = blaze::norm(f - f_next);
-      f            = f_next;
-
-      if(log)
+      double stepsize = 2.0;
+      double c        = 1e-2;
+      double psi_next = std::numeric_limits<double>::lowest();
+      double graddotp = blaze::dot(grad, p);
+      double thres    = 0.0;
+      if(graddotp < 2e-4)
       {
-	log->info("{:>4}   {:g}", it, delta_f);
+	thres = c*(graddotp - graddotp/4);
+      }
+      else
+      {
+	thres = c*(graddotp - 1e-4);
       }
 
-      if(delta_f < 1e-2)
+      do
+      {
+	if(stepsize > 1e-2)
+	{
+	  stepsize /= 2.0;
+	}
+	else
+	{
+	  stepsize /= 1e+2;
+	}
+
+       	f_next    = f + stepsize*p; 
+	psi_next  = joint_likelihood(K, loglike, f_next);
+
+	//std::cout << stepsize << " " << psi_next << " " << psi << " " << stepsize*thres << std::endl;
+      } while(psi_next - psi < stepsize*thres);
+      //std::cout << '\n';
+
+      auto f_norm = blaze::norm(f - f_next);
+      auto g_norm = blaze::norm(grad);
+      if(log)
+      {
+	log->info("{:>4}   {:g}", it,  f_norm);
+      }
+
+      if(f_norm < 1e-2 || g_norm < 1e-2)
       {
 	break;
       }
+
+      f   = f_next;
+      psi = psi_next;
     }
 
     if(log && it == max_iter)

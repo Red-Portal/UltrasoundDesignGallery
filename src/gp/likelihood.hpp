@@ -109,9 +109,9 @@ namespace usdg
 
   inline std::tuple<blaze::DynamicVector<double>,
 		    blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>>
-  pgp_loglike_gradhess(blaze::DynamicMatrix<double> const& delta,
-		       usdg::Dataset const& data,
-		       double sigma)
+  pgp_loglike_gradneghess(blaze::DynamicMatrix<double> const& delta,
+			  usdg::Dataset const& data,
+			  double sigma)
   {
     size_t n_data   = data.num_data();
     size_t n_pseudo = data.num_pseudo();
@@ -154,7 +154,7 @@ namespace usdg
 	hess(beta_idx, beta_idx)  =  delta_ij*phi_ij / 2 / sigma2 / m;
       }
     }
-    return {std::move(grad), std::move(hess)};
+    return {std::move(grad), -1*hess};
   }
 }
 

@@ -29,13 +29,13 @@
 #include "../src/misc/prng.hpp"
 #include "utils.hpp"
 
-#include <spdlog/sinks/stdout_color_sinks.h>
-
 #include <blaze/math/Subvector.h>
 #include <blaze/math/SymmetricMatrix.h>
 
 #include <limits>
 #include <cassert>
+
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 inline double
 sigmoid(double x)
@@ -113,8 +113,21 @@ TEST_CASE("laplace approximation of latent GP", "[laplace]")
       return {std::move(grad), std::move(neg_hess)};
     };
 
-  auto f0     = blaze::zero<double>(p.size());
-  auto [f, W] = usdg::laplace_approximation(K_chol.A, f0, grad_hess);
+
+  auto console  = spdlog::stdout_color_mt("console");
+  spdlog::set_level(spdlog::level::info);
+  auto logger  = spdlog::get("console");
+
+  auto loglike = [&data_y](blaze::DynamicVector<double> const& f_in)->double{
+    return -1*blaze::sum(blaze::log(1 + blaze::exp(-1*data_y*f_in)));
+  };
+
+  auto [f, W] = usdg::laplace_approximation(K_chol,
+					    f_truth.size(),
+					    grad_hess,
+					    loglike,
+					    20,
+					    logger.get());
   auto acc    = binary_accuracy(sigmoid(f), data_y);
   REQUIRE(acc >= 0.9);
 }

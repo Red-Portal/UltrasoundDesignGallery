@@ -31,7 +31,6 @@ namespace usdg
     blaze::LowerMatrix<blaze::DynamicMatrix<double>> L;
     blaze::UpperMatrix<blaze::DynamicMatrix<double>> U;
     blaze::DynamicMatrix<double> Pt;
-
   };
 
   inline LU

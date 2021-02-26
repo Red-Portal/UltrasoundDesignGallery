@@ -37,10 +37,18 @@
 //   }
 // }
 
+TEST_CASE("preferential gaussian process likelihood", "[likelihood]")
+{
+  auto delta = blaze::DynamicMatrix<double>(
+    {{ 1.03636,  0.192338, -0.498405,  -1.36314},
+     {-0.816198, 0.348206,  0.0917257, -0.260458}});
+  REQUIRE(usdg::pgp_loglike(delta) == Approx(-1.8420149682339513));
+}
+
 TEST_CASE("preferential gaussian process likelihood derivatives", "[likelihood]")
 {
   size_t n_dims   = 2;
-  size_t n_pseudo = 4;
+  size_t n_pseudo = 16;
   size_t n_data   = 16;
 
   auto key     = GENERATE(range(0u, 8u));
@@ -69,7 +77,7 @@ TEST_CASE("preferential gaussian process likelihood derivatives", "[likelihood]"
   };
 
   auto delta  = usdg::pgp_delta(f, data, 1.0);
-  auto [g, H] = usdg::pgp_loglike_gradhess(delta, data, 1.0);
+  auto [g, mH] = usdg::pgp_loglike_gradneghess(delta, data, 1.0);
 
   auto g_truth = finitediff_gradient(loglike, f);
   auto H_truth = finitediff_hessian(loglike,  f);
@@ -77,12 +85,12 @@ TEST_CASE("preferential gaussian process likelihood derivatives", "[likelihood]"
   REQUIRE(blaze::norm(g - g_truth) < 1e-4);
 
   /* diagonal */
-  REQUIRE(blaze::norm(blaze::diagonal(H) - blaze::diagonal(H_truth)) < 1e-4);
+  REQUIRE(blaze::norm(-blaze::diagonal(mH) - blaze::diagonal(H_truth)) < 1e-4);
 
   /* off-diagonal */
-  blaze::diagonal(H)       = 0;
+  blaze::diagonal(mH)      = 0;
   blaze::diagonal(H_truth) = 0;
-  REQUIRE(blaze::norm(H - H_truth) < 1e-4);
+  REQUIRE(blaze::max(blaze::abs(-mH - H_truth)) < 1e-4);
 }
 
 

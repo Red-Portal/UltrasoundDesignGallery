@@ -55,7 +55,7 @@ namespace usdg
    * var  = k(x, x) - k(x)^T (K + W^{-1})^{-1} k(x)
    */
   {
-    size_t n_data = data.rows();
+    size_t n_data = data.columns();
     auto k_star   = blaze::DynamicVector<double>(n_data);
     for (size_t i = 0; i < n_data; ++i)
     {

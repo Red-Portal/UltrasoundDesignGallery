@@ -94,11 +94,12 @@ namespace usdg
       }
       gram_chol = std::move(gram_chol_opt.value());
       gram_chol_opt.reset();
-      
+
       auto [f_mode, W] = laplace_approximation(
-	gram_chol.A,
-	blaze::zero<double>(n_dims),
+	gram_chol,
+	gram.rows(),
 	loglike_grad_neghess,
+	loglike,
 	laplace_max_iter,
 	logger);
 
@@ -219,8 +220,9 @@ namespace usdg
 	theta,
 	u,
 	pm,
-	theta_prior,
-	logger);
+	theta_prior);
+      //logger);
+
       theta     = theta_;
       pm        = pm__;
       dist_q_f  = dist_q_f_;

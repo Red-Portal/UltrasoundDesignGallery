@@ -15,6 +15,15 @@ find_package(Catch2 REQUIRED)
 include(CTest)
 include(Catch)
 
+if(NOT (CMAKE_BUILD_TYPE EQUAL "Debug"))
+    find_package(OpenMP)
+    if (OPENMP_FOUND)
+	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${OpenMP_CXX_FLAGS}")
+	set(CMAKE_C_FLAGS_RELEASE   "${CMAKE_C_FLAGS_RELEASE}   ${OpenMP_C_FLAGS}")
+	set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS}  ${OpenMP_EXE_LINKER_FLAGS}")
+    endif()
+endif()
+
 add_library(catch_main STATIC catch_main.cpp)
 target_link_libraries(catch_main PUBLIC Catch2::Catch2)
 target_link_libraries(catch_main PRIVATE project_options)
@@ -32,6 +41,8 @@ add_executable(usgallery_tests
     gp_ess.cpp
     quadrature.cpp
     laplace_bernoulli.cpp
+    finitediff.cpp
+    likelihood.cpp
     )
 target_link_libraries(usgallery_tests
     INTERFACE
@@ -39,6 +50,7 @@ target_link_libraries(usgallery_tests
     Threads::threads
 
     PRIVATE
+    OpenMP::OpenMP_CXX
     BLAS::BLAS
     gcem
     stats

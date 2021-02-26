@@ -40,7 +40,7 @@ include(cmake/CompilerWarnings.cmake)
 set_project_warnings(project_warnings)
 
 # sanitizer options if supported by compiler
-if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
+if(CMAKE_BUILD_TYPE EQUAL "Debug")
     include(cmake/Sanitizers.cmake)
     enable_sanitizers(project_options)
 endif()
@@ -53,13 +53,15 @@ enable_doxygen()
 include(cmake/StaticAnalyzers.cmake)
 
 # Release mode options
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -flto ${CMAKE_CXX_FLAGS_RELEASE}")
 
 # Dependencies
 find_package(SFML 2.5 COMPONENTS system window graphics network audio REQUIRED)
 find_package(ImGui-SFML REQUIRED)
 find_package(Blaze      REQUIRED)
 find_package(Threads    REQUIRED)
+find_package(FMT        REQUIRED)
+find_package(OpenMP)
 
 add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 find_package(spdlog     REQUIRED)
@@ -89,6 +91,22 @@ if(ENABLE_TESTING)
   add_subdirectory(test)
 endif()
 
+# Prior predictive check
+add_executable(prior_predictive src/prior_predictive.cpp)
+target_link_libraries(prior_predictive 
+    INTERFACE
+    blaze::blaze
+    Threads::threads
+
+    PUBLIC
+    OpenMP::OpenMP_CXX
+    project_options
+    project_warnings
+    BLAS::BLAS
+    spdlog::spdlog
+    Random123)
+
+# Ultrasound Design Gallery
 add_executable(usgallery src/main.cpp)
 target_include_directories(usgallery PUBLIC ${SFML_INCLUDE_DIRS})
 target_link_libraries(usgallery
@@ -97,6 +115,7 @@ target_link_libraries(usgallery
     Threads::threads
 
     PUBLIC
+    OpenMP::OpenMP_CXX
     project_options
     project_warnings
     fmt::fmt-header-only

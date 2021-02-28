@@ -95,13 +95,18 @@ namespace usdg
       gram_chol = std::move(gram_chol_opt.value());
       gram_chol_opt.reset();
 
-      auto [f_mode, W] = laplace_approximation(
+      auto laplace_res = laplace_approximation(
 	gram_chol,
 	gram.rows(),
 	loglike_grad_neghess,
 	loglike,
 	laplace_max_iter,
 	logger);
+      if(!laplace_res)
+      {
+	return std::numeric_limits<double>::lowest();
+      }
+      auto [f_mode, W] = laplace_res.value();
 
       auto IpUBL          = blaze::evaluate(identity + (blaze::trans(gram_chol.L)*W*gram_chol.L));
       auto IpUBL_chol_opt = usdg::cholesky_nothrow(IpUBL);

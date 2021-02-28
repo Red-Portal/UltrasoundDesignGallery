@@ -54,6 +54,15 @@ include(cmake/StaticAnalyzers.cmake)
 
 # Release mode options
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -flto ${CMAKE_CXX_FLAGS_RELEASE}")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Rpass-analysis=loop-vectorize  -Rpass-missed=loop-vectorize")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS_RELEASE "-fopenmp-simd ${CMAKE_CXX_FLAGS_RELEASE}")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+endif()
+
+message(${CMAKE_CXX_FLAGS_RELEASE})
 
 # Dependencies
 find_package(SFML 2.5 COMPONENTS system window graphics network audio REQUIRED)
@@ -61,7 +70,7 @@ find_package(ImGui-SFML REQUIRED)
 find_package(Blaze      REQUIRED)
 find_package(Threads    REQUIRED)
 find_package(FMT        REQUIRED)
-find_package(OpenMP)
+find_package(OpenMP     REQUIRED)
 
 add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 find_package(spdlog     REQUIRED)
@@ -91,6 +100,8 @@ if(ENABLE_TESTING)
   add_subdirectory(test)
 endif()
 
+find_package(Python COMPONENTS Development NumPy)
+
 # Prior predictive check
 add_executable(prior_predictive src/prior_predictive.cpp)
 target_link_libraries(prior_predictive 
@@ -99,6 +110,8 @@ target_link_libraries(prior_predictive
     Threads::threads
 
     PUBLIC
+    Python::NumPy
+    Python::Python
     OpenMP::OpenMP_CXX
     project_options
     project_warnings

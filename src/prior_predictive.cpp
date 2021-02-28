@@ -26,6 +26,8 @@
 #include "misc/prng.hpp"
 #include "misc/uniform.hpp"
 
+#include <matplotlib-cpp/matplotlibcpp.h>
+
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 std::tuple<usdg::LatentGaussianProcess<usdg::Matern52>,
@@ -47,8 +49,11 @@ generate_gp_sample(usdg::Random123& prng,
   auto K      = usdg::compute_gram_matrix(kernel, init_points);
   auto K_chol = usdg::cholesky_nothrow(K).value();
   auto z      = usdg::rmvnormal(prng, K.rows());
+  auto y      = K_chol.L * z;
+  auto alpha  = usdg::solve(K_chol, y);
   auto gp     = usdg::LatentGaussianProcess<usdg::Matern52>{
-    std::move(K_chol), std::move(z), kernel};
+    std::move(K_chol), std::move(alpha), kernel};
+
   return {std::move(gp), std::move(init_points)};
 }
 
@@ -67,28 +72,29 @@ generate_datapoint(usdg::Random123& prng,
 
   auto x   = blaze::DynamicVector<double>(uniformgen);
   auto xi  = usdg::rmvnormal(prng, n_dims);
-  xi      /= blaze::max(xi);
+  xi      /= blaze::max(blaze::abs(xi));
 
   auto [lb, ub]     = usdg::pgp_find_bounds(x, xi);
-  auto coeff_dist   = std::normal_distribution<double>(lb, ub);
+  auto coeff_dist   = std::uniform_real_distribution<double>(lb, ub);
   auto coefficients = blaze::DynamicVector<double>(n_pseudo + 1);
   for(size_t i = 0; i < n_pseudo + 1; ++i)
   {
     coefficients[i] = coeff_dist(prng);
   }
 
-  auto observations = blaze::evaluate(
-    blaze::map(coefficients, [&](double coef)->double{
-      auto point       = blaze::evaluate(coef*xi + x);
-      auto [mean, var] = true_gp.predict(true_data, point);
-      return mean + noise_dist(prng);
-  }));
+  auto observations = blaze::DynamicVector<double>(coefficients.size());
+  for (size_t i = 0; i < observations.size(); ++i)
+  {
+    auto point       = blaze::evaluate(coefficients[i] *xi + x);
+    auto [mean, var] = true_gp.predict(true_data, point);
+    observations[i]  = mean + noise_dist(prng);
+  }
 
   auto max_idx = blaze::argmax(observations);
   auto res  = usdg::Datapoint();
   res.betas = blaze::DynamicVector<double>(n_pseudo);
-  res.xi    = std::move(x);
-  res.x     = std::move(xi);
+  res.xi    = std::move(xi);
+  res.x     = std::move(x);
   res.alpha = 0.0;
 
   size_t beta_idx = 0;
@@ -117,11 +123,11 @@ prior_predictive_check(usdg::Random123& prng,
 {
   auto hypers  = prior_dist.sample(prng);
   double sigma = exp(hypers[0]);
-  auto kernel_truth = usdg::Matern52{
+  auto true_kernel = usdg::Matern52{
     exp(hypers[1]), blaze::exp(blaze::subvector(hypers, 2, n_dims))};
 
   size_t n_init_points      = 512;
-  auto [true_gp, true_data] = generate_gp_sample(prng, kernel_truth, n_dims, n_init_points);
+  auto [true_gp, true_data] = generate_gp_sample(prng, true_kernel, n_dims, n_init_points);
 
   if(logger)
   {
@@ -138,7 +144,7 @@ prior_predictive_check(usdg::Random123& prng,
     logger->info("generated data points");
   }
 
-  double sigma_buf = 1.0;
+  double sigma_buf = exp(hypers[0]);
   auto grad_hess = [&](blaze::DynamicVector<double> const& f_in)
     ->std::tuple<blaze::DynamicVector<double>,
 		 blaze::DynamicMatrix<double>>
@@ -162,20 +168,72 @@ prior_predictive_check(usdg::Random123& prng,
       return usdg::compute_gram_matrix(kernel, data_mat);
     };
 
-  size_t n_samples = 128;
-  size_t n_burn    = 128;
+  size_t n_samples = 64;
+  size_t n_burn    = 64;
 
   auto [theta_samples, f_samples, K_samples] = usdg::pm_ess(
     prng,
     loglike,
     grad_hess,
     make_gram,
-    prior_dist.sample(prng),
+    prior_dist.mean,
     prior_dist,
     data_mat.columns(),
     n_samples,
     n_burn,
     logger);
+
+  // {
+  //   std::vector<std::vector<double>> x_plt, y_plt, z_plt;
+  //   for (size_t i = 0; i < 30; ++i) {
+  //     std::vector<double> x_row, y_row, z_row;
+  //     for (size_t j = 0; j < 30; ++j) {
+  // 	double xval = i*(1.0/30);
+  // 	double yval = j*(1.0/30);
+  // 	x_row.push_back(xval);
+  // 	y_row.push_back(yval);
+  // 	auto [mean, var] = true_gp.predict(true_data, blaze::DynamicVector<double>({xval, yval}));
+  // 	z_row.push_back(mean);//y[i*30 + j]);
+  //     }
+  //     x_plt.push_back(x_row);
+  //     y_plt.push_back(y_row);
+  //     z_plt.push_back(z_row);
+  //   }
+  //   matplotlibcpp::plot_surface(x_plt,y_plt,z_plt);
+  //   matplotlibcpp::show();
+  // }
+
+  // {
+  //   std::vector<std::vector<double>> x_plt, y_plt, z_plt;
+  //   for (double i = 0; i <= 1.0;  i += 0.03) {
+  //     std::vector<double> x_row, y_row, z_row;
+  //     for (double j = 0; j <= 1.0; j += 0.03) {
+  // 	x_row.push_back(i);
+  // 	y_row.push_back(j);
+  // 	std::cout << i << " " << j << std::endl;
+
+  // 	double res = 0.0;
+  // 	for (size_t k = 0; k < n_samples; ++k)
+  // 	{
+  // 	  auto theta  = blaze::column(theta_samples, k);
+  // 	  auto kernel = usdg::Matern52{
+  // 	    exp(theta[1]), blaze::exp(blaze::subvector(theta, 2, n_dims))};
+
+  // 	  auto& K_i   = K_samples[k];
+  // 	  auto alpha  = usdg::solve(K_i, blaze::column(f_samples, k));
+  // 	  auto gp     = usdg::LatentGaussianProcess<usdg::Matern52>{K_i, alpha, kernel};
+  // 	  auto [mean, var] = true_gp.predict(true_data, blaze::DynamicVector<double>({i, j}));
+  // 	  res += mean;
+  // 	}
+  // 	z_row.push_back(res / static_cast<double>(n_samples));
+  //     }
+  //     x_plt.push_back(x_row);
+  //     y_plt.push_back(y_row);
+  //     z_plt.push_back(z_row);
+  //   }
+  //   matplotlibcpp::plot_surface(x_plt,y_plt,z_plt);
+  //   matplotlibcpp::show();
+  // }
 
   std::cout << theta_samples << std::endl;
 }
@@ -184,13 +242,13 @@ int main()
 {
   auto key        = 0u;
   auto prng       = usdg::Random123(key);
-  size_t n_dims   = 10;
-  size_t n_pseudo = 10;
-  size_t n_data   = 30;
+  size_t n_dims   = 2;
+  size_t n_pseudo = 5;
+  size_t n_data   = 50;
 
   auto prior_mean = blaze::DynamicVector<double>(n_dims+2, 0.0);
   prior_mean[0]   = -2.0;
-  auto prior_var  = blaze::DynamicVector<double>(n_dims+2, 2.0);
+  auto prior_var  = blaze::DynamicVector<double>(n_dims+2, 1.0);
   prior_var[0]    = 1.0; 
 
   auto prior_chol = usdg::cholesky_nothrow(prior_var).value();

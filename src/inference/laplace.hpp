@@ -47,23 +47,11 @@ namespace usdg
   }
 
   template <typename CholType,
-	    typename LoglikeGradHess>
-  inline blaze::DynamicVector<double>
-  marginal_likelihood_gradient(usdg::Cholesky<CholType> const& K,
-			       LoglikeGradHess loglike_grad_neghess,
-			       blaze::DynamicVector<double> const& f)
-  {
-    auto [gradT, W] = loglike_grad_neghess(f);
-    auto alpha      = usdg::solve(K, f);
-    auto grad       = gradT - alpha;
-    return grad;
-  }
-
-  template <typename CholType,
 	    typename LoglikeGradHess,
 	    typename Loglike>
-  inline std::tuple<blaze::DynamicVector<double>,
-		    blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>>
+  inline std::optional<
+    std::tuple<blaze::DynamicVector<double>,
+	       blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>>>
   laplace_approximation(
     usdg::Cholesky<CholType> const& K,
     size_t n_dims,
@@ -112,16 +100,7 @@ namespace usdg
       double stepsize = 2.0;
       double c        = 1e-2;
       double psi_next = std::numeric_limits<double>::lowest();
-      double graddotp = blaze::dot(grad, p);
-      double thres    = 0.0;
-      if(graddotp < 2e-4)
-      {
-	thres = c*(graddotp - graddotp/4);
-      }
-      else
-      {
-	thres = c*(graddotp - 1e-4);
-      }
+      double thres    = c*blaze::dot(grad, p);
 
       do
       {
@@ -136,19 +115,19 @@ namespace usdg
 
        	f_next    = f + stepsize*p; 
 	psi_next  = joint_likelihood(K, loglike, f_next);
-
-	//std::cout << stepsize << " " << psi_next << " " << psi << " " << stepsize*thres << std::endl;
+	// std::cout << "target: " << psi_next << std::endl;
+	// std::cout << stepsize << " " << psi_next << " " << psi << " " << stepsize*thres << std::endl;
       } while(psi_next - psi < stepsize*thres);
-      //std::cout << '\n';
 
       auto f_norm = blaze::norm(f - f_next);
       auto g_norm = blaze::norm(grad);
+      //std::cout << "gradient: " << g_norm << std::endl;
       if(log)
       {
 	log->info("{:>4}   {:g}", it,  f_norm);
       }
 
-      if(f_norm < 1e-2 || g_norm < 1e-2)
+      if(f_norm < 1e-4)// && g_norm < 1e-2)
       {
 	break;
       }
@@ -157,16 +136,24 @@ namespace usdg
       psi = psi_next;
     }
 
-    if(log && it == max_iter)
+    if(it == max_iter)
     {
-      log->warn("Laplace approximation didn't converge within {} steps.", max_iter);
+      if(log)
+      {
+	log->warn("Laplace approximation didn't converge within {} steps.", max_iter);
+      }
+      return std::nullopt;
     }
-    else if(log)
+    else
     {
-      log->info("Laplace approximation converged.");
+      if(log)
+      {
+	log->info("Laplace approximation converged.");
+      }
+      return std::tuple<
+	blaze::DynamicVector<double>,
+	blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>>{std::move(f), std::move(W)};
     }
-
-    return {std::move(f), std::move(W)};
   }
 }
 

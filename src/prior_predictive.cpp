@@ -16,8 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#define BLAZE_USE_SHARED_MEMORY_PARALLELIZATION 0
-
 #include "gp/data.hpp"
 #include "gp/gp_prior.hpp"
 #include "gp/likelihood.hpp"
@@ -27,7 +25,6 @@
 #include "misc/uniform.hpp"
 
 #include <matplotlib-cpp/matplotlibcpp.h>
-
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 std::tuple<usdg::LatentGaussianProcess<usdg::Matern52>,
@@ -41,10 +38,11 @@ generate_gp_sample(usdg::Random123& prng,
   auto uniformgen = blaze::generate(
     n_dims, [&prng](size_t)->double { return usdg::runiform(prng); });
 
-  auto init_points = blaze::DynamicMatrix<double>(n_dims, n_init_points); 
+  auto init_points = blaze::DynamicMatrix<double>(n_init_points, n_dims); 
   for (size_t i = 0; i < n_init_points; ++i)
   {
-    blaze::column(init_points, i) = blaze::DynamicVector<double>(uniformgen);
+    blaze::row(init_points, i) = blaze::trans(
+      blaze::DynamicVector<double>(uniformgen));
   }
   auto K      = usdg::compute_gram_matrix(kernel, init_points);
   auto K_chol = usdg::cholesky_nothrow(K).value();

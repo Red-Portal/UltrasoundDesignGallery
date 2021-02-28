@@ -94,33 +94,88 @@ namespace usdg
     size_t n_data   = data.num_data();
     size_t n_pseudo = data.num_pseudo();
     auto delta      = blaze::DynamicMatrix<double>(n_pseudo, n_data);
+
     for (size_t data_idx = 0; data_idx < n_data; ++data_idx)
     {
+#pragma omp simd
       for (size_t pseudo_idx = 0; pseudo_idx < n_pseudo; ++pseudo_idx)
       {
 	size_t alpha_idx = data.alpha_index(data_idx);
 	size_t beta_idx  = data.beta_index(data_idx, pseudo_idx);
-	delta(pseudo_idx, data_idx) = (f[beta_idx] - f[alpha_idx]) / sigma;
+	delta(data_idx, pseudo_idx) = (f[beta_idx] - f[alpha_idx]) / sigma;
       }
     }
     return delta;
   }
 
-#pragma omp declare simd uniform(data, phi, n_pseudo, sigma, m, grad) linear(data_idx:1)
   inline void
-  pgp_gradient_beta(usdg::Dataset const& data,
-		    blaze::DynamicMatrix<double> const& phi,
+  pgp_gradient_alpha(blaze::DynamicMatrix<double> const& phi,
+		     size_t alpha_idx,
+		     size_t n_pseudo,
+		     size_t data_idx,
+		     double sigma,
+		     double m,
+		     double* grad) noexcept
+  {
+      double res       = 0.0;
+#pragma omp simd reduction(+:res)
+      for (size_t pseudo_idx = 0; pseudo_idx < n_pseudo; ++pseudo_idx)
+      {
+	res += phi(data_idx, pseudo_idx);
+      }
+      grad[alpha_idx] = res / sigma / m;
+  }
+
+
+#pragma omp declare simd uniform(phi, sigma, m, grad) linear(data_idx:1)
+  inline void
+  pgp_gradient_beta(blaze::DynamicMatrix<double> const& phi,
+		    size_t beta_idx,
+		    size_t pseudo_idx,
 		    size_t data_idx,
-		    size_t n_pseudo,
 		    double sigma,
 		    double m,
 		    double* grad) noexcept
   {
-    for (size_t pseudo_idx = 0; pseudo_idx < n_pseudo; ++pseudo_idx)
-    {
-      size_t beta_idx = data.beta_index(data_idx, pseudo_idx);
-      grad[beta_idx]  = -phi(pseudo_idx, data_idx) / sigma / m;
-    }
+    grad[beta_idx]  = -phi(data_idx, pseudo_idx) / sigma / m;
+  }
+
+  inline void
+  pgp_hessian_alpha(blaze::DynamicMatrix<double> const& phi,
+		    blaze::DynamicMatrix<double> const& delta,
+		    size_t alpha_idx,
+		    size_t n_pseudo,
+		    size_t data_idx,
+		    double sigma2,
+		    double m,
+		    blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>& hess) noexcept
+  {
+      double res = 0.0;
+#pragma omp simd reduction(+:res)
+      for (size_t pseudo_idx = 0; pseudo_idx < n_pseudo; ++pseudo_idx)
+      {
+	res += phi(data_idx, pseudo_idx) * delta(data_idx, pseudo_idx);
+      }
+      hess(alpha_idx, alpha_idx) = res / 2 / sigma2 / m;
+  }
+
+#pragma omp declare simd uniform(phi, delta, alpha_idx, sigma2, m, hess) linear(data_idx:1)
+  inline void
+  pgp_hessian_beta(blaze::DynamicMatrix<double> const& phi,
+		   blaze::DynamicMatrix<double> const& delta,
+		   size_t alpha_idx,
+		   size_t beta_idx,
+		   size_t pseudo_idx,
+		   size_t data_idx,
+		   double sigma2,
+		   double m,
+		   blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>& hess) noexcept
+  {
+    auto delta_ij   = delta(data_idx, pseudo_idx);
+    auto phi_ij     = phi(data_idx, pseudo_idx);
+
+    hess(alpha_idx, beta_idx) = -delta_ij*phi_ij / 2 / sigma2 / m;
+    hess(beta_idx, beta_idx)  =  delta_ij*phi_ij / 2 / sigma2 / m;
   }
 
   inline std::tuple<blaze::DynamicVector<double>,
@@ -129,7 +184,7 @@ namespace usdg
 			  usdg::Dataset const& data,
 			  double sigma)
   {
-    auto start = std::chrono::steady_clock::now();
+//    auto start = std::chrono::steady_clock::now();
 
     size_t n_data   = data.num_data();
     size_t n_pseudo = data.num_pseudo();
@@ -141,41 +196,63 @@ namespace usdg
     auto sigma2 = sigma*sigma;
     double m    = static_cast<double>(n_pseudo);
 
+#pragma omp parallel for schedule(static) 
     for (size_t data_idx = 0; data_idx < n_data; ++data_idx)
     {
       size_t alpha_idx = data.alpha_index(data_idx);
-      grad[alpha_idx]  = blaze::sum(blaze::column(phi, data_idx)) / sigma / m;
-    }
-
-    for (size_t data_idx = 0; data_idx < n_data; ++data_idx)
-    {
-      pgp_gradient_beta(data, phi, data_idx, n_pseudo, sigma, m, grad.data());
-    }
-
-    for (size_t data_idx = 0; data_idx < n_data; ++data_idx)
-    {
-      /* alpha_i, alpha_i */
-      size_t alpha_idx = data.alpha_index(data_idx);
-      auto phi_col     = blaze::column(phi,   data_idx);
-      auto delta_col   = blaze::column(delta, data_idx);
-      hess(alpha_idx, alpha_idx) = blaze::dot(phi_col, delta_col) / 2 / sigma2 / m;
-
-      /* alpha_i, beta_j */
+      pgp_gradient_alpha(phi, alpha_idx, n_pseudo, data_idx, sigma, m, grad.data());
+#pragma omp simd
       for (size_t pseudo_idx = 0; pseudo_idx < n_pseudo; ++pseudo_idx)
       {
 	size_t beta_idx = data.beta_index(data_idx, pseudo_idx);
-	auto delta_ij   = delta_col[pseudo_idx];
-	auto phi_ij     = phi_col[pseudo_idx];
-
-	hess(alpha_idx, beta_idx) = -delta_ij*phi_ij / 2 / sigma2 / m;
-	hess(beta_idx, beta_idx)  =  delta_ij*phi_ij / 2 / sigma2 / m;
+	pgp_gradient_beta(phi, beta_idx, pseudo_idx, data_idx, sigma, m, grad.data());
+      }
+    
+      pgp_hessian_alpha(phi, delta, alpha_idx, n_pseudo,data_idx, sigma2, m, hess);
+#pragma omp simd
+      for (size_t pseudo_idx = 0; pseudo_idx < n_pseudo; ++pseudo_idx)
+      {
+	size_t beta_idx = data.beta_index(data_idx, pseudo_idx);
+	pgp_hessian_beta(phi, delta, alpha_idx, beta_idx, pseudo_idx, data_idx, sigma2, m, hess);
       }
     }
 
-    auto stop = std::chrono::steady_clock::now();
-    auto dur  = std::chrono::duration_cast<
-      std::chrono::duration<double, std::micro>>(stop - start).count();
-    std::cout << dur << "us" << std::endl;
+    // for (size_t data_idx = 0; data_idx < n_data; ++data_idx)
+    // {
+    //   size_t alpha_idx = data.alpha_index(data_idx);
+    //   grad[alpha_idx]  = blaze::sum(blaze::row(phi, data_idx)) / sigma / m;
+    //   for (size_t pseudo_idx = 0; pseudo_idx < n_pseudo; ++pseudo_idx)
+    //   {
+    // 	size_t beta_idx = data.beta_index(data_idx, pseudo_idx);
+    // 	grad[beta_idx]  = -phi(pseudo_idx, data_idx) / sigma / m;
+    //   }
+    // }
+
+
+    // for (size_t data_idx = 0; data_idx < n_data; ++data_idx)
+    // {
+    //   /* alpha_i, alpha_i */
+    //   size_t alpha_idx = data.alpha_index(data_idx);
+    //   auto phi_col     = blaze::row(phi,   data_idx);
+    //   auto delta_col   = blaze::row(delta, data_idx);
+    //   hess(alpha_idx, alpha_idx) = blaze::dot(phi_col, delta_col) / 2 / sigma2 / m;
+
+    //   /* alpha_i, beta_j */
+    //   for (size_t pseudo_idx = 0; pseudo_idx < n_pseudo; ++pseudo_idx)
+    //   {
+    // 	size_t beta_idx = data.beta_index(data_idx, pseudo_idx);
+    // 	auto delta_ij   = delta_col[pseudo_idx];
+    // 	auto phi_ij     = phi_col[pseudo_idx];
+
+    // 	hess(alpha_idx, beta_idx) = -delta_ij*phi_ij / 2 / sigma2 / m;
+    // 	hess(beta_idx, beta_idx)  =  delta_ij*phi_ij / 2 / sigma2 / m;
+    //   }
+    // }
+
+    // auto stop = std::chrono::steady_clock::now();
+    // auto dur  = std::chrono::duration_cast<
+    //   std::chrono::duration<double, std::micro>>(stop - start).count();
+    // std::cout << dur << "us" << std::endl;
     return {std::move(grad), -1*hess};
   }
 }

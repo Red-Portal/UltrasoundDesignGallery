@@ -28,10 +28,10 @@ template <typename Rng>
 inline blaze::DynamicMatrix<double>
 generate_mvsamples(Rng& rng, size_t n_dims, size_t n_points)
 {
-  auto data = blaze::DynamicMatrix<double>(n_dims, n_points);
+  auto data = blaze::DynamicMatrix<double>(n_points, n_dims);
   for (size_t i = 0; i < n_points; ++i)
   {
-    blaze::column(data, i) = usdg::rmvnormal(rng, n_dims);
+    blaze::row(data, i) = blaze::trans(usdg::rmvnormal(rng, n_dims));
   }
   return data;
 }

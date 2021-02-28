@@ -19,9 +19,7 @@
 #ifndef __US_GALLERY_CHOLESKY_HPP__
 #define __US_GALLERY_CHOLESKY_HPP__
 
-#include <blaze/math/LowerMatrix.h>
-#include <blaze/math/DynamicMatrix.h>
-#include <blaze/math/SymmetricMatrix.h>
+#include "blaze.hpp"
 
 namespace usdg
 {

@@ -20,13 +20,11 @@
 #define __US_GALLERY_GP_PRIOR_HPP__
 
 #include "kernel.hpp"
+#include "../misc/blaze.hpp"
 #include "../misc/cholesky.hpp"
 #include "../misc/lu.hpp"
 #include "../misc/linearalgebra.hpp"
 #include "../misc/mvnormal.hpp"
-
-#include <blaze/math/DynamicVector.h>
-#include <blaze/math/DynamicMatrix.h>
 
 #include <numbers>
 

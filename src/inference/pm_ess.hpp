@@ -21,6 +21,7 @@
 
 #include "../gp/gp_prior.hpp"
 #include "../gp/kernel.hpp"
+#include "../misc/blaze.hpp"
 #include "../misc/debug.hpp"
 #include "../misc/linearalgebra.hpp"
 #include "../misc/mvnormal.hpp"

@@ -19,15 +19,13 @@
 #ifndef __US_GALLERY_LAPLACE_HPP__
 #define __US_GALLERY_LAPLACE_HPP__
 
+#include "../misc/blaze.hpp"
 #include "../misc/cholesky.hpp"
 #include "../misc/debug.hpp"
 #include "../misc/linearalgebra.hpp"
 #include "../misc/lu.hpp"
 
 #include "../../test/finitediff.hpp"
-
-#include <blaze/math/DynamicMatrix.h>
-#include <blaze/math/DynamicVector.h>
 
 #include <optional>
 #include <cmath>

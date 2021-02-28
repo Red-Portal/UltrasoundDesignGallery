@@ -22,6 +22,7 @@
 #include "../src/gp/gp_prior.hpp"
 #include "../src/gp/kernel.hpp"
 #include "../src/inference/ess.hpp"
+#include "../src/misc/blaze.hpp"
 #include "../src/misc/cholesky.hpp"
 #include "../src/misc/linearalgebra.hpp"
 #include "../src/misc/mvnormal.hpp"

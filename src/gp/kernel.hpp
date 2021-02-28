@@ -19,9 +19,7 @@
 #ifndef __US_GALLERY_KERNEL_HPP__
 #define __US_GALLERY_KERNEL_HPP__
 
-#include <blaze/math/DynamicVector.h>
-#include <blaze/math/DynamicMatrix.h>
-#include <blaze/math/Subvector.h>
+#include "../misc/blaze.hpp"
 
 #include <cmath>
 

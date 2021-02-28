@@ -20,6 +20,7 @@
 #define BLAZE_USE_DEBUG_MODE 1
 
 #include "../src/inference/imh.hpp"
+#include "../src/misc/blaze.hpp"
 #include "../src/misc/mvnormal.hpp"
 #include "../src/misc/prng.hpp"
 #include "statistical_test.hpp"

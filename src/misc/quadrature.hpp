@@ -7,7 +7,7 @@
 #ifndef __US_GALLERY_QUADRATURE_HPP__
 #define __US_GALLERY_QUADRATURE_HPP__
 
-#include <blaze/math/DynamicVector.h>
+#include "blaze.hpp"
 
 namespace usdg
 {

@@ -20,9 +20,8 @@
 #define BLAZE_USE_DEBUG_MODE 1
 
 #include "../src/misc/prng.hpp"
+#include "../src/misc/blaze.hpp"
 #include "finitediff.hpp"
-
-#include <blaze/util/Random.h>
 
 #include <random>
 #include <iostream>

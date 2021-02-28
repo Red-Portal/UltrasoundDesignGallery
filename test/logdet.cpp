@@ -19,8 +19,9 @@
 #include <catch2/catch.hpp>
 #define BLAZE_USE_DEBUG_MODE 1
 
-#include "../src/misc/linearalgebra.hpp"
+#include "../src/misc/blaze.hpp"
 #include "../src/misc/cholesky.hpp"
+#include "../src/misc/linearalgebra.hpp"
 
 TEST_CASE("Dense log determinant", "[linear algebra]")
 {

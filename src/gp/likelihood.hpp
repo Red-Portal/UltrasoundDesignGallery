@@ -20,11 +20,9 @@
 #define __US_GALLERY_LIKELIHOOD_HPP__
 
 #include "data.hpp"
+#include "../misc/blaze.hpp"
 #include "../misc/mvnormal.hpp"
 #include "../misc/quadrature.hpp"
-
-#include <blaze/math/DynamicVector.h>
-#include <blaze/math/DynamicMatrix.h>
 
 #include <chrono>
 #include <cmath>
@@ -108,21 +106,23 @@ namespace usdg
     return delta;
   }
 
-  template <typename VecLHS,
-	    typename VecRHS>
-  inline double
-  dot_nothrow(VecLHS const& lhs, VecRHS const& rhs, size_t n) noexcept
+#pragma omp declare simd uniform(data, phi, n_pseudo, sigma, m, grad) linear(data_idx:1)
+  inline void
+  pgp_gradient_beta(usdg::Dataset const& data,
+		    blaze::DynamicMatrix<double> const& phi,
+		    size_t data_idx,
+		    size_t n_pseudo,
+		    double sigma,
+		    double m,
+		    double* grad) noexcept
   {
-    double res = 0.0;
-#pragma omp simd reduction(+:res)
-    for (size_t i = 0; i < n; ++i)
+    for (size_t pseudo_idx = 0; pseudo_idx < n_pseudo; ++pseudo_idx)
     {
-      res += lhs[i]  * rhs[i];
+      size_t beta_idx = data.beta_index(data_idx, pseudo_idx);
+      grad[beta_idx]  = -phi(pseudo_idx, data_idx) / sigma / m;
     }
-    return res;
   }
 
-  
   inline std::tuple<blaze::DynamicVector<double>,
 		    blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>>
   pgp_loglike_gradneghess(blaze::DynamicMatrix<double> const& delta,
@@ -144,34 +144,28 @@ namespace usdg
     for (size_t data_idx = 0; data_idx < n_data; ++data_idx)
     {
       size_t alpha_idx = data.alpha_index(data_idx);
-      auto phi_col     = blaze::column(phi,   data_idx);
-      grad[alpha_idx]  = blaze::sum(phi_col) / sigma / m;
+      grad[alpha_idx]  = blaze::sum(blaze::column(phi, data_idx)) / sigma / m;
+    }
 
-      for (size_t pseudo_idx = 0; pseudo_idx < n_pseudo; ++pseudo_idx)
-      {
-	size_t beta_idx = data.beta_index(data_idx, pseudo_idx);
-	grad[beta_idx]  = -phi_col[pseudo_idx] / sigma / m;
-      }
+    for (size_t data_idx = 0; data_idx < n_data; ++data_idx)
+    {
+      pgp_gradient_beta(data, phi, data_idx, n_pseudo, sigma, m, grad.data());
     }
 
     for (size_t data_idx = 0; data_idx < n_data; ++data_idx)
     {
       /* alpha_i, alpha_i */
       size_t alpha_idx = data.alpha_index(data_idx);
-      auto phi_col     = &phi(0, data_idx);
-      auto delta_col   = &delta(0, data_idx);
-      hess(alpha_idx, alpha_idx) = usdg::dot_nothrow(phi_col, delta_col, n_pseudo+1) / 2 / sigma2 / m;
-    }
+      auto phi_col     = blaze::column(phi,   data_idx);
+      auto delta_col   = blaze::column(delta, data_idx);
+      hess(alpha_idx, alpha_idx) = blaze::dot(phi_col, delta_col) / 2 / sigma2 / m;
 
-    /* alpha_i, beta_j */
-    for (size_t data_idx = 0; data_idx < n_data; ++data_idx)
-    {
+      /* alpha_i, beta_j */
       for (size_t pseudo_idx = 0; pseudo_idx < n_pseudo; ++pseudo_idx)
       {
-	size_t alpha_idx = data.alpha_index(data_idx);
 	size_t beta_idx = data.beta_index(data_idx, pseudo_idx);
-	auto delta_ij   = delta(pseudo_idx, data_idx); 
-	auto phi_ij     = phi(pseudo_idx, data_idx);
+	auto delta_ij   = delta_col[pseudo_idx];
+	auto phi_ij     = phi_col[pseudo_idx];
 
 	hess(alpha_idx, beta_idx) = -delta_ij*phi_ij / 2 / sigma2 / m;
 	hess(beta_idx, beta_idx)  =  delta_ij*phi_ij / 2 / sigma2 / m;

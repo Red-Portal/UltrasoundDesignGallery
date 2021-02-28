@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2021  Ray Kim
  *
@@ -20,11 +21,7 @@
 
 #include "cholesky.hpp"
 #include "lu.hpp"
-
-#include <blaze/math/LowerMatrix.h>
-#include <blaze/math/DenseMatrix.h>
-#include <blaze/math/DynamicMatrix.h>
-#include <blaze/math/DenseVector.h>
+#include "blaze.hpp"
 
 #include <optional>
 

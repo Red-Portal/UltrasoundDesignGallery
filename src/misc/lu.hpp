@@ -19,8 +19,7 @@
 #ifndef __US_GALLERY_LU_HPP__
 #define __US_GALLERY_LU_HPP__
 
-#include <blaze/math/LowerMatrix.h>
-#include <blaze/math/DynamicMatrix.h>
+#include "blaze.hpp"
 
 namespace usdg
 {

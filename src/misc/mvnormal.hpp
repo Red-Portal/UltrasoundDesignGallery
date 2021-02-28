@@ -19,12 +19,9 @@
 #ifndef __US_GALLERY_MVNORMAL_HPP__
 #define __US_GALLERY_MVNORMAL_HPP__
 
-#include "linearalgebra.hpp"
 #include "cholesky.hpp"
-
-#include <blaze/math/DynamicMatrix.h>
-#include <blaze/math/LowerMatrix.h>
-#include <blaze/math/DynamicVector.h>
+#include "linearalgebra.hpp"
+#include "blaze.hpp"
 
 #include <cmath>
 #include <numbers>

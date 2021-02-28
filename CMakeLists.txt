@@ -67,10 +67,10 @@ message(${CMAKE_CXX_FLAGS_RELEASE})
 # Dependencies
 find_package(SFML 2.5 COMPONENTS system window graphics network audio REQUIRED)
 find_package(ImGui-SFML REQUIRED)
-find_package(Blaze      REQUIRED)
 find_package(Threads    REQUIRED)
 find_package(FMT        REQUIRED)
 find_package(OpenMP     REQUIRED)
+find_package(Blaze      REQUIRED)
 
 add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 find_package(spdlog     REQUIRED)

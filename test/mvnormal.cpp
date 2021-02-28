@@ -19,14 +19,13 @@
 #include <catch2/catch.hpp>
 #define BLAZE_USE_DEBUG_MODE 1
 
+#include "../src/misc/blaze.hpp"
 #include "../src/misc/linearalgebra.hpp"
 #include "../src/misc/mvnormal.hpp"
 #include "../src/misc/prng.hpp"
 #include "statistical_test.hpp"
 
 #include <cmath>
-
-double const catch_eps = 1e-8;
 
 TEST_CASE("Dense covariance multivariate normal density", "[mvnormal]")
 {

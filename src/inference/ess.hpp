@@ -21,9 +21,7 @@
 
 #include "../misc/mvnormal.hpp"
 #include "../misc/uniform.hpp"
-
-#include <blaze/math/DynamicMatrix.h>
-#include <blaze/math/DynamicVector.h>
+#include "../misc/blaze.hpp"
 
 #include <algorithm>
 #include <iostream>

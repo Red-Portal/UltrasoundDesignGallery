@@ -21,8 +21,7 @@
 
 #include "gp_prior.hpp"
 
-#include <blaze/math/DynamicVector.h>
-#include <blaze/math/DynamicMatrix.h>
+#include "../misc/blaze.hpp"
 
 #include <cstdlib>
 #include <utility>

@@ -20,8 +20,7 @@
 #define __US_GALLERY_IMH_HPP__
 
 #include "../misc/uniform.hpp"
-
-#include <blaze/math/DynamicVector.h>
+#include "../misc/blaze.hpp"
 
 #include <algorithm>
 #include <numbers>

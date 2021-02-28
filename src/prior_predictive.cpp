@@ -176,30 +176,30 @@ prior_predictive_check(usdg::Random123& prng,
     make_gram,
     prior_dist.mean,
     prior_dist,
-    data_mat.columns(),
+    data_mat.rows(),
     n_samples,
     n_burn,
     logger);
 
-  // {
-  //   std::vector<std::vector<double>> x_plt, y_plt, z_plt;
-  //   for (size_t i = 0; i < 30; ++i) {
-  //     std::vector<double> x_row, y_row, z_row;
-  //     for (size_t j = 0; j < 30; ++j) {
-  // 	double xval = i*(1.0/30);
-  // 	double yval = j*(1.0/30);
-  // 	x_row.push_back(xval);
-  // 	y_row.push_back(yval);
-  // 	auto [mean, var] = true_gp.predict(true_data, blaze::DynamicVector<double>({xval, yval}));
-  // 	z_row.push_back(mean);//y[i*30 + j]);
-  //     }
-  //     x_plt.push_back(x_row);
-  //     y_plt.push_back(y_row);
-  //     z_plt.push_back(z_row);
-  //   }
-  //   matplotlibcpp::plot_surface(x_plt,y_plt,z_plt);
-  //   matplotlibcpp::show();
-  // }
+  {
+    std::vector<std::vector<double>> x_plt, y_plt, z_plt;
+    for (size_t i = 0; i < 30; ++i) {
+      std::vector<double> x_row, y_row, z_row;
+      for (size_t j = 0; j < 30; ++j) {
+	double xval = i*(1.0/30);
+	double yval = j*(1.0/30);
+	x_row.push_back(xval);
+	y_row.push_back(yval);
+	auto [mean, var] = true_gp.predict(true_data, blaze::DynamicVector<double>({xval, yval}));
+	z_row.push_back(mean);
+      }
+      x_plt.push_back(x_row);
+      y_plt.push_back(y_row);
+      z_plt.push_back(z_row);
+    }
+    matplotlibcpp::plot_surface(x_plt,y_plt,z_plt);
+    matplotlibcpp::show();
+  }
 
   // {
   //   std::vector<std::vector<double>> x_plt, y_plt, z_plt;

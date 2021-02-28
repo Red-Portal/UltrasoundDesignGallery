@@ -52,7 +52,7 @@ TEST_CASE("Identifiability check of GP hyperparameters using ESS", "[gp & ess]")
 
   auto data_x = generate_mvsamples(prng, n_dims, n_points);
   auto data_y = usdg::sample_gp_prior(prng, kernel, data_x);
-  
+
   auto mll = [&data_x, &data_y, n_dims, n_points](
     blaze::DynamicVector<double> const& theta)->double{
     auto _sigma      = exp(theta[0]);

@@ -106,7 +106,7 @@ namespace usdg
   compute_gram_matrix(Kernel const& k,
 		      blaze::DynamicMatrix<double> const& datamatrix)
   {
-    size_t n_data = datamatrix.columns();
+    size_t n_data = datamatrix.rows();
     auto gram     = blaze::SymmetricMatrix<
       blaze::DynamicMatrix<double>>(n_data);
     for (size_t i = 0; i < n_data; ++i)

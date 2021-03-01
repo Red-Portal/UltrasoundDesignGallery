@@ -53,11 +53,11 @@ namespace usdg
    * var  = k(x, x) - k(x)^T (K + W^{-1})^{-1} k(x)
    */
   {
-    size_t n_data = data.rows();
+    size_t n_data = data.columns();
     auto k_star   = blaze::DynamicVector<double>(n_data);
     for (size_t i = 0; i < n_data; ++i)
     {
-      k_star[i] = this->kernel(blaze::trans(blaze::row(data, i)), x);
+      k_star[i] = this->kernel(blaze::column(data, i), x);
     }
     auto k_self   = this->kernel(x, x);
     auto mean     = blaze::dot(k_star, alpha);

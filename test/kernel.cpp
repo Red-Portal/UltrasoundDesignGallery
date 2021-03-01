@@ -75,6 +75,6 @@ TEST_CASE("Gram matrix computation", "[kernel]")
      {3.08681e-6,  0.6,        3.08681e-6},
      {5.15601e-13, 3.08681e-6, 0.6}});
 
-  auto gram = usdg::compute_gram_matrix(kernel, blaze::trans(datamatrix));
+  auto gram = usdg::compute_gram_matrix(kernel, datamatrix);
   REQUIRE( blaze::norm(gram - truth) < catch_eps );
 }

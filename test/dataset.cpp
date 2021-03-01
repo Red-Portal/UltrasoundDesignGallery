@@ -69,7 +69,7 @@ TEST_CASE("Data matrix construction", "[dataset]")
 					     {0.1,  0.0},
 					     {-0.1, -0.4}});
 
-  REQUIRE( blaze::norm(data_matrix - truth) < catch_eps );
+  REQUIRE( blaze::norm(blaze::trans(data_matrix) - truth) < catch_eps );
 }
 
 TEST_CASE("Latent Gaussian process prediction", "[dataset]")
@@ -109,7 +109,7 @@ TEST_CASE("Latent Gaussian process prediction", "[dataset]")
   auto k_star   = blaze::DynamicVector<double>(3);
   for (size_t i = 0; i < 3; ++i)
   {
-    k_star[i] = kernel(blaze::trans(blaze::row(data, i)), x);
+    k_star[i] = kernel(blaze::column(data, i), x);
   }
   auto mean_truth = blaze::dot(k_star, alpha);
   REQUIRE( mean == Approx(mean_truth) );

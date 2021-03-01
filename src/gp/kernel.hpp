@@ -113,9 +113,9 @@ namespace usdg
     {
       for (size_t j = i; j < n_data; ++j)
       {
-	auto const& xi = blaze::row(datamatrix, i);
-	auto const& xj = blaze::row(datamatrix, j);
-	gram(i, j)     = k(blaze::trans(xi), blaze::trans(xj));
+	auto const& xi = blaze::column(datamatrix, i);
+	auto const& xj = blaze::column(datamatrix, j);
+	gram(i, j)     = k(xi, xj);
       }
     }
     return gram;

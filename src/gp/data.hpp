@@ -116,18 +116,18 @@ namespace usdg
     size_t n_dims   = _n_dims;
     size_t n_pseudo = _n_pseudo;
     size_t n_total  = (n_pseudo + 1) * n_data;
-    auto res        = blaze::DynamicMatrix<double>(n_total, n_dims);
+    auto res        = blaze::DynamicMatrix<double>(n_dims, n_total);
 
     for (size_t i = 0; i < n_data; ++i)
     {
       auto& cur        = _data[i];
       size_t alpha_idx = alpha_index(i);
-      blaze::row(res, alpha_idx) = blaze::trans(cur.x + cur.alpha*cur.xi);
+      blaze::column(res, alpha_idx) = cur.x + cur.alpha*cur.xi;
 
       for (size_t j = 0; j < n_pseudo; ++j)
       {
 	size_t beta_idx = beta_index(i, j);
-	blaze::row(res, beta_idx) = blaze::trans(cur.x + cur.betas[j]*cur.xi);
+	blaze::column(res, beta_idx) = cur.x + cur.betas[j]*cur.xi;
       }
     }
     return res;

@@ -24,8 +24,6 @@
 #include "../src/misc/blaze.hpp"
 #include "../src/misc/mvnormal.hpp"
 
-#include <iostream>
-
 template <typename Rng, typename LoglikeFunc, typename CholType>
 inline blaze::DynamicMatrix<double>
 elliptical_slice(Rng& prng,
@@ -38,7 +36,7 @@ elliptical_slice(Rng& prng,
   size_t n_dims = x0.size();
   auto x        = x0;
   auto p        = loglike(x0);
-  auto samples  = blaze::DynamicMatrix<double>(n_samples, n_dims);
+  auto samples  = blaze::DynamicMatrix<double>(n_dims, n_samples);
 
   for (size_t i = 0; i < n_burnin; ++i)
   { /* burnin */
@@ -56,7 +54,7 @@ elliptical_slice(Rng& prng,
     x = x_prop;
     p = p_prop;
     n_total_props += n_props;
-    blaze::row(samples, i) = blaze::trans(x);
+    blaze::column(samples, i) = x;
   }
   return samples;
 }

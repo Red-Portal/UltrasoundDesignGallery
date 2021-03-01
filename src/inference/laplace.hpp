@@ -29,9 +29,8 @@
 
 #include <optional>
 #include <cmath>
-#include <chrono>
 #include <memory>
-#include <iostream>
+//#include <iostream>
 
 namespace usdg
 {
@@ -84,8 +83,6 @@ namespace usdg
     auto I      = blaze::IdentityMatrix<double>(n_dims);
     for (it = 0; it < max_iter; ++it)
     {
-      auto start = std::chrono::steady_clock::now();
-
       auto [gradT, W_] = loglike_grad_neghess(f);
       W = std::move(W_);
 
@@ -135,13 +132,6 @@ namespace usdg
 
       f   = f_next;
       psi = psi_next;
-
-
-
-    auto stop = std::chrono::steady_clock::now();
-    auto dur  = std::chrono::duration_cast<
-      std::chrono::duration<double, std::ratio<1,1>>>(stop - start).count();
-    std::cout << 1/dur << " iters/second" << std::endl;
     }
 
     if(it == max_iter)

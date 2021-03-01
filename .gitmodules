@@ -1,3 +1,6 @@
 [submodule "third_party/Random123"]
 	path = third_party/Random123
 	url = https://github.com/DEShawResearch/Random123-Boost
+[submodule "third_party/csv-parser"]
+	path = third_party/csv-parser
+	url = https://github.com/vincentlaucsb/csv-parser

@@ -34,6 +34,7 @@ add_executable(usgallery_tests
     laplace_bernoulli.cpp
     finitediff.cpp
     likelihood.cpp
+    spike_slab.cpp
     )
 target_link_libraries(usgallery_tests
     INTERFACE
@@ -42,9 +43,8 @@ target_link_libraries(usgallery_tests
 
     PRIVATE
     #OpenMP::OpenMP_CXX
+    progressbar
     BLAS::BLAS
-    gcem
-    stats
     Random123
     project_warnings
     project_options catch_main)

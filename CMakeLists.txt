@@ -81,11 +81,11 @@ find_package(FMT        REQUIRED)
 set(BLA_STATIC ON)
 find_package(BLAS REQUIRED)
 
-add_library(gcem INTERFACE)
-target_include_directories(gcem SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/gcem/include")
+add_library(csvparser INTERFACE)
+target_include_directories(csvparser SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/csv-parser/single_include")
 
-add_library(stats INTERFACE)
-target_include_directories(stats SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/stats/include")
+add_library(progressbar INTERFACE)
+target_include_directories(progressbar SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/progressbar")
 
 add_library(Random123 INTERFACE)
 target_include_directories(Random123 SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/Random123")
@@ -113,6 +113,8 @@ target_link_libraries(prior_predictive
     Python::NumPy
     Python::Python
     OpenMP::OpenMP_CXX
+    csvparser
+    progressbar
     project_options
     project_warnings
     BLAS::BLAS

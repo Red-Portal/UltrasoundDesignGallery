@@ -47,7 +47,7 @@ TEST_CASE("Identifiability check of GP hyperparameters using ESS", "[gp & ess]")
   auto prior_dist = usdg::MvNormal<usdg::DiagonalChol>{prior_mean, prior_chol};
 
   auto truth  = prior_dist.sample(prng);
-  auto kernel = usdg::Matern52{
+  auto kernel = usdg::Matern52ARD{
     exp(truth[0]), blaze::exp(blaze::subvector(truth, 1, n_dims))};
 
   auto data_x = generate_mvsamples(prng, n_dims, n_points);
@@ -57,7 +57,7 @@ TEST_CASE("Identifiability check of GP hyperparameters using ESS", "[gp & ess]")
     blaze::DynamicVector<double> const& theta)->double{
     auto _sigma      = exp(theta[0]);
     auto _linescales = exp(blaze::subvector(theta, 1u, n_dims));
-    auto _kernel     = usdg::Matern52{_sigma, _linescales};
+    auto _kernel     = usdg::Matern52ARD{_sigma, _linescales};
     auto _K          = usdg::compute_gram_matrix(_kernel, data_x); 
     auto zero_mean   = blaze::zero<double>(n_points);
     if(auto _K_chol = usdg::cholesky_nothrow(_K))

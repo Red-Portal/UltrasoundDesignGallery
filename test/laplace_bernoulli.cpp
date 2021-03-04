@@ -83,7 +83,7 @@ TEST_CASE("laplace approximation of latent GP", "[laplace]")
   size_t n_dims   = 4;
   size_t n_points = 50;
 
-  auto kernel = usdg::Matern52{1.0, blaze::DynamicVector<double>(n_dims, 0.5)};
+  auto kernel = usdg::Matern52ARD{1.0, blaze::DynamicVector<double>(n_dims, 0.5)};
   auto data_x = generate_mvsamples(prng, n_dims, n_points);
   auto K      = usdg::compute_gram_matrix(kernel, data_x);
   auto K_chol = usdg::Cholesky<usdg::DenseChol>();

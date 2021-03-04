@@ -55,7 +55,6 @@ TEST_CASE("spike and slab proposals", "[spike slab]")
   };
 
   auto target = [&](blaze::DynamicVector<double> const&,
-		    blaze::DynamicVector<double> const&,
 		    blaze::DynamicVector<double> const& hyper) -> double {
     return target_dist.logpdf(hyper);
   };
@@ -72,7 +71,7 @@ TEST_CASE("spike and slab proposals", "[spike slab]")
     rho[i] = unif(prng);
   }
   auto hyper = prior_dist.sample(prng);
-  auto pm    = target(gamma, rho, hyper);
+  auto pm    = target(rho, hyper);
 
   auto pg        = progressbar(static_cast<int>(n_samples+n_burn));
   double acc_sum = 0.0;

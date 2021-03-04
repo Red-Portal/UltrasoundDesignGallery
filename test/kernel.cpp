@@ -39,7 +39,7 @@ TEST_CASE("Matern 5/2 kernel value", "[kernel]")
    */
   auto linescales = blaze::DynamicVector<double>({0.3468645418042131, 0.4089279965964634});
   auto sigma      = sqrt(0.6);
-  auto kernel     = usdg::Matern52{sigma, linescales};
+  auto kernel     = usdg::Matern52ARD{sigma, linescales};
 
   auto x = blaze::DynamicVector<double>({1.124618098544101, -1.8477787735615157});
   auto y = blaze::DynamicVector<double>({1.0597907259031794, 0.20131396456561368});
@@ -66,7 +66,7 @@ TEST_CASE("Gram matrix computation", "[kernel]")
   auto linescales = blaze::DynamicVector<double>(
     {0.3468645418042131, 0.4089279965964634});
   auto sigma      = sqrt(0.6);
-  auto kernel     = usdg::Matern52{sigma, linescales};
+  auto kernel     = usdg::Matern52ARD{sigma, linescales};
   auto datamatrix = blaze::DynamicMatrix<double>(
     {{1.0, 3.0, 5.0},
      {2.0, 4.0, 6.0}});

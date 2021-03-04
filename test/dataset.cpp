@@ -80,7 +80,7 @@ TEST_CASE("Latent Gaussian process prediction", "[dataset]")
      {-1, 2, 1}});
   auto linescales = blaze::DynamicVector<double>({1.0, 1.0, 1.0});
   auto sigma      = sqrt(0.6);
-  auto kernel     = usdg::Matern52{sigma, linescales};
+  auto kernel     = usdg::Matern52ARD{sigma, linescales};
 
   auto K = usdg::compute_gram_matrix(kernel, data);
   auto W = blaze::DynamicMatrix<double>(
@@ -97,7 +97,7 @@ TEST_CASE("Latent Gaussian process prediction", "[dataset]")
   REQUIRE_NOTHROW( K_chol = usdg::cholesky_nothrow(K).value() );
   auto alpha  = usdg::solve(K_chol, f);
 
-  auto gp = usdg::LatentGaussianProcess<usdg::Matern52>{
+  auto gp = usdg::LatentGaussianProcess<usdg::Matern52ARD>{
     K_chol, alpha, kernel};
 
   auto x = blaze::DynamicVector<double>(

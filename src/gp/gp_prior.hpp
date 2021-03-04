@@ -67,8 +67,8 @@ namespace usdg
   }
 
   inline std::tuple<double, blaze::DynamicVector<double>>
-  gp_loglike(blaze::DynamicVector<double> const& f,
-	     usdg::Cholesky<usdg::DenseChol> const& cov_chol)
+  gp_loglike_alpha(blaze::DynamicVector<double> const& f,
+		   usdg::Cholesky<usdg::DenseChol> const& cov_chol)
   {
     size_t n_dims     = f.size();
     double normalizer = log(2*std::numbers::pi);
@@ -80,10 +80,23 @@ namespace usdg
     return {like, std::move(alpha)};
   }
 
+  inline double
+  gp_loglike(blaze::DynamicVector<double> const& f,
+	     usdg::Cholesky<usdg::DenseChol> const& cov_chol)
+  {
+    size_t n_dims     = f.size();
+    double normalizer = log(2*std::numbers::pi);
+    double D          = static_cast<double>(n_dims);
+    double like = (usdg::invquad(cov_chol, f)
+		   + usdg::logdet(cov_chol)
+		   + D*normalizer)/-2;
+    return like;
+  }
+
   template <typename Rng>
   inline blaze::DynamicVector<double>
   sample_gp_prior(Rng& prng,
-		  usdg::Matern52 const& kernel,
+		  usdg::Matern52ARD const& kernel,
 		  blaze::DynamicMatrix<double> const& points)
   {
     auto K      = usdg::compute_gram_matrix(kernel, points);

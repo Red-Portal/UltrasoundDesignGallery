@@ -75,12 +75,13 @@ namespace usdg
       log->info("Starting Laplace approximation: {}", usdg::file_name(__FILE__));
       log->info("{}   {}", "iter", "||f - f*||");
     }
-    auto f      = blaze::DynamicVector<double>(n_dims, 0.0);
-    auto f_next = blaze::DynamicVector<double>(f.size());
-    double psi  = joint_likelihood(K, loglike, f);
-    size_t it   = 0;
-    auto W      = blaze::DynamicMatrix<double>();
-    auto I      = blaze::IdentityMatrix<double>(n_dims);
+    auto f        = blaze::DynamicVector<double>(n_dims, 0.0);
+    auto f_next   = blaze::DynamicVector<double>(f.size());
+    double g_norm = std::numeric_limits<double>::max();
+    double psi    = joint_likelihood(K, loglike, f);
+    size_t it     = 0;
+    auto W        = blaze::DynamicMatrix<double>();
+    auto I        = blaze::IdentityMatrix<double>(n_dims);
     for (it = 0; it < max_iter; ++it)
     {
       auto [gradT, W_] = loglike_grad_neghess(f);
@@ -118,14 +119,14 @@ namespace usdg
       } while(psi_next - psi < stepsize*thres);
 
       auto f_norm = blaze::norm(f - f_next);
-      auto g_norm = blaze::norm(grad);
-      //std::cout << "gradient: " << g_norm << std::endl;
+      g_norm      = blaze::norm(grad);
+      //std::cout << it << " gradient: " << g_norm << std::endl;
       if(log)
       {
 	log->info("{:>4}   {:g}", it,  f_norm);
       }
 
-      if(f_norm < 1e-4)// && g_norm < 1e-2)
+      if(f_norm < 1e-1 && g_norm < 1e-1)
       {
 	break;
       }
@@ -133,8 +134,9 @@ namespace usdg
       f   = f_next;
       psi = psi_next;
     }
+    //std::cout << std::endl;
 
-    if(it == max_iter)
+    if(it == max_iter || g_norm > 1e-1)
     {
       if(log)
       {

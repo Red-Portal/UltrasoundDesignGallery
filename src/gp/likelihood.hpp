@@ -106,30 +106,13 @@ namespace usdg
     return delta;
   }
 
-#pragma omp declare simd uniform(data, phi, n_pseudo, sigma, m, grad) linear(data_idx:1)
-  inline void
-  pgp_gradient_beta(usdg::Dataset const& data,
-		    blaze::DynamicMatrix<double> const& phi,
-		    size_t data_idx,
-		    size_t n_pseudo,
-		    double sigma,
-		    double m,
-		    double* grad) noexcept
-  {
-    for (size_t pseudo_idx = 0; pseudo_idx < n_pseudo; ++pseudo_idx)
-    {
-      size_t beta_idx = data.beta_index(data_idx, pseudo_idx);
-      grad[beta_idx]  = -phi(pseudo_idx, data_idx) / sigma / m;
-    }
-  }
-
   inline std::tuple<blaze::DynamicVector<double>,
 		    blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>>
   pgp_loglike_gradneghess(blaze::DynamicMatrix<double> const& delta,
 			  usdg::Dataset const& data,
 			  double sigma)
   {
-    auto start = std::chrono::steady_clock::now();
+    //auto start = std::chrono::steady_clock::now();
 
     size_t n_data   = data.num_data();
     size_t n_pseudo = data.num_pseudo();
@@ -145,11 +128,12 @@ namespace usdg
     {
       size_t alpha_idx = data.alpha_index(data_idx);
       grad[alpha_idx]  = blaze::sum(blaze::column(phi, data_idx)) / sigma / m;
-    }
 
-    for (size_t data_idx = 0; data_idx < n_data; ++data_idx)
-    {
-      pgp_gradient_beta(data, phi, data_idx, n_pseudo, sigma, m, grad.data());
+      for (size_t pseudo_idx = 0; pseudo_idx < n_pseudo; ++pseudo_idx)
+      {
+	size_t beta_idx = data.beta_index(data_idx, pseudo_idx);
+	grad[beta_idx]  = -phi(pseudo_idx, data_idx) / sigma / m;
+      }
     }
 
     for (size_t data_idx = 0; data_idx < n_data; ++data_idx)
@@ -172,10 +156,10 @@ namespace usdg
       }
     }
 
-    auto stop = std::chrono::steady_clock::now();
-    auto dur  = std::chrono::duration_cast<
-      std::chrono::duration<double, std::micro>>(stop - start).count();
-    std::cout << dur << "us" << std::endl;
+    // auto stop = std::chrono::steady_clock::now();
+    // auto dur  = std::chrono::duration_cast<
+    //   std::chrono::duration<double, std::micro>>(stop - start).count();
+    // std::cout << dur << "us" << std::endl;
     return {std::move(grad), -1*hess};
   }
 }

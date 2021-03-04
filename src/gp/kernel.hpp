@@ -22,21 +22,21 @@
 #include "../misc/blaze.hpp"
 
 #include <cmath>
+#include <iostream>
 
 namespace usdg
 {
-  struct Matern52
+  struct Matern52Iso
   {
     double sigma;
-    blaze::DynamicVector<double> ardscales;
+    double scale;
 
-    inline Matern52();
+    inline Matern52Iso();
 
     template <typename VecType>
-    inline Matern52(VecType const& theta);
+    inline Matern52Iso(VecType const& theta);
     
-    template <typename VecType>
-    inline Matern52(double sigma, VecType const& linescales);
+    inline Matern52Iso(double sigma, double scale);
 
     template<typename VecLHSType,
 	     typename VecRHSType>
@@ -47,29 +47,96 @@ namespace usdg
   };
 
   inline
-  Matern52::
-  Matern52()
+  Matern52Iso::
+  Matern52Iso()
+    : sigma(), scale()
+  {}
+
+  template <typename VecType>
+  inline
+  Matern52Iso::
+  Matern52Iso(VecType const& theta)
+    : sigma(theta[0]), scale(theta[1])
+  {}
+
+  inline
+  Matern52Iso::
+  Matern52Iso(double sigma_, double scale_)
+    : sigma(sigma_), scale(scale_)
+  {}
+
+  inline blaze::DynamicVector<double>
+  Matern52Iso::
+  vector() const
+  {
+    auto theta    = blaze::DynamicVector<double>(2);
+    theta[0]      = sigma;
+    theta[1]      = scale;
+    return theta;
+  }
+
+  template<typename VecLHSType,
+	   typename VecRHSType>
+  inline double
+  Matern52Iso::
+  operator()(VecLHSType const& x,
+	     VecRHSType const& y) const noexcept
+  {
+    /*
+     * Matern 5/2 kernel
+     * \sigma * (1 + \sqrt{5}*r + 5/3*r^2) exp(-\sqrt{5}r)
+     */
+    auto r      = blaze::norm((x - y) / this->scale);
+    auto s      = sqrt(5)*r;
+    auto sigma2 = this->sigma * this->sigma;
+    return sigma2 * (1 + s + s*s/3) * exp(-s);
+  }
+
+  struct Matern52ARD
+  {
+    double sigma;
+    blaze::DynamicVector<double> ardscales;
+
+    inline Matern52ARD();
+
+    template <typename VecType>
+    inline Matern52ARD(VecType const& theta);
+    
+    template <typename VecType>
+    inline Matern52ARD(double sigma, VecType const& linescales);
+
+    template<typename VecLHSType,
+	     typename VecRHSType>
+    inline double operator()(VecLHSType const& x,
+			     VecRHSType const& y) const noexcept;
+
+    inline blaze::DynamicVector<double> vector() const;
+  };
+
+  inline
+  Matern52ARD::
+  Matern52ARD()
     : sigma(), ardscales()
   {}
 
   template <typename VecType>
   inline
-  Matern52::
-  Matern52(VecType const& theta)
+  Matern52ARD::
+  Matern52ARD(VecType const& theta)
     : sigma(theta[0]),
       ardscales(blaze::subvector(theta, 1, theta.size()-1))
   {}
 
   template <typename VecType>
   inline
-  Matern52::
-  Matern52(double sigma_, VecType const& linescales_)
+  Matern52ARD::
+  Matern52ARD(double sigma_, VecType const& linescales_)
     : sigma(sigma_),
       ardscales(linescales_)
   {}
 
   inline blaze::DynamicVector<double>
-  Matern52::
+  Matern52ARD::
   vector() const
   {
     size_t n_dims = ardscales.size();
@@ -79,15 +146,10 @@ namespace usdg
     return theta;
   }
 
-  template<typename Kernel>
-  inline blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>
-  compute_gram_matrix(Kernel const& k,
-		      blaze::DynamicMatrix<double> const& datamatrix);
-
   template<typename VecLHSType,
 	   typename VecRHSType>
   inline double
-  Matern52::
+  Matern52ARD::
   operator()(VecLHSType const& x,
 	     VecRHSType const& y) const noexcept
   {
@@ -101,7 +163,7 @@ namespace usdg
     return sigma2 * (1 + s + s*s/3) * exp(-s);
   }
 
-  template<typename Kernel>
+  template <typename Kernel>
   inline blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>
   compute_gram_matrix(Kernel const& k,
 		      blaze::DynamicMatrix<double> const& datamatrix)

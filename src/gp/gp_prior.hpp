@@ -27,6 +27,7 @@
 #include "../misc/mvnormal.hpp"
 
 #include <numbers>
+#include <pair>
 
 namespace usdg
 {
@@ -37,13 +38,13 @@ namespace usdg
     blaze::DynamicVector<double>    alpha;
     KernelFunc                      kernel;
     
-    inline std::tuple<double, double>
+    inline std::pair<double, double>
     predict(blaze::DynamicMatrix<double> const& data,
 	    blaze::DynamicVector<double> const& x) const;
   };
 
   template <typename KernelFunc>
-  inline std::tuple<double, double>
+  inline std::pair<double, double>
   LatentGaussianProcess<KernelFunc>::
   predict(blaze::DynamicMatrix<double> const& data,
 	  blaze::DynamicVector<double> const& x) const

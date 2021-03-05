@@ -60,6 +60,9 @@ namespace usdg
     inline Dataset&
     push_back(Datapoint const& datapoint);
 
+    inline Dataset&
+    push_back(Datapoint&& datapoint);
+
     inline blaze::DynamicMatrix<double>
     data_matrix() const noexcept;
 
@@ -139,6 +142,15 @@ namespace usdg
   {
     assert( datapoint.betas.size() == _n_pseudo );
     _data.push_back(datapoint);
+    return *this;
+  }
+
+  inline usdg::Dataset&
+  Dataset::
+  push_back(Datapoint&& datapoint)
+  {
+    assert( datapoint.betas.size() == _n_pseudo );
+    _data.push_back(std::move(datapoint));
     return *this;
   }
 

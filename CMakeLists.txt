@@ -71,6 +71,7 @@ find_package(Threads    REQUIRED)
 find_package(FMT        REQUIRED)
 find_package(OpenMP     REQUIRED)
 find_package(Blaze      REQUIRED)
+find_package(Pagmo      REQUIRED)
 
 add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 find_package(spdlog     REQUIRED)
@@ -110,6 +111,26 @@ target_link_libraries(prior_predictive
     Threads::threads
 
     PUBLIC
+    Python::NumPy
+    Python::Python
+    OpenMP::OpenMP_CXX
+    csvparser
+    progressbar
+    project_options
+    project_warnings
+    BLAS::BLAS
+    spdlog::spdlog
+    Random123)
+
+# Bayesian optimization test
+add_executable(bayes_opt_test src/bayes_opt_test.cpp)
+target_link_libraries(bayes_opt_test
+    INTERFACE
+    blaze::blaze
+    Threads::threads
+
+    PUBLIC
+    Pagmo::pagmo
     Python::NumPy
     Python::Python
     OpenMP::OpenMP_CXX

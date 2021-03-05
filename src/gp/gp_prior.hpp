@@ -27,7 +27,6 @@
 #include "../misc/mvnormal.hpp"
 
 #include <numbers>
-#include <pair>
 
 namespace usdg
 {

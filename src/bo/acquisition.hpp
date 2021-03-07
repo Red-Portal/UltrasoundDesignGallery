@@ -21,9 +21,10 @@
 
 #include "../misc/blaze.hpp"
 #include "../misc/debug.hpp"
-#include "../misc/linear_algebra.hpp"
+#include "../misc/linearalgebra.hpp"
 #include "bayesian_optimization.hpp"
 #include "cmaes.hpp"
+#include "sample_hyper.hpp"
 
 #include <vector>
 #include <random>
@@ -34,27 +35,34 @@ namespace usdg
 
   template <>
   template <typename Rng>
-  inline std::tuple<blaze::DynamicVector<double>,
-		    blaze::DynamicVector<double>>
+  inline std::pair<blaze::DynamicVector<double>,
+		   blaze::DynamicVector<double>>
   BayesianOptimization<usdg::ThompsonSampling>::
   next_query(Rng& prng,
-	     size_t n_dims,
 	     size_t n_burn,
 	     size_t n_samples,
 	     size_t budget,
+	     usdg::MvNormal<usdg::DiagonalChol> const& prior_dist,
 	     spdlog::logger* logger) const
   {
     if(logger)
     {
-      log->info("Finding next Bayesian optimization query with Thomson sampling: {}",
-		usdg::file_name(__FILE__));
+      logger->info("Finding next Bayesian optimization query with Thomson sampling: {}",
+		   usdg::file_name(__FILE__));
     }
 
     auto data_mat = this->_data.data_matrix();
-    auto [theta_samples, f_samples, K_samples] = sample_gp_hyper(
-      prng, this->_data, data_mat, n_dims, n_burn, n_samples);
+    auto [theta_samples, f_samples, K_samples] = usdg::sample_gp_hyper(
+      prng,
+      this->_data,
+      data_mat,
+      n_burn,
+      n_samples,
+      prior_dist,
+      nullptr);
 
-    auto i      = std::uniform_int_distribution<size_t>(0, n_samples);
+    auto dist   = std::uniform_int_distribution<size_t>(0, n_samples);
+    auto i      = dist(prng);
     auto theta  = blaze::column(theta_samples, i);
     auto f      = blaze::column(f_samples, i);
     auto K      = K_samples[i];
@@ -65,15 +73,15 @@ namespace usdg
 
     auto ts_acq = [&](blaze::DynamicVector<double> const& x) {
       auto [mean, var] = gp.predict(data_mat, x);
-      return mean;
+      return -mean;
     };
     auto [champ_x, champ_y] = cmaes_optimize(
-      prng, ts_acq, n_dims, budget, logger);
+      prng, ts_acq, this->_n_dims, budget, logger);
 
-    auto delta = (this->_x_opt - champ_x);
-    auto xi    = delta / blaze::max(blaze::abs(delta));
-
-
+    auto last_dp = this->_data._data.back();
+    auto prev_x  = (last_dp.xi * last_dp.alpha) + last_dp.x;
+    auto delta   = (prev_x - champ_x);
+    auto xi      = blaze::evaluate(delta / blaze::max(blaze::abs(delta)));
 
     // if(logger)
     // {
@@ -81,7 +89,7 @@ namespace usdg
     // 		usdg::file_name(__FILE__));
     // }
 
-    return {std::move(x), std::move(xi)};
+    return {std::move(champ_x), std::move(xi)};
   }
 
   // class ExpectedImprovement {};

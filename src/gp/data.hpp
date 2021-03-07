@@ -38,7 +38,7 @@ namespace usdg
     blaze::DynamicVector<double> x;
   };
 
-  class Dataset
+  struct Dataset
   {
     size_t _n_dims;
     size_t _n_pseudo;

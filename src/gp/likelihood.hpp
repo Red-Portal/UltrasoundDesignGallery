@@ -31,39 +31,6 @@
 
 namespace usdg
 {
-  inline std::tuple<double, double>
-  pgp_find_bounds(blaze::DynamicVector<double> const& x,
-		  blaze::DynamicVector<double> const& xi)
-  {
-    double lb     = std::numeric_limits<double>::lowest();
-    double ub     = std::numeric_limits<double>::max();
-    size_t n_dims = x.size();
-
-    for (size_t i = 0; i < n_dims; ++i)
-    {
-      double alpha = (1 - x[i]) / xi[i];
-      if(alpha > 0)
-      {
-	ub = std::min(alpha, ub);
-      }
-      else
-      {
-	lb = std::max(alpha, lb);
-      }
-
-      alpha = -x[i] / xi[i];
-      if(alpha > 0)
-      {
-	ub = std::min(alpha, ub);
-      }
-      else
-      {
-	lb = std::max(alpha, lb);
-      }
-    }
-    return {lb, ub};
-  }
-
   inline double
   dnormal2(double x) noexcept
   {

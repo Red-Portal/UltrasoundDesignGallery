@@ -37,33 +37,47 @@ namespace usdg
     blaze::DynamicVector<double>    alpha;
     KernelFunc                      kernel;
     
+    template <typename MatType, typename VecType>
     inline std::pair<double, double>
-    predict(blaze::DynamicMatrix<double> const& data,
-	    blaze::DynamicVector<double> const& x) const;
+    predict(MatType const& data, VecType const& x) const;
   };
 
+  template <typename Kernel,
+	    typename MatType,
+	    typename AlphaVecType,
+	    typename XVecType>
+  inline std::pair<double, double>
+  predict(Kernel const& kernel,
+	  MatType const& data,
+	  usdg::Cholesky<usdg::DenseChol> const& cov_chol,
+	  AlphaVecType const& alpha,
+	  XVecType const& x)
+  {
+    size_t n_data = data.columns();
+    auto k_star   = blaze::DynamicVector<double>(n_data);
+    for (size_t i = 0; i < n_data; ++i)
+    {
+      k_star[i] = kernel(blaze::column(data, i), x);
+    }
+    auto k_self   = kernel(x, x);
+    auto mean     = blaze::dot(k_star, alpha);
+    double gp_var = usdg::invquad(cov_chol, k_star);
+    auto var      = k_self - gp_var;
+    return {mean, var};
+  }
+
   template <typename KernelFunc>
+  template <typename MatType, typename VecType>
   inline std::pair<double, double>
   LatentGaussianProcess<KernelFunc>::
-  predict(blaze::DynamicMatrix<double> const& data,
-	  blaze::DynamicVector<double> const& x) const
+  predict(MatType const& data, VecType const& x) const
   /* 
    * Predictive mean and variance.
    * mean = k(x) K^{-1} f
    * var  = k(x, x) - k(x)^T (K + W^{-1})^{-1} k(x)
    */
   {
-    size_t n_data = data.columns();
-    auto k_star   = blaze::DynamicVector<double>(n_data);
-    for (size_t i = 0; i < n_data; ++i)
-    {
-      k_star[i] = this->kernel(blaze::column(data, i), x);
-    }
-    auto k_self   = this->kernel(x, x);
-    auto mean     = blaze::dot(k_star, alpha);
-    double gp_var = usdg::invquad(this->cov_chol, k_star);
-    auto var      = k_self - gp_var;
-    return {mean, var};
+    return usdg::predict(this->kernel, data, this->cov_chol, this->alpha, x);
   }
 
   inline std::tuple<double, blaze::DynamicVector<double>>

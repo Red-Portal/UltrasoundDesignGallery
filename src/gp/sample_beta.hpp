@@ -19,6 +19,7 @@
 #ifndef __US_GALLERY_SAMPLEBETA_HPP__
 #define __US_GALLERY_SAMPLEBETA_HPP__
 
+#include "../inference/imh.hpp"
 #include "../misc/blaze.hpp"
 
 #include <algorithm>
@@ -30,15 +31,15 @@ namespace usdg
   inline blaze::DynamicVector<double>
   sample_beta(Rng& prng,
 	      double alpha,
-	      double ub,
 	      double lb,
+	      double ub,
 	      size_t iter,
 	      size_t n_samples,
 	      size_t n_dims)
   {
     double t     = static_cast<double>(iter); 
     double n     = static_cast<double>(n_dims);
-    double gamma = 3 / (pow(std::max(t + 1 - n, 1), 0.4)) + 2;
+    double gamma = 3 / (std::pow(std::max(t + 1 - n, 1.0), 0.4)) + 2;
     double sigma = std::tgamma(gamma) * std::abs(ub - lb) / 10;
 
     auto phi = [=](double x) {
@@ -48,7 +49,7 @@ namespace usdg
     auto pdf = [=](double x) {
       return phi((x - alpha) / sigma);
     };
-    return imh_sampler(prng, pdf, lb, ub, n_samples*8, 64, 8);
+    return usdg::imh(prng, pdf, lb, ub, n_samples*8, 64, 8);
   }
 }
 

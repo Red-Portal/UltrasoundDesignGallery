@@ -22,22 +22,24 @@
 #include "../misc/blaze.hpp"
 #include "../misc/debug.hpp"
 
-#include <vector>
-
 #include <pagmo/algorithms/cmaes.hpp>
+#include <pagmo/problem.hpp>
+#include <pagmo/types.hpp>
+
+#include <vector>
+#include <functional>
 
 namespace usdg
 {
-  template <typename Acq>
   struct BoundedProblem {
-    Acq acq;
+    std::function<double(blaze::DynamicVector<double> const&)> acq;
     std::vector<double> lb;
     std::vector<double> ub;
 
     inline std::vector<double>
     fitness(std::vector<double> const& x) const
     {
-      auto x_in = blaze::DynamicVector<double>(x.begin(), x.end());
+      auto x_in = blaze::DynamicVector<double>(x.size(), x.data());
       return { acq(x_in) };
     }
 
@@ -58,18 +60,18 @@ namespace usdg
 		 size_t budget,
 		 spdlog::logger* logger)
   {
-    double sigma0  = sqrt(n_dims)/4;
+    double sigma0  = sqrt(static_cast<double>(n_dims))/4;
     double ftol    = 1e-6;
     double xtol    = 1e-3;
     size_t n_pop   = 4 + static_cast<size_t>(
       ceil(3*log(static_cast<double>(n_dims))));
     auto unif_dist = std::uniform_real_distribution<double>(0, 1);
-    auto prob      = pagmo::problem{
-      usdg::BoundedProblem<ObjectiveFunc>{
+    auto prob      = pagmo::problem(
+      usdg::BoundedProblem{
 	objective,
 	std::vector<double>(n_dims, 0.0),
 	std::vector<double>(n_dims, 1.0)}
-    };
+      );
     auto pop = pagmo::population{prob};
     for (size_t i = 0; i < n_pop; ++i)
     {
@@ -87,10 +89,9 @@ namespace usdg
     user_algo.set_verbosity(1u);
     pop = user_algo.evolve(pop);
 
-    auto champ_x = blaze::DynamicVector<double>(
-      pop.get_pupluation().champion_x());
-    auto champ_f = pop.get_pupluation().champion_f()[0];
-    return {std::move(champ_x), champ_f};
+    auto champ_x = pop.champion_x();
+    auto champ_f = pop.champion_f()[0];
+    return {blaze::DynamicVector<double>(champ_x.size(), champ_x.data()), champ_f};
   }
 }
 

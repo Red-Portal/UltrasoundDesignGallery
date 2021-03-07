@@ -35,12 +35,17 @@ namespace usdg
   sample_gp_hyper(Rng& prng,
 		  usdg::Dataset const& data,
 		  blaze::DynamicMatrix<double> const& data_mat,
-		  size_t n_dims,
 		  size_t n_burn,
 		  size_t n_samples,
-		  usdg::MvNormal<usdg::Cholesky<usdg::DiagonalChol>> const& prior_dist,
+		  usdg::MvNormal<usdg::DiagonalChol> const& prior_dist,
 		  spdlog::logger* logger)
   {
+    if(logger)
+    {
+      logger->info("Sampling from Gaussian process posterior: {}",
+		   usdg::file_name(__FILE__));
+    }
+
     double sigma_buf = 0.01;
     auto grad_hess = [&](blaze::DynamicVector<double> const& f_in)
       ->std::tuple<blaze::DynamicVector<double>,
@@ -63,16 +68,21 @@ namespace usdg
 	return usdg::compute_gram_matrix(kernel, data_mat);
       };
 
-    return usdg::pm_ess(prng,
-			loglike,
-			grad_hess,
-			make_gram,
-			prior_dist.mean,
-			prior_dist,
-			data_mat.columns(),
-			n_samples,
-			n_burn,
-			logger);
+    auto samples = usdg::pm_ess(prng,
+				loglike,
+				grad_hess,
+				make_gram,
+				prior_dist.mean,
+				prior_dist,
+				data_mat.columns(),
+				n_samples,
+				n_burn,
+				logger);
+    if(logger)
+    {
+      logger->info("Sampled from Gaussian process posterior.");
+    }
+    return samples;
   }
 }
 

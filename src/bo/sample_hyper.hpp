@@ -37,6 +37,7 @@ namespace usdg
 		  blaze::DynamicMatrix<double> const& data_mat,
 		  size_t n_burn,
 		  size_t n_samples,
+		  blaze::DynamicVector<double> const& theta_init,
 		  usdg::MvNormal<usdg::DiagonalChol> const& prior_dist,
 		  spdlog::logger* logger)
   {
@@ -60,19 +61,21 @@ namespace usdg
       return usdg::pgp_loglike(delta);
     };
 
+    auto I = blaze::IdentityMatrix<double>(data_mat.columns());
     auto make_gram = [&](blaze::DynamicVector<double> const& theta_in)
       ->blaze::DynamicMatrix<double>
       {
-	sigma_buf   = exp(theta_in[0]);
-	auto kernel = usdg::Matern52Iso{exp(theta_in[1]), blaze::exp(theta_in[2])};
-	return usdg::compute_gram_matrix(kernel, data_mat);
+	auto kernel = usdg::Matern52Iso{exp(theta_in[0]), blaze::exp(theta_in[1])};
+	auto K      = usdg::compute_gram_matrix(kernel, data_mat);
+	sigma_buf   = exp(theta_in[2]);
+	return K + (exp(theta_in[3])*I);
       };
 
     auto samples = usdg::pm_ess(prng,
 				loglike,
 				grad_hess,
 				make_gram,
-				prior_dist.mean,
+				theta_init,
 				prior_dist,
 				data_mat.columns(),
 				n_samples,

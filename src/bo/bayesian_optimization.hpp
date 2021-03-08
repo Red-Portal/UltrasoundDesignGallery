@@ -33,7 +33,6 @@ namespace usdg
     size_t _n_dims;
     usdg::Dataset _data;
 //    blaze::DynamicVector<double> _x_opt;
-    double _y_opt;
 
   public:
     inline
@@ -46,8 +45,9 @@ namespace usdg
     initial_queries(Rng& prng, size_t n_init, spdlog::logger* logger) const;
     
     template <typename Rng>
-    inline std::pair<blaze::DynamicVector<double>,
-		     blaze::DynamicVector<double>>
+    inline std::tuple<blaze::DynamicVector<double>,
+		      blaze::DynamicVector<double>>//,
+			//blaze::DynamicMatrix<double>>
     next_query(Rng& prng,
 	       size_t n_burn,
 	       size_t n_samples,
@@ -67,9 +67,7 @@ namespace usdg
   BayesianOptimization<AcqFunc>::
   BayesianOptimization(size_t n_dims, size_t n_pseudo)
     : _n_dims(n_dims),
-      _data(n_dims, n_pseudo),
-      //_x_opt(),
-      _y_opt(std::numeric_limits<double>::lowest()) 
+      _data(n_dims, n_pseudo)
   { }
 
   template <typename AcqFunc>

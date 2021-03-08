@@ -60,16 +60,21 @@ bayesian_optimization(usdg::Random123& prng,
   size_t n_samples = 64;
   size_t n_iter    = 20;
   size_t budget    = 1000;
-  size_t n_pseudo  = 10;
+  size_t n_pseudo  = 4;
   double sigma     = 0.01;
-  auto prior_mean = blaze::DynamicVector<double>(3, -1.0);
-  auto prior_var  = blaze::DynamicVector<double>(3, 1.0);
+
+  size_t n_params = 4;
+  auto prior_mean = blaze::DynamicVector<double>(n_params, -1.0);
+  auto prior_var  = blaze::DynamicVector<double>(n_params, 1.0);
   auto prior_chol = usdg::cholesky_nothrow(prior_var).value();
   auto prior_dist = usdg::MvNormal<usdg::DiagonalChol>{prior_mean, prior_chol};
 
   double y_opt    = std::numeric_limits<double>::lowest();
-  auto optimizer  = usdg::BayesianOptimization<usdg::ThompsonSampling>(
-    n_dims, n_pseudo);
+  //auto optimizer  = usdg::BayesianOptimization<usdg::ExpectedImprovement>(
+  //auto optimizer  = usdg::BayesianOptimization<usdg::ThompsonSampling>(
+  //auto optimizer  = usdg::BayesianOptimization<usdg::ExpectedImprovementKoyama>(
+  auto optimizer  = usdg::BayesianOptimization<usdg::ThompsonSamplingKoyama>(
+      n_dims, n_pseudo);
   auto noise_dist = std::normal_distribution<double>(0.0, sigma);
   auto init_x     = optimizer.initial_queries(prng, n_init, logger);
   for (auto& [x, xi] : init_x)
@@ -79,9 +84,6 @@ bayesian_optimization(usdg::Random123& prng,
     };
     auto [lb, ub] = usdg::pbo_find_bounds(x, xi);
     auto alpha    = naive_linesearch(noisy_objective, lb, ub, 100);
-
-    std::cout << x + alpha*xi << std::endl;
-
     auto y        = objective(x + xi*alpha);
     auto betas    = usdg::sample_beta(prng, alpha, lb, ub, 0, n_samples, n_dims);
 
@@ -98,8 +100,14 @@ bayesian_optimization(usdg::Random123& prng,
 
   for (size_t iter = 1; iter < n_iter; ++iter)
   {
-    auto [x, xi]  = optimizer.next_query(prng, n_burn, n_samples,
-					 budget, prior_dist, logger);
+    auto [x, xi]  = optimizer.next_query(prng,
+					 n_burn,
+					 n_samples,
+					 budget,
+					 //prev_theta,
+					 prior_dist,
+					 logger);
+
     auto noisy_objective = [&](double alpha) {
       return objective(x + alpha*xi) + noise_dist(prng);
     };

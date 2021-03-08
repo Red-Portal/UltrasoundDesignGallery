@@ -22,6 +22,7 @@
 #include "../misc/blaze.hpp"
 
 #include <limits>
+#include <cmath>
 
 namespace usdg
 {
@@ -35,6 +36,12 @@ namespace usdg
 
     for (size_t i = 0; i < n_dims; ++i)
     {
+      if(std::abs(xi[i]) < 1e-5)
+      {
+	/* no change in this direction */
+	continue;
+      }
+
       double alpha = (1 - x[i]) / xi[i];
       if(alpha > 0)
       {

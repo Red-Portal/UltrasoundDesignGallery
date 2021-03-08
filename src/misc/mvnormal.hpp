@@ -230,6 +230,16 @@ namespace usdg
   }
 
   inline double
+  dnormal(double x, bool logdensity = false) noexcept
+  {
+    double logpdf = (log(2*std::numbers::pi) + x*x)/-2 ;
+    if(logdensity)
+      return logpdf;
+    else
+      return exp(logpdf);
+  }
+
+  inline double
   normal_cdf(double x)
   {
     return std::erfc(-x/std::sqrt(2))/2;

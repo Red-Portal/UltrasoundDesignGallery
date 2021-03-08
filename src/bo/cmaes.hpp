@@ -23,6 +23,7 @@
 #include "../misc/debug.hpp"
 
 #include <pagmo/algorithms/cmaes.hpp>
+#include <pagmo/algorithms/cstrs_self_adaptive.hpp>
 #include <pagmo/problem.hpp>
 #include <pagmo/types.hpp>
 
@@ -48,6 +49,40 @@ namespace usdg
     get_bounds() const
     {
       return { lb, ub };
+    }
+  };
+
+  struct BallConstrainedProblem {
+    std::function<double(blaze::DynamicVector<double> const&)> acq;
+    std::vector<double> lb;
+    std::vector<double> ub;
+
+    inline std::vector<double>
+    fitness(std::vector<double> const& x) const
+    {
+      auto x_in     = blaze::DynamicVector<double>(x.size(), x.data());
+      auto f        = acq(x_in);
+      auto max_norm = blaze::max(blaze::abs(x_in));
+      return { f, max_norm };
+    }
+
+    inline std::pair<std::vector<double>,
+		     std::vector<double>>
+    get_bounds() const
+    {
+      return { lb, ub };
+    }
+
+    inline pagmo::vector_double::size_type
+    get_nec() const
+    {
+      return 1;
+    }
+
+    inline pagmo::vector_double::size_type
+    get_nic() const
+    {
+      return 0;
     }
   };
 
@@ -92,6 +127,59 @@ namespace usdg
     auto champ_x = pop.champion_x();
     auto champ_f = pop.champion_f()[0];
     return {blaze::DynamicVector<double>(champ_x.size(), champ_x.data()), champ_f};
+  }
+
+  template <typename Rng,
+	    typename ObjectiveFunc>
+  inline std::pair<blaze::DynamicVector<double>, double>
+  cmaes_maxball_optimize(Rng& prng,
+			 ObjectiveFunc objective,
+			 size_t n_dims,
+			 size_t budget,
+			 spdlog::logger* logger)
+  {
+    double sigma0  = sqrt(static_cast<double>(n_dims))/4;
+    double ftol    = 1e-6;
+    double xtol    = 1e-3;
+    size_t n_pop   = 4 + static_cast<size_t>(
+      ceil(3*log(static_cast<double>(n_dims))));
+    auto norm_dist = std::normal_distribution<double>(0, 1);
+    auto prob      = pagmo::problem(
+      usdg::BallConstrainedProblem{
+	objective,
+	std::vector<double>(n_dims, -1.0),
+	std::vector<double>(n_dims,  1.0)}
+      );
+    prob.set_c_tol({1e-3});
+    auto pop = pagmo::population{prob};
+    for (size_t i = 0; i < n_pop; ++i)
+    {
+      auto vec = std::vector<double>(n_dims);
+      for (size_t j = 0; j < n_dims; ++j)
+      {
+	vec[j] = norm_dist(prng);
+      }
+      /* Apply max-norm constraint */
+      auto vec_max = *std::max_element(vec.begin(), vec.end());
+      for (size_t j = 0; j < n_dims; ++j)
+      {
+	vec[j] /= vec_max;
+      }
+      pop.push_back(std::move(vec));
+    }
+
+    unsigned int budg_tmp = static_cast<unsigned int>(budget);
+    auto inner_algo = pagmo::cmaes{budg_tmp/16, -1, -1, -1, -1,
+      sigma0, ftol, xtol, false, true};
+    auto user_algo  = pagmo::cstrs_self_adaptive{16, std::move(inner_algo)};
+    user_algo.set_verbosity(1u);
+    pop = user_algo.evolve(pop);
+
+    auto champ_x     = pop.champion_x();
+    auto champ_f     = pop.champion_f()[0];
+    auto champ_x_vec = blaze::DynamicVector<double>(champ_x.size(), champ_x.data());
+    champ_x_vec     /= blaze::max(blaze::abs(champ_x_vec));
+    return {std::move(champ_x_vec), champ_f};
   }
 }
 

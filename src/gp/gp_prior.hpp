@@ -63,6 +63,12 @@ namespace usdg
     auto mean     = blaze::dot(k_star, alpha);
     double gp_var = usdg::invquad(cov_chol, k_star);
     auto var      = k_self - gp_var;
+    // if(std::isnan(mean))
+    // {
+    //   std::cout << mean << ' ' << var << ' ' << k_self << ' ' << k_star << ' ' << alpha << std::endl;
+    //   std::cout << kernel.sigma << ' ' << kernel.scale << std::endl;
+    //   std::cout << x << std::endl;
+    // }
     return {mean, var};
   }
 

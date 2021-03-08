@@ -95,6 +95,11 @@ namespace usdg
 		 size_t budget,
 		 spdlog::logger* logger)
   {
+    if(logger)
+    {
+      logger->info("Optimizing function using CMA-ES: {}",
+		   usdg::file_name(__FILE__));
+    }
     double sigma0  = sqrt(static_cast<double>(n_dims))/4;
     double ftol    = 1e-6;
     double xtol    = 1e-3;
@@ -126,6 +131,10 @@ namespace usdg
 
     auto champ_x = pop.champion_x();
     auto champ_f = pop.champion_f()[0];
+    if(logger)
+    {
+      logger->info("Optimized function using CMA-ES.");
+    }
     return {blaze::DynamicVector<double>(champ_x.size(), champ_x.data()), champ_f};
   }
 
@@ -138,6 +147,11 @@ namespace usdg
 			 size_t budget,
 			 spdlog::logger* logger)
   {
+    if(logger)
+    {
+      logger->info("Optimizing function with max-norm ball constraint using CMA-ES: {}",
+		   usdg::file_name(__FILE__));
+    }
     double sigma0  = sqrt(static_cast<double>(n_dims))/4;
     double ftol    = 1e-6;
     double xtol    = 1e-3;
@@ -179,6 +193,11 @@ namespace usdg
     auto champ_f     = pop.champion_f()[0];
     auto champ_x_vec = blaze::DynamicVector<double>(champ_x.size(), champ_x.data());
     champ_x_vec     /= blaze::max(blaze::abs(champ_x_vec));
+
+    if(logger)
+    {
+      logger->info("Optimized function with max-norm ball constraint using CMA-ES.");
+    }
     return {std::move(champ_x_vec), champ_f};
   }
 }

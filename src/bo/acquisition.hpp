@@ -35,6 +35,12 @@
 
 namespace usdg
 {
+  class ThompsonSamplingKoyama {};
+  class ThompsonSampling {};
+  class ExpectedImprovementKoyama {};
+  class ExpectedImprovement {};
+// class ExpectedImprovement {};
+
   template <typename KernelType>
   inline std::pair<blaze::DynamicVector<double>, double>
   find_best_alpha(usdg::Dataset const& data,
@@ -56,8 +62,6 @@ namespace usdg
     return { std::move(x_opt), y_opt };
   }
 
-  class ThompsonSamplingKoyama {};
-
   template <>
   template <typename Rng>
   inline std::tuple<blaze::DynamicVector<double>,
@@ -73,7 +77,7 @@ namespace usdg
   {
     if(logger)
     {
-      logger->info("Finding next Bayesian optimization query with Thomson sampling: {}",
+      logger->info("Finding next Bayesian optimization query with Thomson sampling with the Koyama scheme: {}",
 		   usdg::file_name(__FILE__));
     }
 
@@ -107,21 +111,18 @@ namespace usdg
     };
     auto [x_champ, y_champ] = usdg::cmaes_optimize(
       prng, ts_acq, this->_n_dims, budget, logger);
-    auto [x_opt, y_opt]     = usdg::find_best_alpha(this->_data, data_mat, mgp);
 
+
+    auto [x_opt, y_opt] = usdg::find_best_alpha(this->_data, data_mat, mgp);
     auto delta = (x_opt - x_champ);
     auto xi    = blaze::evaluate(delta / blaze::max(blaze::abs(delta)));
 
-    // if(logger)
-    // {
-    //   log->info("Found next Bayesian optimization query: {}",
-    // 		usdg::file_name(__FILE__));
-    // }
-
-    return {std::move(x_champ), std::move(xi)};//, std::move(theta_samples)};
+    if(logger)
+    {
+      logger->info("Found next Bayesian optimization query.");
+    }
+    return {std::move(x_champ), std::move(xi)};
   }
-
-  class ThompsonSampling {};
 
   template <>
   template <typename Rng>
@@ -152,9 +153,6 @@ namespace usdg
       prior_dist,
       logger);
 
-    // auto mgp = usdg::MarginalizedGP<usdg::Matern52Iso>(blaze::exp(theta_samples),
-    // 						       f_samples,
-    // 						       K_samples);
     auto dist   = std::uniform_int_distribution<size_t>(0, n_samples-1);
     auto idx    = dist(prng);
     auto theta  = blaze::column(theta_samples, idx);
@@ -188,16 +186,12 @@ namespace usdg
     auto [xi_champ, y_xi_champ] = usdg::cmaes_maxball_optimize(
       prng, ts_xi_acq, this->_n_dims, budget/2, logger);
 
-    // if(logger)
-    // {
-    //   log->info("Found next Bayesian optimization query: {}",
-    // 		usdg::file_name(__FILE__));
-    // }
-
+    if(logger)
+    {
+      logger->info("Found next Bayesian optimization query.");
+    }
     return {std::move(x_champ), std::move(xi_champ)};
   }
-
-  class ExpectedImprovement {};
 
   template <>
   template <typename Rng>
@@ -213,7 +207,7 @@ namespace usdg
   {
     if(logger)
     {
-      logger->info("Finding next Bayesian optimization query with Thomson sampling: {}",
+      logger->info("Finding next Bayesian optimization query with expected improvement: {}",
 		   usdg::file_name(__FILE__));
     }
 
@@ -231,8 +225,8 @@ namespace usdg
     auto mgp = usdg::MarginalizedGP<usdg::Matern52Iso>(blaze::exp(theta_samples),
 						       f_samples,
 						       K_samples);
-    auto [_, y_opt] = usdg::find_best_alpha(this->_data, data_mat, mgp);
 
+    auto [_, y_opt] = usdg::find_best_alpha(this->_data, data_mat, mgp);
     size_t n_pseudo = this->_data.num_pseudo();
     size_t n_dims   = this->_n_dims;
     auto ei_x_acq = [&](blaze::DynamicVector<double> const& x_in) {
@@ -266,16 +260,12 @@ namespace usdg
     auto [xi_champ, y_xi_champ] = cmaes_optimize(
       prng, ei_xi_acq, n_dims, budget/2, logger);
 
-    // if(logger)
-    // {
-    //   log->info("Found next Bayesian optimization query: {}",
-    // 		usdg::file_name(__FILE__));
-    // }
-
+    if(logger)
+    {
+      logger->info("Found next Bayesian optimization query.");
+    }
     return { std::move(x_champ), std::move(xi_champ) };
   }
-
-  class ExpectedImprovementKoyama {};
 
   template <>
   template <typename Rng>
@@ -291,7 +281,7 @@ namespace usdg
   {
     if(logger)
     {
-      logger->info("Finding next Bayesian optimization query with Thomson sampling: {}",
+      logger->info("Finding next Bayesian optimization query with expected improvement and Koyama scheme: {}",
 		   usdg::file_name(__FILE__));
     }
 
@@ -326,12 +316,9 @@ namespace usdg
 
     auto delta = x_opt - x_champ;
     auto xi    = delta / blaze::max(blaze::abs(delta));
-
     if(logger)
     {
       logger->info("Found next Bayesian optimization query.");
-      std::cout << x_champ << std::endl;
-      std::cout << xi      << std::endl;
     }
     return { std::move(x_champ), std::move(xi) };
   }

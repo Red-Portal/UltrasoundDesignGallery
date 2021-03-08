@@ -114,6 +114,7 @@ namespace usdg
 	       size_t n_f_dims,
 	       size_t n_is,
 	       usdg::MvNormal<CholType> const& theta_prior,
+	       bool find_feasible_init = false,
 	       spdlog::logger* logger = nullptr)
   {
     size_t laplace_max_iter = 10;
@@ -140,7 +141,7 @@ namespace usdg
 	loglike_grad_neghess,
 	loglike,
 	laplace_max_iter,
-	logger);
+	nullptr);
       if(!laplace_res)
       {
 	return std::numeric_limits<double>::lowest();
@@ -169,8 +170,20 @@ namespace usdg
       return pm_likelihood(loglike, u, gram_chol, n_f_dims, n_is, buf, dist_q_f);
     };
 
+    auto theta_init = theta;
+    if(find_feasible_init)
+    {
+      while(target(theta_init) == std::numeric_limits<double>::lowest())
+      {
+	if(logger)
+	{
+	  logger->warn("Initial hyperparameter wasn't feasible.");
+	}
+	theta_init = theta_prior.sample(prng);
+      }
+    }
     auto [theta_next, pm_next, n_props] = ess_transition(
-      prng, target, theta, pm_prev, theta_prior);
+      prng, target, theta_init, pm_prev, theta_prior);
 
     return {std::move(theta_next),
       pm_next,
@@ -210,6 +223,12 @@ namespace usdg
     auto f_samples     = blaze::DynamicMatrix<double>(n_dims, n_samples);
     auto gram_samples  = std::vector<usdg::Cholesky<usdg::DenseChol>>(n_samples);
 
+    if(logger)
+    {
+      logger->info("Starting pseudo-marginal MCMC: {}", usdg::file_name(__FILE__));
+      logger->info("{:>4}  {:>6}  {:>10}  {:>15}", "iter", "update", "acceptance", "pseudo-marginal");
+    }
+
     auto [theta, pm, dist_q_f, gram_chol, n_props] = update_theta(
       prng,
       loglike,
@@ -221,13 +240,8 @@ namespace usdg
       n_dims,
       n_is,
       theta_prior,
+      true,
       logger);
-
-    if(logger)
-    {
-      logger->info("Starting pseudo-marginal MCMC: {}", usdg::file_name(__FILE__));
-      logger->info("{:>4}  {:>6}  {:>10}  {:>15}", "iter", "update", "acceptance", "pseudo-marginal");
-    }
 
     double u_accept_sum     = 0;
     double theta_accept_sum = 0;
@@ -264,7 +278,8 @@ namespace usdg
 	n_dims,
 	n_is,
 	theta_prior,
-	nullptr);
+	false,
+	logger);
 
       theta     = theta_;
       pm        = pm__;

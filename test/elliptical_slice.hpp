@@ -21,8 +21,8 @@
 #define __US_GALLERY_ELLIPTICAL_HPP__
 
 #include "../src/inference/ess.hpp"
-#include "../src/misc/blaze.hpp"
-#include "../src/misc/mvnormal.hpp"
+#include "../src/math/blaze.hpp"
+#include "../src/math/mvnormal.hpp"
 
 template <typename Rng, typename LoglikeFunc, typename CholType>
 inline blaze::DynamicMatrix<double>

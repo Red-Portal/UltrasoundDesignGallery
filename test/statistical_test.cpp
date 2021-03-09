@@ -19,9 +19,9 @@
 #include <catch2/catch.hpp>
 #define BLAZE_USE_DEBUG_MODE 1
 
-#include "../src/misc/prng.hpp"
-#include "../src/misc/uniform.hpp"
-#include "../src/misc/mvnormal.hpp"
+#include "../src/math/prng.hpp"
+#include "../src/math/uniform.hpp"
+#include "../src/math/mvnormal.hpp"
 #include "statistical_test.hpp"
 
 #include <random>

@@ -20,9 +20,9 @@
 #include "bo/bayesian_optimization.hpp"
 #include "bo/find_bounds.hpp"
 #include "gp/sample_beta.hpp"
-#include "misc/mvnormal.hpp"
-#include "misc/prng.hpp"
-#include "misc/uniform.hpp"
+#include "math/mvnormal.hpp"
+#include "math/prng.hpp"
+#include "math/uniform.hpp"
 
 #include <pagmo/algorithms/cmaes.hpp>
 #include <matplotlib-cpp/matplotlibcpp.h>

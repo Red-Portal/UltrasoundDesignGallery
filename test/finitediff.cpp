@@ -19,8 +19,8 @@
 #include <catch2/catch.hpp>
 #define BLAZE_USE_DEBUG_MODE 1
 
-#include "../src/misc/prng.hpp"
-#include "../src/misc/blaze.hpp"
+#include "../src/math/prng.hpp"
+#include "../src/math/blaze.hpp"
 #include "finitediff.hpp"
 
 #include <random>

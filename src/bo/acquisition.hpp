@@ -21,10 +21,10 @@
 
 #include "../gp/gp_prior.hpp"
 #include "../gp/marginalized_gp.hpp"
-#include "../misc/blaze.hpp"
-#include "../misc/debug.hpp"
-#include "../misc/linearalgebra.hpp"
-#include "../misc/mvnormal.hpp"
+#include "../math/blaze.hpp"
+#include "../math/debug.hpp"
+#include "../math/linearalgebra.hpp"
+#include "../math/mvnormal.hpp"
 #include "bayesian_optimization.hpp"
 #include "cmaes.hpp"
 #include "sample_hyper.hpp"
@@ -39,7 +39,6 @@ namespace usdg
   class ThompsonSampling {};
   class ExpectedImprovementKoyama {};
   class ExpectedImprovement {};
-// class ExpectedImprovement {};
 
   template <typename KernelType>
   inline std::pair<blaze::DynamicVector<double>, double>

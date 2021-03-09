@@ -21,8 +21,8 @@
 
 #include "../src/gp/gp_prior.hpp"
 #include "../src/gp/kernel.hpp"
-#include "../src/misc/cholesky.hpp"
-#include "../src/misc/mvnormal.hpp"
+#include "../src/math/cholesky.hpp"
+#include "../src/math/mvnormal.hpp"
 
 template <typename Rng>
 inline blaze::DynamicMatrix<double>

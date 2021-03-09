@@ -19,10 +19,10 @@
 #include <catch2/catch.hpp>
 #define BLAZE_USE_DEBUG_MODE 1
 
-#include "../src/misc/blaze.hpp"
-#include "../src/misc/linearalgebra.hpp"
-#include "../src/misc/mvnormal.hpp"
-#include "../src/misc/prng.hpp"
+#include "../src/math/blaze.hpp"
+#include "../src/math/linearalgebra.hpp"
+#include "../src/math/mvnormal.hpp"
+#include "../src/math/prng.hpp"
 #include "statistical_test.hpp"
 
 #include <cmath>

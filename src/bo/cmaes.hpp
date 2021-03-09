@@ -19,8 +19,8 @@
 #ifndef __US_GALLERY_CMAES_HPP__
 #define __US_GALLERY_CMAES_HPP__
 
-#include "../misc/blaze.hpp"
-#include "../misc/debug.hpp"
+#include "../math/blaze.hpp"
+#include "../math/debug.hpp"
 
 #include <pagmo/algorithms/cmaes.hpp>
 #include <pagmo/algorithms/cstrs_self_adaptive.hpp>

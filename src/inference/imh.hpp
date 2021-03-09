@@ -19,8 +19,8 @@
 #ifndef __US_GALLERY_IMH_HPP__
 #define __US_GALLERY_IMH_HPP__
 
-#include "../misc/uniform.hpp"
-#include "../misc/blaze.hpp"
+#include "../math/uniform.hpp"
+#include "../math/blaze.hpp"
 
 #include <algorithm>
 #include <numbers>

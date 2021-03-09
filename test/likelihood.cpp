@@ -21,7 +21,7 @@
 
 #include "../src/gp/likelihood.hpp"
 #include "../src/gp/data.hpp"
-#include "../src/misc/prng.hpp"
+#include "../src/math/prng.hpp"
 #include "finitediff.hpp"
 
 // template <typename Rng, typename Func, typename Gen>

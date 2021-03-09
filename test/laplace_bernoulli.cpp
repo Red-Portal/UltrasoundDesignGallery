@@ -25,8 +25,8 @@
 #include "../src/inference/ess.hpp"
 #include "../src/inference/laplace.hpp"
 #include "../src/inference/pm_ess.hpp"
-#include "../src/misc/mvnormal.hpp"
-#include "../src/misc/prng.hpp"
+#include "../src/math/mvnormal.hpp"
+#include "../src/math/prng.hpp"
 #include "utils.hpp"
 
 #include <blaze/math/Subvector.h>

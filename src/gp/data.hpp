@@ -21,7 +21,7 @@
 
 #include "gp_prior.hpp"
 
-#include "../misc/blaze.hpp"
+#include "../math/blaze.hpp"
 
 #include <cstdlib>
 #include <utility>

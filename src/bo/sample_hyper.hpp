@@ -22,7 +22,7 @@
 #include "../gp/gp_prior.hpp"
 #include "../gp/likelihood.hpp"
 #include "../inference/pm_ess.hpp"
-#include "../misc/blaze.hpp"
+#include "../math/blaze.hpp"
 
 #include <vector>
 

@@ -20,9 +20,9 @@
 #define __US_GALLERY_LIKELIHOOD_HPP__
 
 #include "data.hpp"
-#include "../misc/blaze.hpp"
-#include "../misc/mvnormal.hpp"
-#include "../misc/quadrature.hpp"
+#include "../math/blaze.hpp"
+#include "../math/mvnormal.hpp"
+#include "../math/quadrature.hpp"
 
 #include <chrono>
 #include <cmath>

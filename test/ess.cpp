@@ -20,10 +20,10 @@
 #define BLAZE_USE_DEBUG_MODE 1
 
 #include "../src/inference/ess.hpp"
-#include "../src/misc/cholesky.hpp"
-#include "../src/misc/linearalgebra.hpp"
-#include "../src/misc/mvnormal.hpp"
-#include "../src/misc/prng.hpp"
+#include "../src/math/cholesky.hpp"
+#include "../src/math/linearalgebra.hpp"
+#include "../src/math/mvnormal.hpp"
+#include "../src/math/prng.hpp"
 #include "elliptical_slice.hpp"
 #include "statistical_test.hpp"
 

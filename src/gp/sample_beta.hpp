@@ -20,7 +20,7 @@
 #define __US_GALLERY_SAMPLEBETA_HPP__
 
 #include "../inference/imh.hpp"
-#include "../misc/blaze.hpp"
+#include "../math/blaze.hpp"
 
 #include <algorithm>
 #include <cmath>

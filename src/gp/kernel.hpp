@@ -19,7 +19,7 @@
 #ifndef __US_GALLERY_KERNEL_HPP__
 #define __US_GALLERY_KERNEL_HPP__
 
-#include "../misc/blaze.hpp"
+#include "../math/blaze.hpp"
 
 #include <cmath>
 #include <iostream>

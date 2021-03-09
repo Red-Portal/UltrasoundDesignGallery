@@ -19,11 +19,11 @@
 #ifndef __US_GALLERY_LAPLACE_HPP__
 #define __US_GALLERY_LAPLACE_HPP__
 
-#include "../misc/blaze.hpp"
-#include "../misc/cholesky.hpp"
-#include "../misc/debug.hpp"
-#include "../misc/linearalgebra.hpp"
-#include "../misc/lu.hpp"
+#include "../math/blaze.hpp"
+#include "../math/cholesky.hpp"
+#include "../math/debug.hpp"
+#include "../math/linearalgebra.hpp"
+#include "../math/lu.hpp"
 
 #include "../../test/finitediff.hpp"
 

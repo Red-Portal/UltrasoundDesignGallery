@@ -89,7 +89,7 @@ namespace usdg
     {
       delete_move(prng, gamma_prop, rho_prop);
     }
-    else if(move == 1)
+    else if(move == 2)
     {
       swap_move(prng, gamma_prop, rho_prop);
     }
@@ -124,21 +124,18 @@ namespace usdg
   }
 
   template <typename Rng,
-	    typename LoglikeFunc,
-	    typename PriorFunc>
+	    typename GammaType,
+	    typename RhoType,
+	    typename LoglikeFunc>
   inline std::tuple<blaze::DynamicVector<double>,
 		    blaze::DynamicVector<double>,
-		    blaze::DynamicVector<double>,
-		    double,
 		    double>
   spike_slab_mcmc(Rng& prng,
 		  LoglikeFunc target,
-		  blaze::DynamicVector<double> const& gamma,
-		  blaze::DynamicVector<double> const& rho,
-		  blaze::DynamicVector<double> const& hyper,
+		  GammaType const& gamma,
+		  RhoType   const& rho,
 		  double pm_prev,
-		  double gamma_alpha,
-		  PriorFunc prior)
+		  double gamma_alpha)
   /* 
    * Markov-chain Monte Carlo with Gibbs move for spike-and-slab prior
    * note: alpha in p(gamma) = Bernoulli(alpha) is prespecified for simplicity
@@ -158,76 +155,17 @@ namespace usdg
     auto gamma_prior_prop = bernoulli_jointpdf(gamma_prop, gamma_alpha);
 
     /* Metropolis-Hastings update of spike-and-slab parameters */
-    double pm         = std::numeric_limits<double>::lowest();
-    double pm_prop    = target(gamma_prop, rho_prop, hyper);
+    double pm_prop    = target(rho_prop);
     double like_ratio = pm_prop - pm_prev + gamma_prior_cur - gamma_prior_prop;
     double mh_ratio   = std::min(0.0, like_ratio);
     if(log(u_dist(prng)) < mh_ratio)
     {
-      gamma_acc = std::move(gamma_prop);
-      rho_acc   = std::move(rho_prop);
-      pm        = pm_prop;
+      return {std::move(gamma_prop), std::move(rho_prop), pm_prop};
     }
     else
     {
-      gamma_acc = gamma_prop;
-      rho_acc   = rho_prop;
-      pm        = pm_prev;
+      return {std::move(gamma), std::move(rho), pm_prev};
     }
-
-    /* Slice-sampling update of other hyperparameters */
-    double win_len  = 2.0;
-    auto prior_cur  = prior(hyper);
-    auto logy       = (pm + prior_cur) + log(u_dist(prng));
-    auto n_hypers   = hyper.size();
-    auto ls         = blaze::DynamicVector<double>(n_hypers);
-    auto rs         = blaze::DynamicVector<double>(n_hypers);
-    auto hyper_prop = blaze::DynamicVector<double>(n_hypers);
-
-    for (size_t i = 0; i < n_hypers; ++i)
-    {
-      auto win_shrink = u_dist(prng);
-      ls[i]           = hyper[i] - win_shrink*win_len;
-      rs[i]           = ls[i] + win_len;
-    }
-
-    size_t rejections = 0; 
-    while(true)
-    {
-      for (size_t i = 0; i < n_hypers; ++i)
-      {
-	auto u        = u_dist(prng);
-	hyper_prop[i] = ls[i] + u*(rs[i] - ls[i]);
-      }
-      //std::cout << blaze::trans(hyper_prop) << std::endl;
-
-      pm_prop = target(gamma_acc, rho_acc, hyper_prop);
-      if (logy < pm_prop + prior(hyper_prop))
-      {
-	pm = pm_prop;
-	break;
-      }
-      else
-      {
-	++rejections;
-	for (size_t i = 0; i < n_hypers; ++i)
-	{
-	  if(hyper_prop[i] < hyper[i])
-	  {
-	    ls[i] = hyper_prop[i];
-	  }
-	  else
-	  {
-	    rs[i] = hyper_prop[i];
-	  }
-	}
-      }
-    }
-    return {std::move(gamma_acc),
-      std::move(rho_acc),
-      std::move(hyper_prop),
-      pm_prop,
-      static_cast<double>(1)/static_cast<double>(rejections+1)};
   }
 }
 

@@ -22,8 +22,8 @@
 #include "../bo/find_bounds.hpp"
 
 #include "../gp/data.hpp"
-#include "../misc/blaze.hpp"
-#include "../misc/debug.hpp"
+#include "../math/blaze.hpp"
+#include "../math/debug.hpp"
 
 namespace usdg
 { 

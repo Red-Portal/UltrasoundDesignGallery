@@ -20,11 +20,11 @@
 #define __US_GALLERY_GP_PRIOR_HPP__
 
 #include "kernel.hpp"
-#include "../misc/blaze.hpp"
-#include "../misc/cholesky.hpp"
-#include "../misc/lu.hpp"
-#include "../misc/linearalgebra.hpp"
-#include "../misc/mvnormal.hpp"
+#include "../math/blaze.hpp"
+#include "../math/cholesky.hpp"
+#include "../math/lu.hpp"
+#include "../math/linearalgebra.hpp"
+#include "../math/mvnormal.hpp"
 
 #include <numbers>
 

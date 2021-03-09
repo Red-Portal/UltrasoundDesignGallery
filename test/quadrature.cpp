@@ -19,7 +19,7 @@
 #include <catch2/catch.hpp>
 #define BLAZE_USE_DEBUG_MODE 1
 
-#include "../src/misc/quadrature.hpp"
+#include "../src/math/quadrature.hpp"
 
 #include <cmath>
 #include <numbers>

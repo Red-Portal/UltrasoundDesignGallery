@@ -34,7 +34,6 @@ add_executable(usgallery_tests
     laplace_bernoulli.cpp
     finitediff.cpp
     likelihood.cpp
-    #spike_slab.cpp
     )
 target_link_libraries(usgallery_tests
     INTERFACE

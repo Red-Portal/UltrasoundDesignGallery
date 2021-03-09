@@ -19,7 +19,7 @@
 #include <catch2/catch.hpp>
 #define BLAZE_USE_DEBUG_MODE 1
 
-#include "../src/misc/linearalgebra.hpp"
+#include "../src/math/linearalgebra.hpp"
 
 #include <limits>
 #include <cmath>

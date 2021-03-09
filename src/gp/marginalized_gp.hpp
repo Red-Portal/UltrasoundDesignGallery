@@ -16,15 +16,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __US_GALLERY_BAYESIANOPTIMIZATION_HPP__
-#define __US_GALLERY_BAYESIANOPTIMIZATION_HPP__
+#ifndef __US_GALLERY_MARGINALIZEDGP_HPP__
+#define __US_GALLERY_MARGINALIZEDGP_HPP__
 
 #include "../gp/data.hpp"
 #include "../gp/gp_prior.hpp"
 #include "../gp/likelihood.hpp"
 #include "../inference/pm_ess.hpp"
 #include "../math/blaze.hpp"
-#include "../math/debug.hpp"
 
 #include <vector>
 

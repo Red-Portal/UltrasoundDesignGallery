@@ -23,6 +23,7 @@
 #include "math/mvnormal.hpp"
 #include "math/prng.hpp"
 #include "math/uniform.hpp"
+#include "system/profile.hpp"
 
 #include <pagmo/algorithms/cmaes.hpp>
 #include <matplotlib-cpp/matplotlibcpp.h>
@@ -68,6 +69,7 @@ bayesian_optimization(usdg::Random123& prng,
   auto prior_var  = blaze::DynamicVector<double>(n_params, 1.0);
   auto prior_chol = usdg::cholesky_nothrow(prior_var).value();
   auto prior_dist = usdg::MvNormal<usdg::DiagonalChol>{prior_mean, prior_chol};
+  auto profiler   = usdg::Profiler{};
 
   double y_opt    = std::numeric_limits<double>::lowest();
   //auto optimizer  = usdg::BayesianOptimization<usdg::ExpectedImprovement>(
@@ -106,6 +108,7 @@ bayesian_optimization(usdg::Random123& prng,
 					 budget,
 					 //prev_theta,
 					 prior_dist,
+					 &profiler,
 					 logger);
 
     auto noisy_objective = [&](double alpha) {
@@ -124,6 +127,7 @@ bayesian_optimization(usdg::Random123& prng,
     {
       logger->info("iter = {:>4}, y opt = {:g}", iter, y_opt);
     }
+    std::cout << profiler;
   }
 }
 

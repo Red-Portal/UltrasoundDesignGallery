@@ -28,9 +28,9 @@
 
 namespace usdg
 {
-  using microsecond = std::chrono::duration<std::micro, double>;
-  using millisecond = std::chrono::duration<std::milli, double>;
-  using second      = std::chrono::duration<std::ratio<1,1>, double>;
+  using microsecond = std::chrono::duration<double, std::micro>;
+  using millisecond = std::chrono::duration<double, std::milli>;
+  using second      = std::chrono::duration<double, std::ratio<1,1>>;
   using clock       = std::chrono::steady_clock;
   using namespace std::string_literals;
 
@@ -41,10 +41,10 @@ namespace usdg
 
   public:
     inline void
-    start(std::string_view region_id);
+    start(std::string const& region_id);
 
     inline void
-    stop(std::string_view region_id);
+    stop(std::string const& region_id);
 
     friend std::ostream&
     operator<<(std::ostream& os, Profiler const& profiler);
@@ -52,20 +52,20 @@ namespace usdg
 
   inline void
   Profiler::
-  start(std::string_view region_id)
+  start(std::string const& region_id)
   {
     _start[region_id] = usdg::clock::now();
   }
 
   inline void
   Profiler::
-  stop(std::string_view region_id)
+  stop(std::string const& region_id)
   {
     auto stop     = usdg::clock::now();
     auto duration = std::chrono::duration_cast<usdg::second>(
       stop - this->_start[region_id]);
 
-    if(duration.count() < 0)
+    if(duration.count() < 0.0)
     {
       throw std::runtime_error("Negative execution time measured");
     }
@@ -77,8 +77,9 @@ namespace usdg
   {
     for (auto const& [key, val] : profiler._duration)
     {
-      std::cout << key << ": " << val.count << "sec\n";
+      std::cout << key << ": " << val.count() << "sec\n";
     }
+    return os;
   }
 }
 

@@ -21,9 +21,9 @@
 
 #include "../math/blaze.hpp"
 #include "../math/cholesky.hpp"
-#include "../math/debug.hpp"
 #include "../math/linearalgebra.hpp"
 #include "../math/lu.hpp"
+#include "../system/debug.hpp"
 
 #include "../../test/finitediff.hpp"
 

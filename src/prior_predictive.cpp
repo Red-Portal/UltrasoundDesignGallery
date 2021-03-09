@@ -23,6 +23,7 @@
 #include "math/mvnormal.hpp"
 #include "math/prng.hpp"
 #include "math/uniform.hpp"
+#include "system/debug.hpp"
 
 #include <matplotlib-cpp/matplotlibcpp.h>
 

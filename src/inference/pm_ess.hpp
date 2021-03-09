@@ -22,9 +22,9 @@
 #include "../gp/gp_prior.hpp"
 #include "../gp/kernel.hpp"
 #include "../math/blaze.hpp"
-#include "../math/debug.hpp"
 #include "../math/linearalgebra.hpp"
 #include "../math/mvnormal.hpp"
+#include "../system/debug.hpp"
 #include "ess.hpp"
 #include "laplace.hpp"
 

@@ -20,7 +20,7 @@
 #define __US_GALLERY_CMAES_HPP__
 
 #include "../math/blaze.hpp"
-#include "../math/debug.hpp"
+#include "../system/debug.hpp"
 
 #include <pagmo/algorithms/cmaes.hpp>
 #include <pagmo/algorithms/cstrs_self_adaptive.hpp>
@@ -123,9 +123,10 @@ namespace usdg
       pop.push_back(std::move(vec));
     }
 
-    unsigned int budg_tmp = static_cast<unsigned int>(budget);
+    auto budg_tmp  = static_cast<unsigned int>(budget);
+    auto seed      = static_cast<unsigned int>(prng());
     auto user_algo = pagmo::cmaes{budg_tmp, -1, -1, -1, -1,
-      sigma0, ftol, xtol, false, true};
+      sigma0, ftol, xtol, true, true, seed};
     user_algo.set_verbosity(1u);
     pop = user_algo.evolve(pop);
 
@@ -182,9 +183,10 @@ namespace usdg
       pop.push_back(std::move(vec));
     }
 
-    unsigned int budg_tmp = static_cast<unsigned int>(budget);
+    auto budg_tmp   = static_cast<unsigned int>(budget);
+    auto seed       = static_cast<unsigned int>(prng());
     auto inner_algo = pagmo::cmaes{budg_tmp/16, -1, -1, -1, -1,
-      sigma0, ftol, xtol, false, true};
+      sigma0, ftol, xtol, true, true, seed};
     auto user_algo  = pagmo::cstrs_self_adaptive{16, std::move(inner_algo)};
     user_algo.set_verbosity(1u);
     pop = user_algo.evolve(pop);

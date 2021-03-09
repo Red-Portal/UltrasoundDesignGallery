@@ -23,7 +23,8 @@
 
 #include "../gp/data.hpp"
 #include "../math/blaze.hpp"
-#include "../math/debug.hpp"
+#include "../system/debug.hpp"
+#include "../system/profile.hpp"
 
 namespace usdg
 { 
@@ -53,6 +54,7 @@ namespace usdg
 	       size_t n_samples,
 	       size_t budget,
 	       usdg::MvNormal<usdg::DiagonalChol> const& prior_dist,
+	       usdg::Profiler* profiler,
 	       spdlog::logger* logger) const;
 
     inline void

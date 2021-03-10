@@ -20,6 +20,10 @@
 #define BLAZE_USE_DEBUG_MODE 1
 
 #include "../src/gp/kernel.hpp"
+#include "../src/math/prng.hpp"
+#include "../src/math/mvnormal.hpp"
+
+#include "finitediff.hpp"
 
 double const catch_eps = 1e-8;
 
@@ -77,4 +81,27 @@ TEST_CASE("Gram matrix computation", "[kernel]")
 
   auto gram = usdg::compute_gram_matrix(kernel, datamatrix);
   REQUIRE( blaze::norm(gram - truth) < catch_eps );
+}
+
+TEST_CASE("kernel derivative", "[kernel]")
+{
+  size_t n_dims  = 8;
+  auto key       = GENERATE(range(0u, 8u));
+  auto prng      = usdg::Random123(key);
+  auto norm_dist = std::normal_distribution<double>(0, 1);
+
+  auto sigma  = exp(norm_dist(prng));
+  auto scale  = exp(norm_dist(prng));
+  auto kernel = usdg::Matern52Iso{sigma, scale};
+  auto dx     = usdg::rmvnormal(prng, n_dims);
+  auto y      = usdg::rmvnormal(prng, n_dims);
+
+  auto grad_truth = finitediff_gradient(
+    [&y, &kernel](blaze::DynamicVector<double> const& x)
+    {
+      return kernel(x, y);
+    }, dx);
+
+  auto grad  = usdg::derivative(kernel, dx, y);
+  REQUIRE( blaze::norm(grad_truth - grad) < catch_eps );
 }

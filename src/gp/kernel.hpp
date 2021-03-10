@@ -182,6 +182,23 @@ namespace usdg
     }
     return gram;
   }
+
+  template <typename XVecType,
+	    typename YVecType>
+  inline decltype(auto)
+  derivative(Matern52Iso const& kernel,
+	     XVecType const& dx,
+	     YVecType const& y)
+  {
+    auto delta  = (dx - y) / kernel.scale;
+    auto r      = blaze::norm(delta);
+    auto sqrt5  = sqrt(5);
+    auto sigma2 = kernel.sigma * kernel.sigma;
+    auto s      = sqrt5*r;
+    auto dsdx   = sqrt5*delta/kernel.scale/r;
+
+    return (sigma2/-3.0*s*(1 + s)*exp(-s)) * dsdx;
+  }
 }
 
 #endif

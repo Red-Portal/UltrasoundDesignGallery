@@ -187,13 +187,14 @@ namespace usdg
 	    typename YVecType>
   inline decltype(auto)
   derivative(Matern52Iso const& kernel,
+	     double sigma2,
 	     XVecType const& dx,
 	     YVecType const& y)
   {
+    auto const sqrt5 = sqrt(5);
+
     auto delta  = (dx - y) / kernel.scale;
     auto r      = blaze::norm(delta);
-    auto sqrt5  = sqrt(5);
-    auto sigma2 = kernel.sigma * kernel.sigma;
     auto s      = sqrt5*r;
     auto dsdx   = sqrt5*delta/kernel.scale/r;
 

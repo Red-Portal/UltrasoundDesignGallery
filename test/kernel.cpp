@@ -102,6 +102,6 @@ TEST_CASE("kernel derivative", "[kernel]")
       return kernel(x, y);
     }, dx);
 
-  auto grad  = usdg::derivative(kernel, dx, y);
+  auto grad  = usdg::derivative(kernel, kernel.sigma*kernel.sigma, dx, y);
   REQUIRE( blaze::norm(grad_truth - grad) < catch_eps );
 }

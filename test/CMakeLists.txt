@@ -34,6 +34,7 @@ add_executable(usgallery_tests
     laplace_bernoulli.cpp
     finitediff.cpp
     likelihood.cpp
+    gp_prior.cpp
     )
 target_link_libraries(usgallery_tests
     INTERFACE

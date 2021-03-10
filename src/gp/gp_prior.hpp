@@ -127,6 +127,51 @@ namespace usdg
     auto y = K_chol.L * Z;
     return y;
   }
+
+  // template <typename KernelFunc,
+  // 	    typename MatType,
+  // 	    typename VecType>
+  // inline blaze::DynamicVector<double>
+  // gradient_predict(usdg::LatentGaussianProcess<KernelFunc> const& gp,
+  // 		   MatType const& data,
+  // 		   VecType const& dx)
+  // {
+
+  //   size_t n_data  = data.columns();
+  //   size_t n_dims  = data.rows();
+  //   auto pred_grad = blaze::DynamicVector<double>(n_dims, 0.0);
+  //   auto 
+  //   auto sigma2   = gp.kernel.sigma * gp.kernel.sigma;
+  //   for (size_t i = 0; i < n_data; ++i)
+  //   {
+  //     auto y       = blaze::column(data, i);
+  //     auto kstardx = derivative(gp.kernel, sigma2, dx, y);
+  //     grad        += kstardx*gp.alpha[i];
+  //   }
+  //   return grad;
+  // }
+
+  template <typename KernelFunc,
+	    typename MatType,
+	    typename VecType>
+  inline blaze::DynamicVector<double>
+  gradient_mean(usdg::LatentGaussianProcess<KernelFunc> const& gp,
+		   MatType const& data,
+		   VecType const& dx)
+  {
+
+    size_t n_data = data.columns();
+    size_t n_dims = data.rows();
+    auto grad     = blaze::DynamicVector<double>(n_dims, 0.0);
+    auto sigma2   = gp.kernel.sigma * gp.kernel.sigma;
+    for (size_t i = 0; i < n_data; ++i)
+    {
+      auto y       = blaze::column(data, i);
+      auto kstardx = derivative(gp.kernel, sigma2, dx, y);
+      grad        += kstardx*gp.alpha[i];
+    }
+    return grad;
+  }
 }
 
 #endif

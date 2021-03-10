@@ -43,13 +43,26 @@ namespace usdg
     double sigma = std::tgamma(gamma) * std::abs(ub - lb) / 10;
 
     auto phi = [=](double x) {
-      return gamma / (2*std::tgamma(1/gamma)) * exp(pow(-std::abs(x), gamma));
+      return gamma / (2*std::tgamma(1/gamma)) * exp(-pow(std::abs(x), gamma));
     };
 
     auto pdf = [=](double x) {
       return phi((x - alpha) / sigma);
     };
-    return usdg::imh(prng, pdf, lb, ub, n_samples*8, 64, 8);
+    auto samples = usdg::imh(prng, pdf, lb, ub, n_samples*8, 64, 8);
+
+    // size_t idx = 0;
+    // if (std::abs(alpha - lb) > 1e-2)
+    // {
+    //   samples[idx] = lb;
+    //   ++idx;
+    // }
+    // if (std::abs(alpha - ub) > 1e-2)
+    // {
+    //   samples[idx] = ub;
+    //   ++idx;
+    // }
+    return samples;
   }
 }
 

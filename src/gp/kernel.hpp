@@ -92,7 +92,102 @@ namespace usdg
     return sigma2 * (1 + s + s*s/3) * exp(-s);
   }
 
-  struct Matern52ARD
+  template <typename XVecType,
+	    typename YVecType>
+  inline decltype(auto)
+  derivative(Matern52Iso const& kernel,
+	     double sigma2,
+	     XVecType const& dx,
+	     YVecType const& y)
+  {
+    auto const sqrt5 = sqrt(5);
+
+    auto delta  = (dx - y) / kernel.scale;
+    auto r      = blaze::norm(delta);
+    auto s      = sqrt5*r;
+    auto dsdx   = sqrt5*delta/kernel.scale/r;
+    return (sigma2/-3.0*s*(1 + s)*exp(-s)) * dsdx;
+  }
+
+  struct SquaredExpIso
+  {
+    double sigma;
+    double scale;
+
+    inline SquaredExpIso();
+
+    template <typename VecType>
+    inline SquaredExpIso(VecType const& theta);
+    
+    inline SquaredExpIso(double sigma, double scale);
+
+    template<typename VecLHSType,
+	     typename VecRHSType>
+    inline double operator()(VecLHSType const& x,
+			     VecRHSType const& y) const noexcept;
+
+    inline blaze::DynamicVector<double> vector() const;
+  };
+
+  inline
+  SquaredExpIso::
+  SquaredExpIso()
+    : sigma(), scale()
+  {}
+
+  template <typename VecType>
+  inline
+  SquaredExpIso::
+  SquaredExpIso(VecType const& theta)
+    : sigma(theta[0]), scale(theta[1])
+  {}
+
+  inline
+  SquaredExpIso::
+  SquaredExpIso(double sigma_, double scale_)
+    : sigma(sigma_), scale(scale_)
+  {}
+
+  inline blaze::DynamicVector<double>
+  SquaredExpIso::
+  vector() const
+  {
+    auto theta    = blaze::DynamicVector<double>(2);
+    theta[0]      = sigma;
+    theta[1]      = scale;
+    return theta;
+  }
+
+  template<typename VecLHSType,
+	   typename VecRHSType>
+  inline double
+  SquaredExpIso::
+  operator()(VecLHSType const& x,
+	     VecRHSType const& y) const noexcept
+  {
+    /*
+     * Matern 5/2 kernel
+     * \sigma * (1 + \sqrt{5}*r + 5/3*r^2) exp(-\sqrt{5}r)
+     */
+    auto delta  = (x - y) / this->scale;
+    auto sigma2 = this->sigma * this->sigma;
+    return sigma2*exp(blaze::dot(delta, delta)/-2);
+  }
+
+  template <typename XVecType,
+	    typename YVecType>
+  inline decltype(auto)
+  derivative(SquaredExpIso const& kernel,
+	     double sigma2,
+	     XVecType const& dx,
+	     YVecType const& y)
+  {
+    auto delta  = (dx - y) / kernel.scale;
+    auto k      = sigma2*exp(blaze::dot(delta, delta)/-2);
+    return (-k/kernel.scale)*delta;
+  }
+
+ struct Matern52ARD
   {
     double sigma;
     blaze::DynamicVector<double> ardscales;
@@ -181,24 +276,6 @@ namespace usdg
       }
     }
     return gram;
-  }
-
-  template <typename XVecType,
-	    typename YVecType>
-  inline decltype(auto)
-  derivative(Matern52Iso const& kernel,
-	     double sigma2,
-	     XVecType const& dx,
-	     YVecType const& y)
-  {
-    auto const sqrt5 = sqrt(5);
-
-    auto delta  = (dx - y) / kernel.scale;
-    auto r      = blaze::norm(delta);
-    auto s      = sqrt5*r;
-    auto dsdx   = sqrt5*delta/kernel.scale/r;
-
-    return (sigma2/-3.0*s*(1 + s)*exp(-s)) * dsdx;
   }
 }
 

@@ -24,6 +24,7 @@
 #include "../src/math/mvnormal.hpp"
 #include "../src/math/prng.hpp"
 #include "statistical_test.hpp"
+#include "finitediff.hpp"
 
 #include <cmath>
 
@@ -284,4 +285,22 @@ TEST_CASE("Laplace approximated normal density", "[mvnormal]")
 
   auto x = usdg::rmvnormal(prng, 3);
   REQUIRE( dist.logpdf(x) == Approx(true_dist.logpdf(x)) );
+}
+
+TEST_CASE("Derivative of unit Gaussian", "[dnormal]")
+{
+  auto x   = blaze::DynamicVector<double>({0.3});
+  auto pdf = [](blaze::DynamicVector<double> const& x_vec){
+    return usdg::gradient_dnormal(x_vec[0], false);
+  };
+  auto dpdf_dx      = usdg::gradient_dnormal(x[1], false);
+  auto true_dpdf_dx = finitediff_gradient(pdf, x);
+  REQUIRE( true_dpdf_dx == dpdf_dx );
+
+  auto logpdf = [](blaze::DynamicVector<double> const& x_vec){
+    return usdg::gradient_dnormal(x_vec[0], true);
+  };
+  auto dlogpdf_dx      = usdg::gradient_dnormal(x[1], true);
+  auto true_dlogpdf_dx = finitediff_gradient(logpdf, x);
+  REQUIRE( true_dlogpdf_dx == dlogpdf_dx );
 }

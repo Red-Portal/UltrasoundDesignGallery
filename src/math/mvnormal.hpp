@@ -240,6 +240,15 @@ namespace usdg
   }
 
   inline double
+  gradient_dnormal(double x, bool logdensity = false) noexcept
+  {
+    if(logdensity)
+      return -x;
+    else
+      return -x*dnormal(x, false);
+  }
+
+  inline double
   normal_cdf(double x)
   {
     return std::erfc(-x/std::sqrt(2))/2;

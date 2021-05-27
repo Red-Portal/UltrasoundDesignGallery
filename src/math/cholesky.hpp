@@ -21,6 +21,8 @@
 
 #include "blaze.hpp"
 
+#include <optional>
+
 namespace usdg
 {
   struct DenseChol {};

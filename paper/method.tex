@@ -11,9 +11,66 @@ Recently, Mikkola \textit{et al.} showed a clever formulation~\cite{pmlr-v119-mi
 \sigma                  &\sim p\,(\sigma) \\
 \vf \mid \vtheta        &\sim \mathcal{GP}(0, K_{\theta}) \\
 \epsilon                &\sim \mathcal{GP}(0, \sigma) \\
-  f(\alpha\,\vxi + \vx) > f(\vbeta_i\,\vxi + \vx) \mid \vf,\, \epsilon
-  &\sim p\,(\alpha,\, \vx,\,\vxi,\,\vbeta_i \mid \epsilon,\, \vf)  \\
+  f(\alpha\,\vxi + \vx) > f(\beta_i \,\vxi + \vx) \mid \vf,\, \epsilon
+  &\sim p\,(\alpha,\, \beta_i,\, \vx,\,\vxi,\, \mid \epsilon,\, \vf)  \\
 \end{align*}
+
+\begin{figure}[t]
+  \removelatexerror
+  \begin{algorithm2e}[H]
+    \DontPrintSemicolon
+    \SetAlgoLined
+    \KwIn{Covariance matrix \(\mK\),
+      convergence criterion, 
+      gradient function of the likelihood \(\nabla_{\vf}\, p(\mathcal{D}\mid\vf)\),
+      Hessian function of the joint \(\nabla^2_{\vf}\, p(\mathcal{D},\, \vf)\)
+    }
+    \( \vf_1 \leftarrow \mathbf{0} \)\;
+    \Repeat{ until convergence } {
+      \(\valpha        \leftarrow \mK\backslash\vf_{t} \)\;
+      \(\vg            \leftarrow \nabla_{\vf}\, p(\mathcal{D}\mid\vf)|_{\vf = \vf_t} - \valpha \)\;
+      \(\mW            \leftarrow -  \nabla^2_{\vf}\, p(\mathcal{D},\, \vf) \)\;
+      \(\mB           \leftarrow \mI + \mK \mW \)\;
+      \(\mL, \mU      \leftarrow \mathrm{lu}\,(\mB) \)\;
+      \(\vp           \leftarrow \mL \backslash \mU \backslash \mK \vg \)\;
+      \(\vf_{t+1}      \leftarrow \vf_t + \eta \, \vp \)\;
+      \(t \leftarrow t + 1\)\;
+    }
+    \caption{Newton's Method for Laplace's Approximation}\label{alg:newton}
+  \end{algorithm2e}
+\end{figure}
+%
+\paragraph{Laplace's Approximation}
+We approximate the posterior \(p\,(\vf\,|\,\vtheta,\, \mathcal{D})\) with Laplace's approximation~\cite{williams_bayesian_1998}.
+Laplace's approximation performs a second order Taylor expansion around the maximum of the posterior such that
+\begin{align}
+q\,(\vf) = \mathcal{N}(f;\, \vf^*,\, {(\mK^{-1} + \mW)}^{-1}) \approx p\,(\vf \mid \vtheta,\, \mathcal{D})
+\end{align}
+where \(\vf^*\) is the maximum a-posteriori estimate such that \(\nabla_{\vf}\, p\,(\mathcal{D},\, \vf)|_{\vf = \vf^*} = 0\), \(\mW = -\nabla^2_{\vf}\, p\,(\mathcal{D},\,\vf)|_{\vf=\vf^*} \) is the negative Hessian of the likelihood at \(\vf^*\), and \(\mK\) is the covariance matrix.
+In general, \(\mH\), the Hessian of \(p\,(\mathcal{D},\vf)\) turns out structured.
+This allows efficient implementations of Newton's method for finding \(\vf^*\).
+For example,~\cite{rasmussen_gaussian_2006} discusses cases where \(\mH\) is diagonal or block-diagonal.
+Unfortunately, in our case, the structure of \(\mH\) is neither.
+We thus provide a different implementation of Newton's iteration in~\cref{alg:newton} that uses the identity
+\begin{align}
+  {(\mK^{-1} + \mW)}^{-1} = {(\mI + \mK \mW )}^{-1} \mK = \mB^{-1} \mK ,
+\end{align}
+which follows from Woodburry's matrix identity.
+The stepsize \(\eta\) is found using backtracking line search with Armijo's condition~\cite{nocedal_numerical_2006}.
+
+\paragraph{Pseudo-Marginal MCMC}
+Using our approximation \(q\,(\vf)\), we use pseudo-marginal MCMC~\cite{filippone_pseudomarginal_2014} for sampling both \(\vf\) and \(\vtheta\) from the posterior.
+The marignal likelihood is approximated using importance sampling such that
+\begin{align}
+  \tilde{p}\,(\mathcal{D}\mid\theta)
+  &= \int p\,(\mathcal{D}\mid\vf)\,p\,(\vf\mid\vtheta) d\vf \\
+  &\approx \frac{1}{N_{\mathrm{pm}}} \sum^{N_{\mathrm{pm}}}_{i=1} \frac{p\,(\mathcal{D}\mid\vf_i)\,p\,(\vf_i\mid\vtheta)}{q\,(\vf_i)}
+\end{align}
+where \(\vf_i\) are samples from \(q\,(\vf)\) and \(N_{\mathrm{pm}}\) is the number of samples.
+For simplicity, we use the maximum a-posteriori estimate \(\vf^*\).
+
+For sampling \(\theta\) and \(\sigma\), we use elliptical slice sampling~\cite{murray_elliptical_2010}.
+To resolve this problem, Murray \& Graham propose pseudo-marginal slice sampling~\cite{pmlr-v51-murray16}.
 
 Using the ARD hyperparameters alone for sensitivity analysis results is not very effective~\cite{pmlr-v89-paananen19a}.
 Also, the non-identifiability of ARD hyperparameters complicates their statistical analysis~\cite{zhang_inconsistent_2004a}.
@@ -32,6 +89,7 @@ Given \(\vx\) and \(\vxi\), the user is expected to solve the line-search proble
  &\minimize_{ \alpha }\;\; f\,(\alpha\,\vxi + \vx) \\
  &\text{subject to}\;\; \alpha_{\text{min}} \leq \alpha \leq \alpha_{\text{max}}\;.
 \end{align}
+
 
 %%% Local Variables:
 %%% TeX-master: "master"

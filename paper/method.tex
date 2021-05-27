@@ -1,0 +1,38 @@
+
+\section{Ultrasound Design Gallery}\label{section:method}
+
+\subsection{Graphical Interface of \usdg}\label{section:ui}
+
+\subsection{Learning {\user}s Preference with Gaussian Processes}\label{section:gp}
+
+Recently, Mikkola \textit{et al.} showed a clever formulation~\cite{pmlr-v119-mikkola20a}.
+\begin{align*}
+\vtheta                 &\sim p\,(\theta) \\
+\sigma                  &\sim p\,(\sigma) \\
+\vf \mid \vtheta        &\sim \mathcal{GP}(0, K_{\theta}) \\
+\epsilon                &\sim \mathcal{GP}(0, \sigma) \\
+  f(\alpha\,\vxi + \vx) > f(\vbeta_i\,\vxi + \vx) \mid \vf,\, \epsilon
+  &\sim p\,(\alpha,\, \vx,\,\vxi,\,\vbeta_i \mid \epsilon,\, \vf)  \\
+\end{align*}
+
+Using the ARD hyperparameters alone for sensitivity analysis results is not very effective~\cite{pmlr-v89-paananen19a}.
+Also, the non-identifiability of ARD hyperparameters complicates their statistical analysis~\cite{zhang_inconsistent_2004a}.
+ARD is severely affected by dimensionality.
+This manifests as low acceptance rates in MCMC procedures~\cite{filippone_pseudomarginal_2014}.
+
+\subsection{Optimizing \User~Preference with Preferential Bayesian Optimization}\label{section:bo}
+
+\begin{align}
+ &\minimize_{\vx,\, \vxi}\;\; \mathrm{acquisition}\,(\vx, \vxi \mid \mathcal{D}) \\
+ &\text{subject to}\;\; \vx \in \mathcal{X},\; {\parallel \vxi \parallel}_{\infty} = 1
+\end{align}
+
+Given \(\vx\) and \(\vxi\), the user is expected to solve the line-search problem
+\begin{align}
+ &\minimize_{ \alpha }\;\; f\,(\alpha\,\vxi + \vx) \\
+ &\text{subject to}\;\; \alpha_{\text{min}} \leq \alpha \leq \alpha_{\text{max}}\;.
+\end{align}
+
+%%% Local Variables:
+%%% TeX-master: "master"
+%%% End:

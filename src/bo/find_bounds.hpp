@@ -64,6 +64,69 @@ namespace usdg
     }
     return {lb, ub};
   }
+
+  inline std::tuple<double, double, size_t, double, size_t, double>
+  dbounds_dxi(blaze::DynamicVector<double> const& x,
+	      blaze::DynamicVector<double> const& xi)
+  {
+    double lb          = std::numeric_limits<double>::lowest();
+    double ub          = std::numeric_limits<double>::max();
+    size_t n_dims      = x.size();
+    double lb_grad_val = 0.0;
+    size_t lb_grad_idx = 0.0;
+    double ub_grad_val = 0.0;
+    size_t ub_grad_idx = 0.0;
+
+    for (size_t i = 0; i < n_dims; ++i)
+    {
+      if(std::abs(xi[i]) < 1e-5)
+      {
+	/* no change in this direction */
+	continue;
+      }
+
+      double alpha = (1 - x[i]) / xi[i];
+      if(alpha > 0)
+      {
+	if(ub > alpha)
+	{
+	  ub          = alpha;
+	  ub_grad_val = alpha / -xi[i];
+	  ub_grad_idx = i;
+	}
+      }
+      else
+      {
+	if(lb < alpha)
+	{
+	  lb          = alpha;
+	  lb_grad_val = alpha / -xi[i];
+	  lb_grad_idx = i;
+	}
+      }
+
+      alpha = -x[i] / xi[i];
+      if(alpha > 0)
+      {
+	if(ub > alpha)
+	{
+	  ub          = alpha;
+	  ub_grad_val = alpha / -xi[i];
+	  ub_grad_idx = i;
+	}
+      }
+      else
+      {
+	if(lb < alpha)
+	{
+	  lb          = alpha;
+	  lb_grad_val = alpha / -xi[i];
+	  lb_grad_idx = i;
+	}
+      }
+    }
+    return {lb, ub, lb_grad_idx, lb_grad_val, ub_grad_idx, ub_grad_val};
+  }
 }
 
 #endif

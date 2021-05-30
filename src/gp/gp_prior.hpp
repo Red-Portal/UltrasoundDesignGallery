@@ -31,7 +31,7 @@
 namespace usdg
 {
   template <typename KernelFunc>
-  struct LatentGaussianProcess
+  struct GP
   {
     usdg::Cholesky<usdg::DenseChol> cov_chol;
     blaze::DynamicVector<double>    alpha;
@@ -63,25 +63,14 @@ namespace usdg
     auto mean     = blaze::dot(k_star, alpha);
     double gp_var = usdg::invquad(cov_chol, k_star);
     auto var      = k_self - gp_var;
-    // if(std::isnan(mean))
-    // {
-    //   std::cout << mean << ' ' << var << ' ' << k_self << ' ' << k_star << ' ' << alpha << std::endl;
-    //   std::cout << kernel.sigma << ' ' << kernel.scale << std::endl;
-    //   std::cout << x << std::endl;
-    // }
     return {mean, var};
   }
 
   template <typename KernelFunc>
   template <typename MatType, typename VecType>
   inline std::pair<double, double>
-  LatentGaussianProcess<KernelFunc>::
+  GP<KernelFunc>::
   predict(MatType const& data, VecType const& x) const
-  /* 
-   * Predictive mean and variance.
-   * mean = k(x) K^{-1} f
-   * var  = k(x, x) - k(x)^T (K + W^{-1})^{-1} k(x)
-   */
   {
     return usdg::predict(this->kernel, data, this->cov_chol, this->alpha, x);
   }
@@ -132,7 +121,7 @@ namespace usdg
   // 	    typename MatType,
   // 	    typename VecType>
   // inline blaze::DynamicVector<double>
-  // gradient_predict(usdg::LatentGaussianProcess<KernelFunc> const& gp,
+  // gradient_predict(usdg::GP<KernelFunc> const& gp,
   // 		   MatType const& data,
   // 		   VecType const& dx)
   // {
@@ -155,11 +144,10 @@ namespace usdg
 	    typename MatType,
 	    typename VecType>
   inline blaze::DynamicVector<double>
-  gradient_mean(usdg::LatentGaussianProcess<KernelFunc> const& gp,
-		   MatType const& data,
-		   VecType const& dx)
+  gradient_mean(usdg::GP<KernelFunc> const& gp,
+		MatType const& data,
+		VecType const& dx)
   {
-
     size_t n_data = data.columns();
     size_t n_dims = data.rows();
     auto grad     = blaze::DynamicVector<double>(n_dims, 0.0);
@@ -167,10 +155,50 @@ namespace usdg
     for (size_t i = 0; i < n_data; ++i)
     {
       auto y       = blaze::column(data, i);
-      auto kstardx = derivative(gp.kernel, sigma2, dx, y);
+      auto kstardx = usdg::gradient(gp.kernel, sigma2, dx, y);
       grad        += kstardx*gp.alpha[i];
     }
     return grad;
+  }
+
+  template <typename KernelFunc,
+	    typename MatType,
+	    typename VecType>
+  inline std::tuple<double,
+		    double,
+		    blaze::DynamicVector<double>,
+		    blaze::DynamicVector<double>>
+  gradient_mean_var(usdg::GP<KernelFunc> const& gp,
+		    MatType const& data,
+		    VecType const& dx)
+  {
+    size_t n_data  = data.columns();
+    size_t n_dims  = data.rows();
+    auto mean_grad = blaze::DynamicVector<double>(n_dims, 0.0);
+    auto var_grad  = blaze::DynamicVector<double>(n_dims, 0.0);
+    auto& kernel   = gp.kernel;
+    auto sigma2    = kernel.sigma*kernel.sigma;
+    auto k_star    = blaze::DynamicVector<double>(n_data);
+    for (size_t i  = 0; i < n_data; ++i)
+    {
+      k_star[i]    = kernel(blaze::column(data, i), dx);
+    }
+    auto Kinvkstar = usdg::solve(gp.cov_chol, k_star);
+
+    for (size_t i  = 0; i < n_data; ++i)
+    {
+      auto y       = blaze::column(data, i);
+      auto kstardx = usdg::gradient(gp.kernel, sigma2, dx, y);
+      mean_grad   += kstardx*gp.alpha[i];
+      var_grad    += kstardx*Kinvkstar[i];
+    }
+
+    auto k_self   = kernel(dx, dx);
+    auto mean     = blaze::dot(k_star, gp.alpha);
+    double gp_var = usdg::invquad(gp.cov_chol, k_star);
+    auto var      = k_self - gp_var;
+    var_grad     *= -2;
+    return { mean, var, std::move(mean_grad), std::move(var_grad) };
   }
 }
 

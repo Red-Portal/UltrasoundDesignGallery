@@ -80,6 +80,7 @@ namespace usdg
 				data_mat.columns(),
 				n_samples,
 				n_burn,
+				4,
 				logger);
     if(logger)
     {

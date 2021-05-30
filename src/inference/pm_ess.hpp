@@ -51,6 +51,25 @@ namespace usdg
     return log(res) + logmin;
   }
 
+  // template <typename Loglike,
+  // 	    typename CholType>
+  // inline double
+  // pm_likelihood(Loglike loglike,
+  // 		blaze::DynamicVector<double> const& u,
+  // 		usdg::Cholesky<usdg::DenseChol> const& gram_chol,
+  // 		size_t n_f_dims,
+  // 		size_t n_is,
+  // 		usdg::MvNormal<CholType> const& dist_q_f)
+  // {
+  //   for (size_t i = 0; i < n_is; ++i)
+  //   {
+  //     auto f   = usdg::unwhiten(dist_q_f, blaze::subvector(u, i*n_f_dims, n_f_dims));
+  //     auto p_f = usdg::gp_loglike(f, gram_chol);
+  //     buf[i]   = loglike(f) + p_f - dist_q_f.logpdf(f);
+  //   }
+  //   return usdg::logsumexp(buf) - log(static_cast<double>(n_is));
+  // }
+
   template <typename Loglike,
 	    typename CholType>
   inline double
@@ -209,6 +228,7 @@ namespace usdg
 	 size_t n_dims,
 	 size_t n_samples,
 	 size_t n_burn,
+	 size_t n_thin,
 	 spdlog::logger* logger = nullptr)
   {
     size_t n_is = 16;
@@ -219,6 +239,7 @@ namespace usdg
       usdg::Cholesky<DiagonalChol>{ones, ones}};
     auto u = u_prior.sample(prng);
 
+    auto n_iters       = n_thin*n_samples;
     auto theta_samples = blaze::DynamicMatrix<double>(theta_init.size(), n_samples);
     auto f_samples     = blaze::DynamicMatrix<double>(n_dims, n_samples);
     auto gram_samples  = std::vector<usdg::Cholesky<usdg::DenseChol>>(n_samples);
@@ -245,7 +266,7 @@ namespace usdg
 
     double u_accept_sum     = 0;
     double theta_accept_sum = 0;
-    for (size_t i = 0; i < n_burn + n_samples; ++i)
+    for (size_t i = 0; i < n_burn + n_iters; ++i)
     {
       auto [u_, pm_, u_acc] = update_u(
 	prng,
@@ -293,11 +314,12 @@ namespace usdg
 		     theta_accept_sum/static_cast<double>(i+1), pm);
       }
 
-      if(i >= n_burn)
+      if(i >= n_burn && (i-n_burn) % n_thin == 0)
       {
-	blaze::column(theta_samples, i-n_burn) = theta;
-	blaze::column(f_samples,     i-n_burn) = dist_q_f.mean;
-	gram_samples[i-n_burn]                 = gram_chol;
+	size_t idx_sample = (i - n_burn) / n_thin;
+	blaze::column(theta_samples, idx_sample) = theta;
+	blaze::column(f_samples,     idx_sample) = dist_q_f.mean;
+	gram_samples[idx_sample]                 = gram_chol;
       }
     }
     return {std::move(theta_samples),

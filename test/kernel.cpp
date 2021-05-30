@@ -27,7 +27,7 @@
 
 double const catch_eps = 1e-8;
 
-TEST_CASE("Matern 5/2 kernel value", "[kernel]")
+TEST_CASE("matern 5/2 kernel value", "[kernel]")
 {
   /* 
    * Compared against Julia KernelFunctions.jl result
@@ -51,7 +51,31 @@ TEST_CASE("Matern 5/2 kernel value", "[kernel]")
   REQUIRE(kernel(x, y) == Approx(0.0004385141317002246));
 }
 
-TEST_CASE("Gram matrix computation", "[kernel]")
+TEST_CASE("squared exponential kernel value", "[kernel]")
+{
+  /* 
+   * Compared against Julia KernelFunctions.jl result
+
+   using KernelFunctions
+   ℓ = 2.0; σ² = 0.6
+   k = KernelFunctions.SqExponentialKernel()
+   t = KernelFunctions.ScaleTransform(1 ./ℓ)
+   k = σ²*KernelFunctions.transform(k, t)
+   x = [1.124618098544101, -1.8477787735615157]; y = [1.0597907259031794, 0.20131396456561368]
+   k(x, y)
+
+   */
+  auto linescales = 2.0;
+  auto sigma      = sqrt(0.6);
+  auto kernel     = usdg::SquaredExpIso{sigma, linescales};
+
+  auto x = blaze::DynamicVector<double>({1.124618098544101, -1.8477787735615157});
+  auto y = blaze::DynamicVector<double>({1.0597907259031794, 0.20131396456561368});
+
+  REQUIRE(kernel(x, y) == Approx(0.35480086928576404));
+}
+
+TEST_CASE("gram matrix computation", "[kernel]")
 {
   /* 
    * Compared against Julia KernelFunctions.jl result
@@ -83,7 +107,7 @@ TEST_CASE("Gram matrix computation", "[kernel]")
   REQUIRE( blaze::norm(gram - truth) < catch_eps );
 }
 
-TEST_CASE("kernel derivative", "[kernel]")
+TEST_CASE("matern 5/2 kernel derivative", "[kernel]")
 {
   size_t n_dims  = 8;
   auto key       = GENERATE(range(0u, 8u));
@@ -103,5 +127,28 @@ TEST_CASE("kernel derivative", "[kernel]")
     }, dx);
 
   auto grad  = usdg::derivative(kernel, kernel.sigma*kernel.sigma, dx, y);
+  REQUIRE( blaze::norm(grad_truth - grad) < catch_eps );
+}
+
+TEST_CASE("squared exponential kernel derivative", "[kernel]")
+{
+  size_t n_dims  = 8;
+  auto key       = GENERATE(range(0u, 8u));
+  auto prng      = usdg::Random123(key);
+  auto norm_dist = std::normal_distribution<double>(0, 1);
+
+  auto sigma  = exp(norm_dist(prng));
+  auto scale  = exp(norm_dist(prng));
+  auto kernel = usdg::SquaredExpIso{sigma, scale};
+  auto dx     = usdg::rmvnormal(prng, n_dims);
+  auto y      = usdg::rmvnormal(prng, n_dims);
+
+  auto grad_truth = finitediff_gradient(
+    [&y, &kernel](blaze::DynamicVector<double> const& x)
+    {
+      return kernel(x, y);
+    }, dx);
+
+  auto grad  = usdg::gradient(kernel, kernel.sigma*kernel.sigma, dx, y);
   REQUIRE( blaze::norm(grad_truth - grad) < catch_eps );
 }

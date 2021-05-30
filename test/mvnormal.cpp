@@ -291,16 +291,16 @@ TEST_CASE("Derivative of unit Gaussian", "[dnormal]")
 {
   auto x   = blaze::DynamicVector<double>({0.3});
   auto pdf = [](blaze::DynamicVector<double> const& x_vec){
-    return usdg::gradient_dnormal(x_vec[0], false);
+    return usdg::dnormal(x_vec[0], false);
   };
-  auto dpdf_dx      = usdg::gradient_dnormal(x[1], false);
+  auto dpdf_dx      = usdg::gradient_dnormal(x[0], false);
   auto true_dpdf_dx = finitediff_gradient(pdf, x);
   REQUIRE( true_dpdf_dx == dpdf_dx );
 
   auto logpdf = [](blaze::DynamicVector<double> const& x_vec){
-    return usdg::gradient_dnormal(x_vec[0], true);
+    return usdg::dnormal(x_vec[0], true);
   };
-  auto dlogpdf_dx      = usdg::gradient_dnormal(x[1], true);
+  auto dlogpdf_dx      = usdg::gradient_dnormal(x[0], true);
   auto true_dlogpdf_dx = finitediff_gradient(logpdf, x);
   REQUIRE( true_dlogpdf_dx == dlogpdf_dx );
 }

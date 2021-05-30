@@ -25,7 +25,6 @@
 #include "math/uniform.hpp"
 #include "system/debug.hpp"
 
-#include <matplotlib-cpp/matplotlibcpp.h>
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 

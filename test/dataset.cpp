@@ -97,7 +97,7 @@ TEST_CASE("Latent Gaussian process prediction", "[dataset]")
   REQUIRE_NOTHROW( K_chol = usdg::cholesky_nothrow(K).value() );
   auto alpha  = usdg::solve(K_chol, f);
 
-  auto gp = usdg::LatentGaussianProcess<usdg::Matern52ARD>{
+  auto gp = usdg::GP<usdg::Matern52ARD>{
     K_chol, alpha, kernel};
 
   auto x = blaze::DynamicVector<double>(

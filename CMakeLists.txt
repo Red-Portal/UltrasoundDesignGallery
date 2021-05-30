@@ -15,8 +15,7 @@ cmake_minimum_required(VERSION 3.15)
 
 # Set the project name to your project name, my project isn't very descriptive
 project(us_gallery CXX)
-include(cmake/StandardProjectSettings.cmake)
-include(cmake/PreventInSourceBuilds.cmake)
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)
@@ -40,7 +39,7 @@ include(cmake/CompilerWarnings.cmake)
 set_project_warnings(project_warnings)
 
 # sanitizer options if supported by compiler
-if(CMAKE_BUILD_TYPE EQUAL "Debug")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     include(cmake/Sanitizers.cmake)
     enable_sanitizers(project_options)
 endif()
@@ -62,8 +61,6 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
-message(${CMAKE_CXX_FLAGS_RELEASE})
-
 # Dependencies
 find_package(SFML 2.5 COMPONENTS system window graphics network audio REQUIRED)
 find_package(ImGui-SFML REQUIRED)
@@ -72,6 +69,8 @@ find_package(FMT        REQUIRED)
 find_package(OpenMP     REQUIRED)
 find_package(Blaze      REQUIRED)
 find_package(Pagmo      REQUIRED)
+find_package(Eigen3     REQUIRED)
+find_package(NLOPT      REQUIRED)
 
 add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 find_package(spdlog     REQUIRED)
@@ -91,6 +90,11 @@ target_include_directories(progressbar SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/t
 add_library(Random123 INTERFACE)
 target_include_directories(Random123 SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/Random123")
 
+add_library(LBFGSpp INTERFACE)
+target_include_directories(LBFGSpp SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/LBFGSpp/include")
+
+find_package(Python COMPONENTS Development NumPy REQUIRED)
+
 option(BUILD_SHARED_LIBS "Enable compilation of shared libraries" OFF)
 option(ENABLE_TESTING "Enable Test Builds" ON)
 option(ENABLE_FUZZING "Enable Fuzzing Builds" OFF)
@@ -101,27 +105,6 @@ if(ENABLE_TESTING)
   add_subdirectory(test)
 endif()
 
-find_package(Python COMPONENTS Development NumPy)
-
-# Prior predictive check
-add_executable(prior_predictive src/prior_predictive.cpp)
-target_link_libraries(prior_predictive 
-    INTERFACE
-    blaze::blaze
-    Threads::threads
-
-    PUBLIC
-    Python::NumPy
-    Python::Python
-    OpenMP::OpenMP_CXX
-    csvparser
-    progressbar
-    project_options
-    project_warnings
-    BLAS::BLAS
-    spdlog::spdlog
-    Random123)
-
 # Bayesian optimization test
 add_executable(bayes_opt_test src/bayes_opt_test.cpp)
 target_link_libraries(bayes_opt_test
@@ -130,6 +113,8 @@ target_link_libraries(bayes_opt_test
     Threads::threads
 
     PUBLIC
+    Python::NumPy
+    Python::Python
     Pagmo::pagmo
     Python::NumPy
     Python::Python
@@ -140,6 +125,9 @@ target_link_libraries(bayes_opt_test
     project_warnings
     BLAS::BLAS
     spdlog::spdlog
+    Eigen3::Eigen
+    LBFGSpp
+    NLOPT::nlopt
     Random123)
 
 # Ultrasound Design Gallery
@@ -152,6 +140,8 @@ target_link_libraries(usgallery
 
     PUBLIC
     #OpenMP::OpenMP_CXX
+    Python::NumPy
+    Python::Python
     project_options
     project_warnings
     fmt::fmt-header-only

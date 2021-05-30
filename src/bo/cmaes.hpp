@@ -21,17 +21,27 @@
 
 #include "../math/blaze.hpp"
 #include "../system/debug.hpp"
+#include "../system/profile.hpp"
 
 #include <pagmo/algorithms/cmaes.hpp>
 #include <pagmo/algorithms/cstrs_self_adaptive.hpp>
 #include <pagmo/problem.hpp>
 #include <pagmo/types.hpp>
 
-#include <vector>
+#include <chrono>
 #include <functional>
+#include <tuple>
+#include <type_traits>
+#include <vector>
 
 namespace usdg
 {
+  template <class, template <class, class...> class>
+  struct is_instance : public std::false_type {};
+
+  template <class...Ts, template <class, class...> class U>
+  struct is_instance<U<Ts...>, U> : public std::true_type {};
+
   struct BoundedProblem {
     std::function<double(blaze::DynamicVector<double> const&)> acq;
     std::vector<double> lb;
@@ -60,10 +70,10 @@ namespace usdg
     inline std::vector<double>
     fitness(std::vector<double> const& x) const
     {
-      auto x_in     = blaze::DynamicVector<double>(x.size(), x.data());
-      auto f        = acq(x_in);
-      auto max_norm = blaze::max(blaze::abs(x_in));
-      return { f, max_norm };
+      auto x_in = blaze::DynamicVector<double>(x.size(), x.data());
+      x_in     /= blaze::max(blaze::abs(x_in));
+      auto f    = acq(x_in);
+      return { f };
     }
 
     inline std::pair<std::vector<double>,
@@ -72,27 +82,36 @@ namespace usdg
     {
       return { lb, ub };
     }
-
-    inline pagmo::vector_double::size_type
-    get_nec() const
-    {
-      return 1;
-    }
-
-    inline pagmo::vector_double::size_type
-    get_nic() const
-    {
-      return 0;
-    }
   };
 
+  template <typename RatioType>
+  inline bool
+  terminate(std::chrono::duration<double, RatioType> budget,
+	    usdg::clock::time_point const& start_time,
+	    size_t n_evals)
+  {
+    return (usdg::clock::now() - start_time) > budget;
+  }
+
+  template <typename IntType,
+	    typename = std::enable_if_t<std::is_integral<IntType>::value>>
+  inline bool
+  terminate(IntType budget,
+	    usdg::clock::time_point const& start_time,
+	    size_t n_evals)
+  {
+    (void)start_time;
+    return n_evals > budget;
+  }
+
   template <typename Rng,
-	    typename ObjectiveFunc>
+	    typename ObjectiveFunc,
+	    typename BudgetType>
   inline std::pair<blaze::DynamicVector<double>, double>
   cmaes_optimize(Rng& prng,
 		 ObjectiveFunc objective,
 		 size_t n_dims,
-		 size_t budget,
+		 BudgetType budget,
 		 spdlog::logger* logger)
   {
     if(logger)
@@ -100,15 +119,22 @@ namespace usdg
       logger->info("Optimizing function using CMA-ES: {}",
 		   usdg::file_name(__FILE__));
     }
-    double sigma0  = sqrt(static_cast<double>(n_dims))/4;
-    double ftol    = 1e-6;
-    double xtol    = 1e-3;
-    size_t n_pop   = 4 + static_cast<size_t>(
+    double sigma0 = sqrt(static_cast<double>(n_dims))/4;
+    double ftol   = 1e-6;
+    double xtol   = 1e-3;
+    size_t n_pop  = 4 + static_cast<size_t>(
       ceil(3*log(static_cast<double>(n_dims))));
-    auto unif_dist = std::uniform_real_distribution<double>(0, 1);
-    auto prob      = pagmo::problem(
+
+    size_t n_feval    = 0;
+    auto start_time  = usdg::clock::now();
+    auto unif_dist   = std::uniform_real_distribution<double>(0, 1);
+    auto prob        = pagmo::problem(
       usdg::BoundedProblem{
-	objective,
+	[&](blaze::DynamicVector<double> const& x)
+	{
+	  n_feval += 1;
+	  return objective(x);
+	},
 	std::vector<double>(n_dims, 0.0),
 	std::vector<double>(n_dims, 1.0)}
       );
@@ -123,12 +149,22 @@ namespace usdg
       pop.push_back(std::move(vec));
     }
 
-    auto budg_tmp  = static_cast<unsigned int>(budget);
     auto seed      = static_cast<unsigned int>(prng());
-    auto user_algo = pagmo::cmaes{budg_tmp, -1, -1, -1, -1,
+    auto user_algo = pagmo::cmaes{1, -1, -1, -1, -1,
       sigma0, ftol, xtol, true, true, seed};
-    user_algo.set_verbosity(1u);
-    pop = user_algo.evolve(pop);
+    //user_algo.set_verbosity(1u);
+
+    while(true)
+    {
+      size_t before_n_feval  = n_feval;
+      pop = user_algo.evolve(pop);
+      size_t after_n_feval  = n_feval;
+      if(usdg::terminate(budget, start_time, n_feval)
+	 || after_n_feval - before_n_feval == 0)
+      {
+	break;
+      }
+    }
 
     auto champ_x = pop.champion_x();
     auto champ_f = pop.champion_f()[0];
@@ -136,7 +172,9 @@ namespace usdg
     {
       logger->info("Optimized function using CMA-ES.");
     }
-    return {blaze::DynamicVector<double>(champ_x.size(), champ_x.data()), champ_f};
+    auto champ_x_blaze = blaze::DynamicVector<double>(champ_x.size());
+    std::copy(champ_x_blaze.begin(), champ_x_blaze.end(), champ_x_blaze.begin());
+    return {champ_x_blaze, champ_f};
   }
 
   template <typename Rng,
@@ -158,12 +196,19 @@ namespace usdg
     double xtol    = 1e-3;
     size_t n_pop   = 4 + static_cast<size_t>(
       ceil(3*log(static_cast<double>(n_dims))));
-    auto norm_dist = std::normal_distribution<double>(0, 1);
-    auto prob      = pagmo::problem(
+
+    size_t n_feval    = 0;
+    auto start_time  = usdg::clock::now();
+    auto norm_dist   = std::normal_distribution<double>(0, 1);
+    auto prob        = pagmo::problem(
       usdg::BallConstrainedProblem{
-	objective,
-	std::vector<double>(n_dims, -1.0),
-	std::vector<double>(n_dims,  1.0)}
+	[&](blaze::DynamicVector<double> const& x)
+	{
+	  n_feval += 1;
+	  return objective(x);
+	},
+	std::vector<double>(n_dims, 0.0),
+	std::vector<double>(n_dims, 1.0)}
       );
     prob.set_c_tol({1e-3});
     auto pop = pagmo::population{prob};
@@ -172,24 +217,26 @@ namespace usdg
       auto vec = std::vector<double>(n_dims);
       for (size_t j = 0; j < n_dims; ++j)
       {
-	vec[j] = norm_dist(prng);
-      }
-      /* Apply max-norm constraint */
-      auto vec_max = *std::max_element(vec.begin(), vec.end());
-      for (size_t j = 0; j < n_dims; ++j)
-      {
-	vec[j] /= vec_max;
+	vec[j] = std::abs(norm_dist(prng));
       }
       pop.push_back(std::move(vec));
     }
 
-    auto budg_tmp   = static_cast<unsigned int>(budget);
-    auto seed       = static_cast<unsigned int>(prng());
-    auto inner_algo = pagmo::cmaes{budg_tmp/16, -1, -1, -1, -1,
+    auto seed      = static_cast<unsigned int>(prng());
+    auto user_algo = pagmo::cmaes{1, -1, -1, -1, -1,
       sigma0, ftol, xtol, true, true, seed};
-    auto user_algo  = pagmo::cstrs_self_adaptive{16, std::move(inner_algo)};
-    user_algo.set_verbosity(1u);
-    pop = user_algo.evolve(pop);
+
+    while(true)
+    {
+      size_t before_n_feval = n_feval;
+      pop = user_algo.evolve(pop);
+      size_t after_n_feval  = n_feval;
+      if(usdg::terminate(budget, start_time, n_feval)
+	 || after_n_feval - before_n_feval == 0)
+      {
+	break;
+      }
+    }
 
     auto champ_x     = pop.champion_x();
     auto champ_f     = pop.champion_f()[0];

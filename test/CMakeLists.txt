@@ -35,6 +35,7 @@ add_executable(usgallery_tests
     finitediff.cpp
     likelihood.cpp
     gp_prior.cpp
+    bayesian_optimization.cpp
     )
 target_link_libraries(usgallery_tests
     INTERFACE
@@ -42,7 +43,10 @@ target_link_libraries(usgallery_tests
     Threads::threads
 
     PRIVATE
+    Pagmo::pagmo
     #OpenMP::OpenMP_CXX
+    Python::NumPy
+    Python::Python
     progressbar
     BLAS::BLAS
     Random123

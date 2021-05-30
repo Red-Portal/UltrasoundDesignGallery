@@ -177,17 +177,17 @@ namespace usdg
   template <typename XVecType,
 	    typename YVecType>
   inline decltype(auto)
-  derivative(SquaredExpIso const& kernel,
-	     double sigma2,
-	     XVecType const& dx,
-	     YVecType const& y)
+  gradient(SquaredExpIso const& kernel,
+	   double sigma2,
+	   XVecType const& dx,
+	   YVecType const& y)
   {
     auto delta  = (dx - y) / kernel.scale;
     auto k      = sigma2*exp(blaze::dot(delta, delta)/-2);
     return (-k/kernel.scale)*delta;
   }
 
- struct Matern52ARD
+  struct Matern52ARD
   {
     double sigma;
     blaze::DynamicVector<double> ardscales;

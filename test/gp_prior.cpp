@@ -19,15 +19,17 @@
 #include <catch2/catch.hpp>
 #define BLAZE_USE_DEBUG_MODE 1
 
+#include "../src/bo/find_bounds.hpp"
 #include "../src/gp/gp_prior.hpp"
-#include "../src/math/prng.hpp"
-#include "../src/math/mvnormal.hpp"
+#include "../src/gp/marginalized_gp.hpp"
 #include "../src/math/cholesky.hpp"
+#include "../src/math/mvnormal.hpp"
+#include "../src/math/prng.hpp"
 
 #include "finitediff.hpp"
 #include "utils.hpp"
 
-TEST_CASE("gaussian process prediction gradient", "[kernel]")
+TEST_CASE("gaussian process mean gradient", "[gp]")
 {
   auto key        = GENERATE(range(0u, 8u));
   auto prng       = usdg::Random123(key);
@@ -38,13 +40,13 @@ TEST_CASE("gaussian process prediction gradient", "[kernel]")
   auto norm_dist = std::normal_distribution<double>(0, 1);
   auto sigma     = exp(norm_dist(prng));
   auto scale     = exp(norm_dist(prng) + 1);
-  auto kernel    = usdg::Matern52Iso{sigma, scale};
+  auto kernel    = usdg::SquaredExpIso(sigma, scale);
   auto gram      = usdg::compute_gram_matrix(kernel, data_mat);
   auto z         = usdg::rmvnormal(prng, n_points);
   auto dx        = usdg::rmvnormal(prng, n_dims);
   auto chol      = usdg::cholesky_nothrow(gram).value();
 
-  auto gp         = usdg::LatentGaussianProcess<decltype(kernel)>{
+  auto gp         = usdg::GP<decltype(kernel)>{
     std::move(chol), z, kernel};
   auto grad_truth = finitediff_gradient(
     [&data_mat, &gp](blaze::DynamicVector<double> const& x)
@@ -57,7 +59,93 @@ TEST_CASE("gaussian process prediction gradient", "[kernel]")
   REQUIRE( blaze::norm(grad_truth - grad) < 1e-4 );
 }
 
-TEST_CASE("gaussian process prediction gradient regression1", "[kernel]")
+TEST_CASE("gaussian process prediction mean and variance gradient", "[gp]")
+{
+  auto key        = GENERATE(range(0u, 8u));
+  auto prng       = usdg::Random123(key);
+  size_t n_dims   = 8;
+  size_t n_points = 32;
+
+  auto data_mat  = generate_mvsamples(prng, n_dims, n_points);
+  auto norm_dist = std::normal_distribution<double>(0, 1);
+  auto sigma     = exp(norm_dist(prng));
+  auto scale     = exp(norm_dist(prng) + 1);
+  auto kernel    = usdg::SquaredExpIso(sigma, scale);
+  auto gram      = usdg::compute_gram_matrix(kernel, data_mat);
+  auto z         = usdg::rmvnormal(prng, n_points);
+  auto dx        = usdg::rmvnormal(prng, n_dims);
+  auto chol      = usdg::cholesky_nothrow(gram).value();
+
+  auto gp         = usdg::GP<decltype(kernel)>{
+    std::move(chol), z, kernel};
+
+
+  auto mean_grad_truth = finitediff_gradient(
+    [&data_mat, &gp](blaze::DynamicVector<double> const& x)
+    {
+      auto [mean, var] = gp.predict(data_mat, x);
+      return mean;
+    }, dx);
+  auto var_grad_truth = finitediff_gradient(
+    [&data_mat, &gp](blaze::DynamicVector<double> const& x)
+    {
+      auto [mean, var] = gp.predict(data_mat, x);
+      return var;
+    }, dx);
+  auto [mean_truth, var_truth]          = gp.predict(data_mat, dx);
+  auto [mean, var, mean_grad, var_grad] = usdg::gradient_mean_var(gp, data_mat, dx);
+
+  REQUIRE( mean == Approx(mean_truth) );
+  REQUIRE( var  == Approx(var_truth) );
+  REQUIRE( blaze::norm(mean_grad_truth - mean_grad) < 1e-4 );
+  REQUIRE( blaze::norm(var_grad_truth  - var_grad)  < 1e-4 );
+}
+
+TEST_CASE("marginalized gaussian process prediction mean and variance gradient", "[mgp]")
+{
+  auto key         = GENERATE(range(0u, 8u));
+  auto prng        = usdg::Random123(key);
+  size_t n_dims    = 8;
+  size_t n_samples = 8;
+  size_t n_points  = 32;
+
+  std::cout << __LINE__ << std::endl;
+  auto data_mat = generate_mvsamples(prng, n_dims, n_points);
+  auto hypers   = generate_mvsamples(prng, 2,      n_samples) + 1.0;
+  auto grams    = std::vector<usdg::Cholesky<usdg::DenseChol>>(n_samples);
+  for (size_t i = 0; i < n_samples; ++i)
+  {
+    auto hyper_col = blaze::column(hypers, i);
+    auto kernel    = usdg::SquaredExpIso(hyper_col);
+    auto gram      = usdg::compute_gram_matrix(kernel, data_mat);
+    grams[i]       = usdg::cholesky_nothrow(gram).value();
+  }
+  auto alphas = generate_mvsamples(prng, n_points, n_samples);
+  auto dx     = usdg::rmvnormal(prng, n_dims);
+  auto mgp    = usdg::MarginalizedGP<usdg::SquaredExpIso>(hypers, alphas, grams);
+
+  auto mean_grad_truth = finitediff_gradient(
+    [&data_mat, &mgp](blaze::DynamicVector<double> const& x)
+    {
+      auto [mean, var] = mgp.predict(data_mat, x);
+      return mean;
+    }, dx);
+  auto var_grad_truth = finitediff_gradient(
+    [&data_mat, &mgp](blaze::DynamicVector<double> const& x)
+    {
+      auto [mean, var] = mgp.predict(data_mat, x);
+      return var;
+    }, dx);
+  auto [mean_truth, var_truth]          = mgp.predict(data_mat, dx);
+  auto [mean, var, mean_grad, var_grad] = usdg::gradient_mean_var(mgp, data_mat, dx);
+
+  REQUIRE( mean == Approx(mean_truth) );
+  REQUIRE( var  == Approx(var_truth) );
+  REQUIRE( blaze::norm(mean_grad_truth - mean_grad) < 1e-4 );
+  REQUIRE( blaze::norm(var_grad_truth  - var_grad)  < 1e-4 );
+}
+
+TEST_CASE("gaussian process prediction gradient regression1", "[gp]")
 {
   auto data_mat  = blaze::DynamicMatrix<double>{
     {0.835248,  0.841446,   0.843102,   0.84353,  0.838296,  0.649214, 0.651899,  0.640166,   0.682612, 0.651628, 0.534399,  0.510567,  0.52977,   0.50226, 0.517407,   0.41023,  0.493844,  0.466412,   0.54297,  0.467464,  0.524246,   0.47388,  0.454902,  0.517634,  0.470901,   0.29128,  0.290777,   0.279564,  0.280481,    0.278918,      0.73195,   0.758865,  0.783234,  0.784758,  0.76013,  0.957462,    0.953157,  0.906225,  0.975952,  0.983839 },
@@ -86,10 +174,10 @@ TEST_CASE("gaussian process prediction gradient regression1", "[kernel]")
 
   auto sigma     = 0.626403;
   auto scale     = 2.69178;
-  auto kernel    = usdg::Matern52Iso{sigma, scale};
+  auto kernel    = usdg::SquaredExpIso{sigma, scale};
   auto gram      = usdg::compute_gram_matrix(kernel, data_mat);
   auto chol      = usdg::cholesky_nothrow(gram).value();
-  auto gp        = usdg::LatentGaussianProcess<decltype(kernel)>{
+  auto gp        = usdg::GP<decltype(kernel)>{
     std::move(chol), std::move(alpha), std::move(kernel)};
   auto grad_truth = finitediff_gradient(
     [&data_mat, &gp](blaze::DynamicVector<double> const& x)
@@ -101,3 +189,4 @@ TEST_CASE("gaussian process prediction gradient regression1", "[kernel]")
 
   REQUIRE( blaze::norm(grad_truth - grad) < 1e-4 );
 }
+

@@ -28,10 +28,7 @@ add_executable(usgallery_tests
     kernel.cpp
     dataset.cpp
     imh.cpp
-    ess.cpp
-    gp_ess.cpp
     quadrature.cpp
-    laplace_bernoulli.cpp
     finitediff.cpp
     likelihood.cpp
     gp_prior.cpp

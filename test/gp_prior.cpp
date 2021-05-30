@@ -101,50 +101,6 @@ TEST_CASE("gaussian process prediction mean and variance gradient", "[gp]")
   REQUIRE( blaze::norm(var_grad_truth  - var_grad)  < 1e-4 );
 }
 
-TEST_CASE("marginalized gaussian process prediction mean and variance gradient", "[mgp]")
-{
-  auto key         = GENERATE(range(0u, 8u));
-  auto prng        = usdg::Random123(key);
-  size_t n_dims    = 8;
-  size_t n_samples = 8;
-  size_t n_points  = 32;
-
-  std::cout << __LINE__ << std::endl;
-  auto data_mat = generate_mvsamples(prng, n_dims, n_points);
-  auto hypers   = generate_mvsamples(prng, 2,      n_samples) + 1.0;
-  auto grams    = std::vector<usdg::Cholesky<usdg::DenseChol>>(n_samples);
-  for (size_t i = 0; i < n_samples; ++i)
-  {
-    auto hyper_col = blaze::column(hypers, i);
-    auto kernel    = usdg::SquaredExpIso(hyper_col);
-    auto gram      = usdg::compute_gram_matrix(kernel, data_mat);
-    grams[i]       = usdg::cholesky_nothrow(gram).value();
-  }
-  auto alphas = generate_mvsamples(prng, n_points, n_samples);
-  auto dx     = usdg::rmvnormal(prng, n_dims);
-  auto mgp    = usdg::MarginalizedGP<usdg::SquaredExpIso>(hypers, alphas, grams);
-
-  auto mean_grad_truth = finitediff_gradient(
-    [&data_mat, &mgp](blaze::DynamicVector<double> const& x)
-    {
-      auto [mean, var] = mgp.predict(data_mat, x);
-      return mean;
-    }, dx);
-  auto var_grad_truth = finitediff_gradient(
-    [&data_mat, &mgp](blaze::DynamicVector<double> const& x)
-    {
-      auto [mean, var] = mgp.predict(data_mat, x);
-      return var;
-    }, dx);
-  auto [mean_truth, var_truth]          = mgp.predict(data_mat, dx);
-  auto [mean, var, mean_grad, var_grad] = usdg::gradient_mean_var(mgp, data_mat, dx);
-
-  REQUIRE( mean == Approx(mean_truth) );
-  REQUIRE( var  == Approx(var_truth) );
-  REQUIRE( blaze::norm(mean_grad_truth - mean_grad) < 1e-4 );
-  REQUIRE( blaze::norm(var_grad_truth  - var_grad)  < 1e-4 );
-}
-
 TEST_CASE("gaussian process prediction gradient regression1", "[gp]")
 {
   auto data_mat  = blaze::DynamicMatrix<double>{

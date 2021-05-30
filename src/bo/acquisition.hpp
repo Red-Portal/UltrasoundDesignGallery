@@ -280,184 +280,184 @@ namespace usdg
     return {std::move(x_next), std::move(xi_next)};
   }
 
-  template <>
-  template <typename Rng, typename BudgetType>
-  inline std::tuple<blaze::DynamicVector<double>,
-		    blaze::DynamicVector<double>>
-  BayesianOptimization<usdg::ThompsonSamplingKoyama>::
-  next_query(Rng& prng,
-	     size_t n_burn,
-	     size_t n_samples,
-	     BudgetType budget,
-	     usdg::MvNormal<usdg::DiagonalChol> const& prior_dist,
-	     usdg::Profiler* profiler,
-	     spdlog::logger* logger) const
-  {
-    if(logger)
-    {
-      logger->info("Finding next Bayesian optimization query with Thomson sampling with the Koyama scheme: {}",
-		   usdg::file_name(__FILE__));
-    }
-    if(profiler)
-    {
-      profiler->start("next_query"s);
-      profiler->start("sample_gp_hyper"s);
-    }
-    auto dist   = std::uniform_int_distribution<size_t>(0, n_samples-1);
-    auto i      = dist(prng);
+  // template <>
+  // template <typename Rng, typename BudgetType>
+  // inline std::tuple<blaze::DynamicVector<double>,
+  // 		    blaze::DynamicVector<double>>
+  // BayesianOptimization<usdg::ThompsonSamplingKoyama>::
+  // next_query(Rng& prng,
+  // 	     size_t n_burn,
+  // 	     size_t n_samples,
+  // 	     BudgetType budget,
+  // 	     usdg::MvNormal<usdg::DiagonalChol> const& prior_dist,
+  // 	     usdg::Profiler* profiler,
+  // 	     spdlog::logger* logger) const
+  // {
+  //   if(logger)
+  //   {
+  //     logger->info("Finding next Bayesian optimization query with Thomson sampling with the Koyama scheme: {}",
+  // 		   usdg::file_name(__FILE__));
+  //   }
+  //   if(profiler)
+  //   {
+  //     profiler->start("next_query"s);
+  //     profiler->start("sample_gp_hyper"s);
+  //   }
+  //   auto dist   = std::uniform_int_distribution<size_t>(0, n_samples-1);
+  //   auto i      = dist(prng);
 
-    auto data_mat = this->_data.data_matrix();
-    auto [theta_samples, f_samples, K_samples] = usdg::sample_gp_hyper(
-      prng,
-      this->_data,
-      data_mat,
-      n_burn,
-      i+1,  
-      prior_dist.mean,
-      prior_dist,
-      nullptr);
-    if(profiler)
-    {
-      profiler->stop("sample_gp_hyper"s);
-      profiler->start("optimize_acquisition"s);
-    }
+  //   auto data_mat = this->_data.data_matrix();
+  //   auto [theta_samples, f_samples, K_samples] = usdg::sample_gp_hyper(
+  //     prng,
+  //     this->_data,
+  //     data_mat,
+  //     n_burn,
+  //     i+1,  
+  //     prior_dist.mean,
+  //     prior_dist,
+  //     nullptr);
+  //   if(profiler)
+  //   {
+  //     profiler->stop("sample_gp_hyper"s);
+  //     profiler->start("optimize_acquisition"s);
+  //   }
 
-    auto mgp = usdg::MarginalizedGP<usdg::SquaredExpIso>(blaze::exp(theta_samples),
-							 f_samples,
-							 K_samples);
-    auto [x_opt, y_opt] = usdg::find_best_alpha(this->_data, data_mat, mgp);
+  //   auto mgp = usdg::MarginalizedGP<usdg::SquaredExpIso>(blaze::exp(theta_samples),
+  // 							 f_samples,
+  // 							 K_samples);
+  //   auto [x_opt, y_opt] = usdg::find_best_alpha(this->_data, data_mat, mgp);
 
-    auto theta  = blaze::column(theta_samples, i);
-    auto f      = blaze::column(f_samples, i);
-    auto K      = K_samples[i];
-    auto kernel = usdg::SquaredExpIso(blaze::exp(theta));
-    auto alpha  = usdg::solve(K, f);
-    auto gp     = GP{std::move(K), std::move(alpha), std::move(kernel)};
+  //   auto theta  = blaze::column(theta_samples, i);
+  //   auto f      = blaze::column(f_samples, i);
+  //   auto K      = K_samples[i];
+  //   auto kernel = usdg::SquaredExpIso(blaze::exp(theta));
+  //   auto alpha  = usdg::solve(K, f);
+  //   auto gp     = GP{std::move(K), std::move(alpha), std::move(kernel)};
 
-    auto ts_acq = [&](blaze::DynamicVector<double> const& x,
-		      bool with_gradient)
-      -> std::pair<double, blaze::DynamicVector<double>> {
-      auto [mean, var] = gp.predict(data_mat, x);
-      auto grad        = blaze::DynamicVector<double>();
-      if(with_gradient)
-      {
-	grad = gradient_mean(gp, data_mat, x);
-      }
-      return { mean, std::move(grad) };
-    };
+  //   auto ts_acq = [&](blaze::DynamicVector<double> const& x,
+  // 		      bool with_gradient)
+  //     -> std::pair<double, blaze::DynamicVector<double>> {
+  //     auto [mean, var] = gp.predict(data_mat, x);
+  //     auto grad        = blaze::DynamicVector<double>();
+  //     if(with_gradient)
+  //     {
+  // 	grad = gradient_mean(gp, data_mat, x);
+  //     }
+  //     return { mean, std::move(grad) };
+  //   };
 
-    auto [x_next, y_next] = usdg::lbfgs_multistage_box_optimize(
-      prng, ts_acq, this->_n_dims, budget, 128, logger);
+  //   auto [x_next, y_next] = usdg::lbfgs_multistage_box_optimize(
+  //     prng, ts_acq, this->_n_dims, budget, 128, logger);
 
-    auto delta = (x_opt - x_next);
-    auto xi    = blaze::evaluate(delta / blaze::max(blaze::abs(delta)));
+  //   auto delta = (x_opt - x_next);
+  //   auto xi    = blaze::evaluate(delta / blaze::max(blaze::abs(delta)));
 
-    std::cout << x_next << std::endl;
-    std::cout << xi     << std::endl;
+  //   std::cout << x_next << std::endl;
+  //   std::cout << xi     << std::endl;
 
-    if(profiler)
-    {
-      profiler->stop("optimize_acquisition"s);
-      profiler->stop("next_query"s);
-    }
-    if(logger)
-    {
-      logger->info("Found next Bayesian optimization query.");
-    }
-    return {std::move(x_next), std::move(xi)};
-  }
+  //   if(profiler)
+  //   {
+  //     profiler->stop("optimize_acquisition"s);
+  //     profiler->stop("next_query"s);
+  //   }
+  //   if(logger)
+  //   {
+  //     logger->info("Found next Bayesian optimization query.");
+  //   }
+  //   return {std::move(x_next), std::move(xi)};
+  // }
 
-  template <>
-  template <typename Rng, typename BudgetType>
-  inline std::tuple<blaze::DynamicVector<double>,
-		    blaze::DynamicVector<double>>
-  BayesianOptimization<usdg::ExpectedImprovement>::
-  next_query(Rng& prng,
-	     size_t n_burn,
-	     size_t n_samples,
-	     BudgetType budget,
-	     usdg::MvNormal<usdg::DiagonalChol> const& prior_dist,
-	     usdg::Profiler* profiler,
-	     spdlog::logger* logger) const
-  {
-    if(logger)
-    {
-      logger->info("Finding next Bayesian optimization query with expected improvement: {}",
-		   usdg::file_name(__FILE__));
-    }
-    if(profiler)
-    {
-      profiler->start("next_query"s);
-      profiler->start("sample_gp_hyper"s);
-    }
+  // template <>
+  // template <typename Rng, typename BudgetType>
+  // inline std::tuple<blaze::DynamicVector<double>,
+  // 		    blaze::DynamicVector<double>>
+  // BayesianOptimization<usdg::ExpectedImprovement>::
+  // next_query(Rng& prng,
+  // 	     size_t n_burn,
+  // 	     size_t n_samples,
+  // 	     BudgetType budget,
+  // 	     usdg::MvNormal<usdg::DiagonalChol> const& prior_dist,
+  // 	     usdg::Profiler* profiler,
+  // 	     spdlog::logger* logger) const
+  // {
+  //   if(logger)
+  //   {
+  //     logger->info("Finding next Bayesian optimization query with expected improvement: {}",
+  // 		   usdg::file_name(__FILE__));
+  //   }
+  //   if(profiler)
+  //   {
+  //     profiler->start("next_query"s);
+  //     profiler->start("sample_gp_hyper"s);
+  //   }
 
-    auto data_mat = this->_data.data_matrix();
-    auto [theta_samples, f_samples, K_samples] = usdg::sample_gp_hyper(
-      prng,
-      this->_data,
-      data_mat,
-      n_burn,
-      n_samples,
-      prior_dist.mean,
-      prior_dist,
-      nullptr);
-    if(profiler)
-    {
-      profiler->stop("sample_gp_hyper"s);
-      profiler->start("optimize_acquisition"s);
-    }
+  //   auto data_mat = this->_data.data_matrix();
+  //   auto [theta_samples, f_samples, K_samples] = usdg::sample_gp_hyper(
+  //     prng,
+  //     this->_data,
+  //     data_mat,
+  //     n_burn,
+  //     n_samples,
+  //     prior_dist.mean,
+  //     prior_dist,
+  //     nullptr);
+  //   if(profiler)
+  //   {
+  //     profiler->stop("sample_gp_hyper"s);
+  //     profiler->start("optimize_acquisition"s);
+  //   }
 
-    auto mgp = usdg::MarginalizedGP<usdg::SquaredExpIso>(blaze::exp(theta_samples),
-							 f_samples,
-							 K_samples);
+  //   auto mgp = usdg::MarginalizedGP<usdg::SquaredExpIso>(blaze::exp(theta_samples),
+  // 							 f_samples,
+  // 							 K_samples);
 
-    auto [_, y_opt] = usdg::find_best_alpha(this->_data, data_mat, mgp);
-    size_t n_dims   = this->_n_dims;
-    auto ei_x_acq = [&](blaze::DynamicVector<double> const& x_in) {
-      auto [mean, var] = mgp.predict(data_mat, x_in);
-      double sigma     = sqrt(var);
-      double delta     = (mean - y_opt);
-      double ei        = delta*usdg::normal_cdf(delta/sigma)
-	+ sigma*usdg::dnormal(delta/sigma);
-      return -ei;
-    };
-    auto [x_champ, y_x_champ] = usdg::cmaes_optimize(
-      prng, ei_x_acq, n_dims, budget/2, logger);
+  //   auto [_, y_opt] = usdg::find_best_alpha(this->_data, data_mat, mgp);
+  //   size_t n_dims   = this->_n_dims;
+  //   auto ei_x_acq = [&](blaze::DynamicVector<double> const& x_in) {
+  //     auto [mean, var] = mgp.predict(data_mat, x_in);
+  //     double sigma     = sqrt(var);
+  //     double delta     = (mean - y_opt);
+  //     double ei        = delta*usdg::normal_cdf(delta/sigma)
+  // 	+ sigma*usdg::dnormal(delta/sigma);
+  //     return -ei;
+  //   };
+  //   auto [x_champ, y_x_champ] = usdg::cmaes_optimize(
+  //     prng, ei_x_acq, n_dims, budget/2, logger);
 
-    auto ei_xi_acq = [&](blaze::DynamicVector<double> const& xi_in) {
-      size_t n_pseudo    = 16;
-      auto [lb, ub]      = usdg::pbo_find_bounds(x_champ, xi_in);
-      double beta_delta  = (ub - lb) / static_cast<double>(n_pseudo);
-      double ei_avg      = 0.0;
-      for (size_t i = 0; i < n_pseudo; ++i)
-      {
-	auto beta        = lb + beta_delta*static_cast<double>(i);
-	auto [mean, var] = mgp.predict(data_mat, x_champ + beta*xi_in);
-	double sigma     = sqrt(var);
-	double delta     = (mean - y_opt);
-	double ei        = delta*usdg::normal_cdf(delta/sigma)
-	  + sigma*usdg::dnormal(delta/sigma);
-	ei_avg += ei;
-      }
-      return -ei_avg / static_cast<double>(n_pseudo);
-    };
-    auto [xi_champ, y_xi_champ] = usdg::cmaes_maxball_optimize(
-      prng, ei_xi_acq, n_dims, budget/2, logger);
+  //   auto ei_xi_acq = [&](blaze::DynamicVector<double> const& xi_in) {
+  //     size_t n_pseudo    = 16;
+  //     auto [lb, ub]      = usdg::pbo_find_bounds(x_champ, xi_in);
+  //     double beta_delta  = (ub - lb) / static_cast<double>(n_pseudo);
+  //     double ei_avg      = 0.0;
+  //     for (size_t i = 0; i < n_pseudo; ++i)
+  //     {
+  // 	auto beta        = lb + beta_delta*static_cast<double>(i);
+  // 	auto [mean, var] = mgp.predict(data_mat, x_champ + beta*xi_in);
+  // 	double sigma     = sqrt(var);
+  // 	double delta     = (mean - y_opt);
+  // 	double ei        = delta*usdg::normal_cdf(delta/sigma)
+  // 	  + sigma*usdg::dnormal(delta/sigma);
+  // 	ei_avg += ei;
+  //     }
+  //     return -ei_avg / static_cast<double>(n_pseudo);
+  //   };
+  //   auto [xi_champ, y_xi_champ] = usdg::cmaes_maxball_optimize(
+  //     prng, ei_xi_acq, n_dims, budget/2, logger);
 
-    std::cout << x_champ << std::endl;
-    std::cout << xi_champ << std::endl;
+  //   std::cout << x_champ << std::endl;
+  //   std::cout << xi_champ << std::endl;
 
-    if(profiler)
-    {
-      profiler->stop("optimize_acquisition"s);
-      profiler->stop("next_query"s);
-    }
-    if(logger)
-    {
-      logger->info("Found next Bayesian optimization query.");
-    }
-    return { std::move(x_champ), std::move(xi_champ) };
-  }
+  //   if(profiler)
+  //   {
+  //     profiler->stop("optimize_acquisition"s);
+  //     profiler->stop("next_query"s);
+  //   }
+  //   if(logger)
+  //   {
+  //     logger->info("Found next Bayesian optimization query.");
+  //   }
+  //   return { std::move(x_champ), std::move(xi_champ) };
+  // }
 
   template <>
   template <typename Rng, typename BudgetType>

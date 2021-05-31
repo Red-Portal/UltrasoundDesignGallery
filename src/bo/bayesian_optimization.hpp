@@ -48,13 +48,10 @@ namespace usdg
     template <typename Rng,
 	      typename BudgetType>
     inline std::tuple<blaze::DynamicVector<double>,
-		      blaze::DynamicVector<double>>//,
-			//blaze::DynamicMatrix<double>>
+		      blaze::DynamicVector<double>>
     next_query(Rng& prng,
-	       size_t n_burn,
-	       size_t n_samples,
 	       BudgetType budget,
-	       usdg::MvNormal<usdg::DiagonalChol> const& prior_dist,
+	       blaze::DynamicVector<double> const& linescales,
 	       usdg::Profiler* profiler,
 	       spdlog::logger* logger) const;
 

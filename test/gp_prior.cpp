@@ -21,7 +21,6 @@
 
 #include "../src/bo/find_bounds.hpp"
 #include "../src/gp/gp_prior.hpp"
-#include "../src/gp/marginalized_gp.hpp"
 #include "../src/math/cholesky.hpp"
 #include "../src/math/mvnormal.hpp"
 #include "../src/math/prng.hpp"

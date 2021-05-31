@@ -20,7 +20,6 @@
 #define __US_GALLERY_ACQUISITION_HPP__
 
 #include "../gp/gp_prior.hpp"
-#include "../gp/marginalized_gp.hpp"
 #include "../math/blaze.hpp"
 #include "../math/linearalgebra.hpp"
 #include "../math/mvnormal.hpp"
@@ -29,7 +28,7 @@
 #include "bayesian_optimization.hpp"
 #include "cmaes.hpp"
 #include "lbfgs.hpp"
-#include "sample_hyper.hpp"
+#include "gp_inference.hpp"
 
 #include "../../test/finitediff.hpp"
 
@@ -91,64 +90,62 @@ namespace usdg
     return { pred_sum/N, grad_buf };
   }
 
-  // template <typename KernelType>
-  // std::tuple<double, blaze::DynamicVector<double>>
-  // ei_x_gradient(usdg::MarginalizedGP<KernelType> const& mgp,
-  // 		blaze::DynamicMatrix<double> const& data_mat,
-  // 		double y_opt,
-  // 		blaze::DynamicVector<double> const& x,
-  // 		bool derivative)
-  // {
-  //   size_t n_dims = x.size();
-  //   auto grad_buf = [derivative, n_dims]{
-  //     if(derivative)
-  //     {
-  // 	return blaze::DynamicVector<double>(n_dims, 0.0);
-  //     }
-  //     else
-  //     {
-  // 	return blaze::DynamicVector<double>();
-  //     }}();
+  template <typename KernelType>
+  std::tuple<double, blaze::DynamicVector<double>>
+  ei_x_gradient(usdg::GP<KernelType> const& gp,
+		blaze::DynamicMatrix<double> const& data_mat,
+		double y_opt,
+		blaze::DynamicVector<double> const& x,
+		bool derivative)
+  {
+    size_t n_dims = x.size();
+    auto grad_buf = [derivative, n_dims]{
+      if(derivative)
+      {
+	return blaze::DynamicVector<double>(n_dims, 0.0);
+      }
+      else
+      {
+	return blaze::DynamicVector<double>();
+      }}();
 
-  //   double ei = 0.0;
-  //   if (derivative)
-  //   {
-  //     // T1: d\mu/dx(x) \Phi(z)
-  //     // T2: \phi(z)((\mu - y*)dz/dx + 1/(2\sigma) d\sigma^2/dx) 
-  //     // T3: \sigma d\phi/dx(z) dz/dxz
+    double ei = 0.0;
+    if (derivative)
+    {
+      // T1: d\mu/dx(x) \Phi(z)
+      // T2: \phi(z)((\mu - y*)dz/dx + 1/(2\sigma) d\sigma^2/dx) 
+      // T3: \sigma d\phi/dx(z) dz/dxz
 
-  //     auto [mean, var, dmu_dx, dvar_dx] = usdg::gradient_mean_var(mgp, data_mat, x);
+      auto [mean, var, dmu_dx, dvar_dx] = usdg::gradient_mean_var(gp, data_mat, x);
 
-  //     double sigma = sqrt(var);
-  //     double delta = (mean - y_opt);
-  //     double z     = delta/sigma;
-  //     double Phiz  = usdg::normal_cdf(z);
-  //     double phiz  = usdg::dnormal(z);
-  //     ei           = delta*Phiz + phiz*sigma;
+      double sigma = sqrt(var);
+      double delta = (mean - y_opt);
+      double z     = delta/sigma;
+      double Phiz  = usdg::normal_cdf(z);
+      double phiz  = usdg::dnormal(z);
+      ei           = delta*Phiz + phiz*sigma;
 
-  //     auto dz_dx   = dmu_dx / sigma;
-  //     auto dphi_dz = usdg::gradient_dnormal(z)*dz_dx;
-  //     auto t1      = dmu_dx*Phiz;
-  //     auto t2      = phiz*(delta*dz_dx + 1.0/(2*sigma)*dvar_dx);
-  //     auto t3      = sigma*dphi_dz;
-  //     auto dei_dx  = t1 + t2 + t3;
-  //     grad_buf += dei_dx;
-  //   }
-  //   else
-  //   {
-  //     auto [mean, var] = mgp.predict(data_mat, x);
-  //     double sigma     = sqrt(var);
-  //     double delta     = (mean - y_opt);
-  //     double z         = delta/sigma;
-  //     double Phiz      = usdg::normal_cdf(z);
-  //     double phiz      = usdg::dnormal(z);
-  //     ei               = delta*Phiz + phiz*sigma;
-  //   }
-  //   return { ei, grad_buf };
-  // }
+      auto dz_dx   = dmu_dx / sigma;
+      auto dphi_dz = usdg::gradient_dnormal(z)*dz_dx;
+      auto t1      = dmu_dx*Phiz;
+      auto t2      = phiz*(delta*dz_dx + 1.0/(2*sigma)*dvar_dx);
+      auto t3      = sigma*dphi_dz;
+      auto dei_dx  = t1 + t2 + t3;
+      grad_buf += dei_dx;
+    }
+    else
+    {
+      auto [mean, var] = gp.predict(data_mat, x);
+      double sigma     = sqrt(var);
+      double delta     = (mean - y_opt);
+      double z         = delta/sigma;
+      double Phiz      = usdg::normal_cdf(z);
+      double phiz      = usdg::dnormal(z);
+      ei               = delta*Phiz + phiz*sigma;
+    }
+    return { ei, grad_buf };
+  }
 
-  class ThompsonSamplingKoyama {};
-  class ThompsonSampling {};
   class ExpectedImprovementKoyama {};
   class ExpectedImprovement {};
 
@@ -172,200 +169,6 @@ namespace usdg
     }
     return { std::move(x_opt), y_opt };
   }
-
-  template <>
-  template <typename Rng, typename BudgetType>
-  inline std::tuple<blaze::DynamicVector<double>,
-		    blaze::DynamicVector<double>>
-  BayesianOptimization<usdg::ThompsonSampling>::
-  next_query(Rng& prng,
-	     size_t n_burn,
-	     size_t n_samples,
-	     BudgetType budget,
-	     usdg::MvNormal<usdg::DiagonalChol> const& prior_dist,
-	     usdg::Profiler* profiler,
-	     spdlog::logger* logger) const
-  {
-    if(logger)
-    {
-      logger->info("Finding next Bayesian optimization query with Thomson sampling: {}",
-		   usdg::file_name(__FILE__));
-    }
-    if(profiler)
-    {
-      profiler->start("next_query"s);
-      profiler->start("sample_gp_hyper"s);
-    }
-
-    auto data_mat = this->_data.data_matrix();
-    auto dist     = std::uniform_int_distribution<size_t>(0, n_samples-1);
-    auto idx      = dist(prng);
-
-    auto [theta_samples, f_samples, K_samples] = usdg::sample_gp_hyper(
-      prng,
-      this->_data,
-      data_mat,
-      n_burn,
-      idx + 1, //n_samples, 
-      prior_dist.mean,
-      prior_dist,
-      nullptr);
-    if(profiler)
-    {
-      profiler->stop("sample_gp_hyper"s);
-      profiler->start("optimize_acquisition"s);
-    }
-
-    auto theta  = blaze::column(theta_samples, idx);
-    auto f      = blaze::column(f_samples, idx);
-    auto K      = K_samples[idx];
-    auto kernel = usdg::SquaredExpIso(blaze::exp(theta));
-    auto alpha  = usdg::solve(K, f);
-    auto gp     = GP{std::move(K), std::move(alpha), std::move(kernel)};
-    auto n_beta = this->_data._n_pseudo;
-
-    // auto mgp = usdg::MarginalizedGP<usdg::SquaredExpIso>(blaze::exp(theta_samples),
-    // 							 f_samples,
-    // 							 K_samples);
-    // render_function([&data_mat, &mgp](blaze::DynamicVector<double> const& fuck){
-    //   auto [mean, var] = mgp.predict(data_mat, fuck);
-    //   return mean;
-    // });
-
-    // render_function([&data_mat, &gp](blaze::DynamicVector<double> const& fuck){
-    //   auto [mean, var] = gp.predict(data_mat, fuck);
-    //   return mean;
-    // });
-
-    auto ts_x_acq = [&](blaze::DynamicVector<double> const& x,
-		      bool with_gradient)
-      -> std::pair<double, blaze::DynamicVector<double>>
-      {
-	auto [mean, var] = gp.predict(data_mat, x);
-	auto grad        = blaze::DynamicVector<double>();
-	if(with_gradient)
-	{
-	  grad = gradient_mean(gp, data_mat, x);
-	}
-	return { mean, std::move(grad) };
-      };
-
-    auto [x_next, _] = usdg::lbfgs_multistage_box_optimize(
-      prng, ts_x_acq, this->_n_dims, budget, 128, logger);
-
-    auto ts_xi_acq = [&](blaze::DynamicVector<double> const& xi,
-			 bool with_gradient)
-    {
-      return thompson_xi_gradient(gp, data_mat, n_beta, x_next,
-				  xi, with_gradient);
-    };
-
-    auto [xi_next, __] = usdg::lbfgs_optimize(
-      prng, ts_xi_acq, this->_n_dims, budget, logger);
-    
-    xi_next /= blaze::max(blaze::abs(xi_next));
-
-    std::cout << x_next << std::endl;
-    std::cout << xi_next<< std::endl;
-
-    if(profiler)
-    {
-      profiler->stop("optimize_acquisition"s);
-      profiler->stop("next_query"s);
-    }
-    if(logger)
-    {
-      logger->info("Found next Bayesian optimization query.");
-    }
-    return {std::move(x_next), std::move(xi_next)};
-  }
-
-  // template <>
-  // template <typename Rng, typename BudgetType>
-  // inline std::tuple<blaze::DynamicVector<double>,
-  // 		    blaze::DynamicVector<double>>
-  // BayesianOptimization<usdg::ThompsonSamplingKoyama>::
-  // next_query(Rng& prng,
-  // 	     size_t n_burn,
-  // 	     size_t n_samples,
-  // 	     BudgetType budget,
-  // 	     usdg::MvNormal<usdg::DiagonalChol> const& prior_dist,
-  // 	     usdg::Profiler* profiler,
-  // 	     spdlog::logger* logger) const
-  // {
-  //   if(logger)
-  //   {
-  //     logger->info("Finding next Bayesian optimization query with Thomson sampling with the Koyama scheme: {}",
-  // 		   usdg::file_name(__FILE__));
-  //   }
-  //   if(profiler)
-  //   {
-  //     profiler->start("next_query"s);
-  //     profiler->start("sample_gp_hyper"s);
-  //   }
-  //   auto dist   = std::uniform_int_distribution<size_t>(0, n_samples-1);
-  //   auto i      = dist(prng);
-
-  //   auto data_mat = this->_data.data_matrix();
-  //   auto [theta_samples, f_samples, K_samples] = usdg::sample_gp_hyper(
-  //     prng,
-  //     this->_data,
-  //     data_mat,
-  //     n_burn,
-  //     i+1,  
-  //     prior_dist.mean,
-  //     prior_dist,
-  //     nullptr);
-  //   if(profiler)
-  //   {
-  //     profiler->stop("sample_gp_hyper"s);
-  //     profiler->start("optimize_acquisition"s);
-  //   }
-
-  //   auto mgp = usdg::MarginalizedGP<usdg::SquaredExpIso>(blaze::exp(theta_samples),
-  // 							 f_samples,
-  // 							 K_samples);
-  //   auto [x_opt, y_opt] = usdg::find_best_alpha(this->_data, data_mat, mgp);
-
-  //   auto theta  = blaze::column(theta_samples, i);
-  //   auto f      = blaze::column(f_samples, i);
-  //   auto K      = K_samples[i];
-  //   auto kernel = usdg::SquaredExpIso(blaze::exp(theta));
-  //   auto alpha  = usdg::solve(K, f);
-  //   auto gp     = GP{std::move(K), std::move(alpha), std::move(kernel)};
-
-  //   auto ts_acq = [&](blaze::DynamicVector<double> const& x,
-  // 		      bool with_gradient)
-  //     -> std::pair<double, blaze::DynamicVector<double>> {
-  //     auto [mean, var] = gp.predict(data_mat, x);
-  //     auto grad        = blaze::DynamicVector<double>();
-  //     if(with_gradient)
-  //     {
-  // 	grad = gradient_mean(gp, data_mat, x);
-  //     }
-  //     return { mean, std::move(grad) };
-  //   };
-
-  //   auto [x_next, y_next] = usdg::lbfgs_multistage_box_optimize(
-  //     prng, ts_acq, this->_n_dims, budget, 128, logger);
-
-  //   auto delta = (x_opt - x_next);
-  //   auto xi    = blaze::evaluate(delta / blaze::max(blaze::abs(delta)));
-
-  //   std::cout << x_next << std::endl;
-  //   std::cout << xi     << std::endl;
-
-  //   if(profiler)
-  //   {
-  //     profiler->stop("optimize_acquisition"s);
-  //     profiler->stop("next_query"s);
-  //   }
-  //   if(logger)
-  //   {
-  //     logger->info("Found next Bayesian optimization query.");
-  //   }
-  //   return {std::move(x_next), std::move(xi)};
-  // }
 
   // template <>
   // template <typename Rng, typename BudgetType>
@@ -465,10 +268,8 @@ namespace usdg
 		    blaze::DynamicVector<double>>
   BayesianOptimization<usdg::ExpectedImprovementKoyama>::
   next_query(Rng& prng,
-	     size_t n_burn,
-	     size_t n_samples,
 	     BudgetType budget,
-	     usdg::MvNormal<usdg::DiagonalChol> const& prior_dist,
+	     blaze::DynamicVector<double> const& linescales,
 	     usdg::Profiler* profiler,
 	     spdlog::logger* logger) const
   {
@@ -480,19 +281,10 @@ namespace usdg
     if(profiler)
     {
       profiler->start("next_query"s);
-      profiler->start("sample_gp_hyper"s);
     }
 
     auto data_mat = this->_data.data_matrix();
-    auto [theta_samples, f_samples, K_samples] = usdg::sample_gp_hyper(
-      prng,
-      this->_data,
-      data_mat,
-      n_burn,
-      n_samples,
-      prior_dist.mean,
-      prior_dist,
-      nullptr);
+    auto gp       = fit_gp(prng, this->_data, data_mat, linescales, logger);
 
     if(profiler)
     {
@@ -500,25 +292,15 @@ namespace usdg
       profiler->start("optimize_acquisition"s);
     }
 
-    auto mgp = usdg::MarginalizedGP<usdg::SquaredExpIso>(blaze::exp(theta_samples),
-							 f_samples,
-							 K_samples);
-    auto [x_opt, y_opt] = usdg::find_best_alpha(this->_data, data_mat, mgp);
+    auto [x_opt, y_opt] = usdg::find_best_alpha(this->_data, data_mat, gp);
 
     auto ei_x_acq = [&](blaze::DynamicVector<double> const& x,
 			bool with_gradient)
       -> std::pair<double, blaze::DynamicVector<double>>
       {
-	auto [m,v] = ei_x_gradient(mgp, data_mat, y_opt, x, with_gradient);
-	return {m, v};
+	auto [mean,var] = ei_x_gradient(gp, data_mat, y_opt, x, with_gradient);
+	return {mean, var};
       };
-
-    // auto grad = finitediff_gradient([&ei_x_acq](auto const& x_in){ return ei_x_acq(x_in, false).first; }, x_opt);
-    // auto real = ei_x_acq(x_opt, true).second;
-    // std::cout << grad << std::endl;
-    // std::cout << real << std::endl;
-    // std::cout << grad - real << std::endl;
-    // throw std::runtime_error("");
 
     size_t n_dims   = this->_n_dims;
     auto [x_next, _] = usdg::lbfgs_multistage_box_optimize(

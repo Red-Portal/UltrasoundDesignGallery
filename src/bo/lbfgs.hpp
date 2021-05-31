@@ -64,6 +64,64 @@ namespace usdg
     return x_opt;
   }
 
+  // template <typename ObjectiveFunc>
+  // inline blaze::DynamicVector<double>
+  // lbfgs(ObjectiveFunc objective_grad,
+  // 	blaze::DynamicVector<double> const& x_init,
+  // 	double x_lb,
+  // 	double x_ub,
+  // 	size_t n_maxeval = 1024,
+  // 	double ftol_rel  = 1e-5,
+  // 	double xtol_rel  = 1e-5)
+  // {
+  //   size_t n_dims = x_init.size();
+  //   auto x_buf    = blaze::DynamicVector<double>(n_dims);
+  //   auto objective_lambda = [&objective_grad, &x_buf](
+  //     std::vector<double> const& x,
+  //     std::vector<double>& grad) -> double
+  //   {
+  //     std::copy(x.begin(), x.end(), x_buf.begin());
+  //     auto [y, grad_buf] = objective_grad(x_buf, !grad.empty());
+  //     std::copy(grad_buf.begin(), grad_buf.end(), grad.begin());
+  //     return y;
+  //   };
+
+  //   auto objective_wrapped = std::function<
+  //     double(std::vector<double> const&,
+  // 	     std::vector<double>&)>(objective_lambda);
+
+  //   auto objective_invoke = +[](std::vector<double> const& x,
+  // 				std::vector<double>& grad,
+  // 				void* punned)
+  //   {
+  //     return (*reinterpret_cast<
+  // 	std::function<
+  // 	      double(std::vector<double> const&,
+  // 		     std::vector<double>&)>*>(punned))(x, grad);
+  //   };
+  //   auto optimizer = nlopt::opt(nlopt::LD_LBFGS,
+  // 				static_cast<unsigned int>(n_dims));
+  //   optimizer.set_lower_bounds(x_lb);
+  //   optimizer.set_upper_bounds(x_ub);
+  //   optimizer.set_max_objective(objective_invoke, &objective_wrapped);
+  //   optimizer.set_xtol_rel(ftol_rel);
+  //   optimizer.set_ftol_rel(xtol_rel);
+  //   optimizer.set_maxeval(n_maxeval);
+
+  //   try
+  //   {
+  //     double yval; 
+  //     auto result  = optimizer.optimize(x_init, yval);
+  //     auto x_found = blaze::DynamicVector<double>(n_dims);
+  //     std::copy(x_init.begin(), x_init.end(), x_found.begin());
+  //     return x_found;
+  //   }
+  //   catch(std::exception& e)
+  //   {
+  //     std::cout << "nlopt failed: " << e.what() << std::endl;
+  //   }
+  // }
+
   template <typename Rng, typename ObjectiveFunc>
   inline std::pair<blaze::DynamicVector<double>, double>
   lbfgs_multistage_box_optimize(Rng& prng,

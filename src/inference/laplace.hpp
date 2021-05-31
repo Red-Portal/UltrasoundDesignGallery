@@ -25,12 +25,9 @@
 #include "../math/lu.hpp"
 #include "../system/debug.hpp"
 
-#include "../../test/finitediff.hpp"
-
 #include <optional>
 #include <cmath>
 #include <memory>
-//#include <iostream>
 
 namespace usdg
 {
@@ -38,8 +35,8 @@ namespace usdg
 	    typename Loglike>
   inline double
   joint_likelihood(usdg::Cholesky<CholType> const& K,
-		      Loglike loglike,
-		      blaze::DynamicVector<double> const& f)
+		   Loglike loglike,
+		   blaze::DynamicVector<double> const& f)
   {
     return loglike(f) + usdg::invquad(K, f)/-2 + usdg::logdet(K)/-2;
   }
@@ -48,8 +45,7 @@ namespace usdg
 	    typename LoglikeGradHess,
 	    typename Loglike>
   inline std::optional<
-    std::tuple<blaze::DynamicVector<double>,
-	       blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>>>
+    std::tuple<blaze::DynamicVector<double>, usdg::LU>>
   laplace_approximation(
     usdg::Cholesky<CholType> const& K,
     size_t n_dims,
@@ -80,18 +76,18 @@ namespace usdg
     double g_norm = std::numeric_limits<double>::max();
     double psi    = joint_likelihood(K, loglike, f);
     size_t it     = 0;
-    auto W        = blaze::DynamicMatrix<double>();
+    auto Blu      = LU();
     auto I        = blaze::IdentityMatrix<double>(n_dims);
     for (it = 0; it < max_iter; ++it)
     {
       auto [gradT, W_] = loglike_grad_neghess(f);
-      W = std::move(W_);
+      auto W = std::move(W_);
 
       auto alpha   = usdg::solve(K, f);
       auto grad    = blaze::evaluate(gradT - alpha);
       auto KW	   = K.A*W;
       auto B	   = I + KW;
-      auto Blu	   = usdg::lu(B);
+      Blu	   = usdg::lu(B);
       auto Kb	   = K.A*grad;
       auto BinvKb  = usdg::solve(Blu, Kb);
       auto p       = BinvKb;
@@ -114,13 +110,11 @@ namespace usdg
 
        	f_next    = f + stepsize*p; 
 	psi_next  = joint_likelihood(K, loglike, f_next);
-	// std::cout << "target: " << psi_next << std::endl;
-	// std::cout << stepsize << " " << psi_next << " " << psi << " " << stepsize*thres << std::endl;
       } while(psi_next - psi < stepsize*thres);
 
       auto f_norm = blaze::norm(f - f_next);
       g_norm      = blaze::norm(grad);
-      //std::cout << it << " gradient: " << g_norm << std::endl;
+
       if(log)
       {
 	log->info("{:>4}   {:g}", it,  f_norm);
@@ -150,9 +144,8 @@ namespace usdg
       {
 	log->info("Laplace approximation converged.");
       }
-      return std::tuple<
-	blaze::DynamicVector<double>,
-	blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>>{std::move(f), std::move(W)};
+      return std::tuple<blaze::DynamicVector<double>, usdg::LU>{
+	std::move(f), std::move(Blu)};
     }
   }
 }

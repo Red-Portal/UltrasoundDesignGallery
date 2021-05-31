@@ -56,12 +56,11 @@ bayesian_optimization(usdg::Random123& prng,
 		      Func objective,
 		      size_t n_dims,
 		      size_t n_init,
-		      size_t n_burn,
-		      size_t n_samples,
 		      size_t n_iter,
 		      BudgetType budget,
 		      size_t n_pseudo,
 		      double sigma,
+		      blaze::DynamicVector<double> linescales,
 		      spdlog::logger* logger)
 {
   size_t n_params = 4;
@@ -99,11 +98,8 @@ bayesian_optimization(usdg::Random123& prng,
   for (size_t iter = 1; iter < n_iter; ++iter)
   {
     auto [x, xi]  = optimizer.next_query(prng,
-					 n_burn,
-					 n_samples,
 					 budget,
-					 //prev_theta,
-					 prior_dist,
+					 linescales,
 					 &profiler,
 					 logger);
 
@@ -183,12 +179,11 @@ int main()
 
   size_t n_dims    = 6;
   size_t n_init    = 4;
-  size_t n_burn    = 64;
-  size_t n_samples = 32;
   size_t n_iter    = 50;
   size_t budget    = 1000;
   size_t n_pseudo  = 8;
   double sigma     = 0.0001;
+  auto linescales  = blaze::DynamicVector<double>(n_dims, 0.2);
 
   //std::cout << hartmann(blaze::DynamicVector<double>({0.20169, 0.150011, 0.476874, 0.275332, 0.311652, 0.6573})) << std::endl;
   //usdg::render_function(hartmann);
@@ -201,12 +196,11 @@ int main()
     hartmann,//rosenbrock,
     n_dims,					   
     n_init,
-    n_burn,
-    n_samples,
     n_iter,
     budget,
     n_pseudo,
     sigma,
+    linescales,
     logger.get());
 
   //auto optimizer  = usdg::BayesianOptimization<>(

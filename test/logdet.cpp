@@ -61,3 +61,17 @@ TEST_CASE("LU log determinant", "[linear algebra]")
   
   REQUIRE( usdg::logdet(lu) == Approx(truth) );
 }
+
+TEST_CASE("LU log absolute determinant", "[linear algebra]")
+{
+  auto A = blaze::DynamicMatrix<double>(
+    {{0.0944588,  0.0657655, 0.787083},
+     {0.747948,   0.15963,  -0.953662},
+     {-0.563567, -0.384138, -0.947089}});
+
+  auto lu = usdg::LU();
+  REQUIRE_NOTHROW( lu = usdg::lu(A) );
+  auto truth = log(abs(blaze::det(A)));
+  
+  REQUIRE( usdg::logabsdet(lu) == Approx(truth) );
+}

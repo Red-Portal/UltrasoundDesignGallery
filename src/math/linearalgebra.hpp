@@ -131,6 +131,25 @@ namespace usdg
     return logdiag;
   }
 
+  inline double
+  logabstrace(blaze::DynamicMatrix<double> const& A)
+  /*
+   * Compute log absolute of trace using LU decomposition using Kahan's method.
+   */
+  {
+    size_t n_dims  = A.rows();
+    double logdiag = 0.0;
+    double c       = 0.0;
+    for (size_t i  = 0; i < n_dims; ++i)
+    {
+      double y = log(abs(A(i,i))) - c;
+      double t = logdiag + y;
+      c        = (t - logdiag) - y;
+      logdiag  = t;
+    }
+    return logdiag;
+  }
+
   template<typename CholType>
   inline double
   logdet(usdg::Cholesky<CholType> const& chol)
@@ -152,6 +171,18 @@ namespace usdg
   {
     auto L_diag = usdg::logtrace(lu.L);
     auto U_diag = usdg::logtrace(lu.U);
+    return L_diag + U_diag;
+  }
+
+  inline double
+  logabsdet(usdg::LU const& lu)
+  /*
+   * Compute log determinant using Cholesky decomposition
+   * Summation uses Kahan's method.
+   */
+  {
+    auto L_diag = usdg::logabstrace(lu.L);
+    auto U_diag = usdg::logabstrace(lu.U);
     return L_diag + U_diag;
   }
 }

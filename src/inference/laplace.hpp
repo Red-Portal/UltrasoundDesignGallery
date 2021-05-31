@@ -45,7 +45,9 @@ namespace usdg
 	    typename LoglikeGradHess,
 	    typename Loglike>
   inline std::optional<
-    std::tuple<blaze::DynamicVector<double>, usdg::LU>>
+    std::tuple<blaze::DynamicVector<double>,
+	       usdg::LU,
+	       blaze::SymmetricMatrix<blaze::DynamicMatrix<double>>>>
   laplace_approximation(
     usdg::Cholesky<CholType> const& K,
     size_t n_dims,
@@ -77,11 +79,12 @@ namespace usdg
     double psi    = joint_likelihood(K, loglike, f);
     size_t it     = 0;
     auto Blu      = LU();
+    auto W        = blaze::DynamicMatrix<double>();
     auto I        = blaze::IdentityMatrix<double>(n_dims);
     for (it = 0; it < max_iter; ++it)
     {
       auto [gradT, W_] = loglike_grad_neghess(f);
-      auto W = std::move(W_);
+      W = std::move(W_);
 
       auto alpha   = usdg::solve(K, f);
       auto grad    = blaze::evaluate(gradT - alpha);
@@ -144,8 +147,8 @@ namespace usdg
       {
 	log->info("Laplace approximation converged.");
       }
-      return std::tuple<blaze::DynamicVector<double>, usdg::LU>{
-	std::move(f), std::move(Blu)};
+      return std::tuple<decltype(f), decltype(Blu), decltype(W)>{
+	std::move(f), std::move(Blu), std::move(W)};
     }
   }
 }

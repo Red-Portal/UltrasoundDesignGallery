@@ -88,6 +88,22 @@ namespace usdg
     return x_found;
   }
 
+  inline usdg::Cholesky<usdg::DenseChol>
+  laplace_marginal_covariance(
+    blaze::SymmetricMatrix<blaze::DynamicMatrix<double>> const& W,
+    usdg::Cholesky<usdg::DenseChol> const& K_chol)
+  {
+    size_t n_f_dims      = K_chol.L.rows();
+    auto I               = blaze::IdentityMatrix<double>(n_f_dims);
+    auto IpLtBL          = blaze::evaluate(I + (blaze::trans(K_chol.L)*W*K_chol.L));
+    auto IpLtBL_chol_opt = usdg::cholesky_nothrow(IpLtBL);
+    if(!IpLtBL_chol_opt)
+    {
+      throw std::runtime_error("Failed to fit Gaussian process");
+    }
+    return std::move(IpLtBL_chol_opt.value());
+  }
+
   template <typename Rng>
   inline decltype(auto)
   fit_gp(Rng& prng,
@@ -139,7 +155,7 @@ namespace usdg
       {
 	return std::numeric_limits<double>::lowest();
       }
-      auto [f_mode, Blu] = laplace_res.value();
+      auto [ f_mode, Blu, _ ] = laplace_res.value();
       double t1    = loglike(f_mode);
       double t2    = usdg::invquad(gram_chol, f_mode) / -0.5;
       double t3    = abs(usdg::logabsdet(Blu)) / -0.5 ;
@@ -165,12 +181,12 @@ namespace usdg
     {
       throw std::runtime_error("Failed to fit Gaussian process");
     }
-    auto [f_mode, Blu] = laplace_res.value();
-
-    auto kernel = usdg::Matern52ARD{1.0, linescales};
-    auto alpha  = usdg::solve(gram_chol, f_mode);
+    auto [f_mode, _, W]   = laplace_res.value();
+    auto laplacecov_chol  = laplace_marginal_covariance(W, gram_chol);
+    auto kernel           = usdg::Matern52ARD{1.0, linescales};
+    auto alpha            = usdg::solve(laplacecov_chol, f_mode);
     return usdg::GP<decltype(kernel)>{
-      std::move(gram_chol),
+      std::move(laplacecov_chol),
       std::move(alpha),
       std::move(kernel)};
   } 

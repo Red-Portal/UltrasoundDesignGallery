@@ -126,7 +126,30 @@ TEST_CASE("matern 5/2 kernel derivative", "[kernel]")
       return kernel(x, y);
     }, dx);
 
-  auto grad  = usdg::derivative(kernel, kernel.sigma*kernel.sigma, dx, y);
+  auto grad  = usdg::gradient(kernel, kernel.sigma*kernel.sigma, dx, y);
+  REQUIRE( blaze::norm(grad_truth - grad) < catch_eps );
+}
+
+TEST_CASE("matern 5/2 ARD kernel derivative", "[kernel]")
+{
+  size_t n_dims  = 8;
+  auto key       = GENERATE(range(0u, 8u));
+  auto prng      = usdg::Random123(key);
+  auto norm_dist = std::normal_distribution<double>(0, 1);
+
+  auto sigma  = exp(norm_dist(prng));
+  auto scale  = blaze::exp(usdg::rmvnormal(prng, n_dims));
+  auto kernel = usdg::Matern52ARD{sigma, scale};
+  auto dx     = usdg::rmvnormal(prng, n_dims);
+  auto y      = usdg::rmvnormal(prng, n_dims);
+
+  auto grad_truth = finitediff_gradient(
+    [&y, &kernel](blaze::DynamicVector<double> const& x)
+    {
+      return kernel(x, y);
+    }, dx);
+
+  auto grad  = usdg::gradient(kernel, kernel.sigma*kernel.sigma, dx, y);
   REQUIRE( blaze::norm(grad_truth - grad) < catch_eps );
 }
 

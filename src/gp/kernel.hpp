@@ -95,10 +95,10 @@ namespace usdg
   template <typename XVecType,
 	    typename YVecType>
   inline decltype(auto)
-  derivative(Matern52Iso const& kernel,
-	     double sigma2,
-	     XVecType const& dx,
-	     YVecType const& y)
+  gradient(Matern52Iso const& kernel,
+	   double sigma2,
+	   XVecType const& dx,
+	   YVecType const& y)
   {
     auto const sqrt5 = sqrt(5);
 
@@ -256,6 +256,21 @@ namespace usdg
     auto s      = sqrt(5)*r;
     auto sigma2 = this->sigma * this->sigma;
     return sigma2 * (1 + s + s*s/3) * exp(-s);
+  }
+
+  template <typename XVecType,
+	    typename YVecType>
+  inline decltype(auto)
+  gradient(Matern52ARD const& kernel,
+	   double sigma2,
+	   XVecType const& dx,
+	   YVecType const& y)
+  {
+    auto delta = (dx - y) / kernel.ardscales;
+    auto r     = blaze::norm(delta);
+    auto s     = sqrt(5)*r; 
+    auto dsdx  = sqrt(5)*delta/r/kernel.ardscales;
+    return sigma2*exp(-s)*dsdx*s*(1 + s)/-3.0;
   }
 
   template <typename Kernel>

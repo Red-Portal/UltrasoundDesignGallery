@@ -26,7 +26,6 @@
 #include "../system/debug.hpp"
 #include "../system/profile.hpp"
 #include "bayesian_optimization.hpp"
-#include "cmaes.hpp"
 #include "lbfgs.hpp"
 #include "gp_inference.hpp"
 

@@ -40,7 +40,6 @@ target_link_libraries(usgallery_tests
     Threads::threads
 
     PRIVATE
-    Pagmo::pagmo
     #OpenMP::OpenMP_CXX
     Python::NumPy
     Python::Python

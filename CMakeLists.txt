@@ -68,7 +68,6 @@ find_package(Threads    REQUIRED)
 find_package(FMT        REQUIRED)
 find_package(OpenMP     REQUIRED)
 find_package(Blaze      REQUIRED)
-find_package(Pagmo      REQUIRED)
 find_package(Eigen3     REQUIRED)
 find_package(NLOPT      REQUIRED)
 
@@ -115,7 +114,6 @@ target_link_libraries(bayes_opt_test
     PUBLIC
     Python::NumPy
     Python::Python
-    Pagmo::pagmo
     Python::NumPy
     Python::Python
     OpenMP::OpenMP_CXX

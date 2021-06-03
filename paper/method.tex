@@ -5,13 +5,13 @@
 
 \subsection{Learning {\user}s Preference with Gaussian Processes}\label{section:gp}
 
+\subsubsection{Probabilistic Model}
 Recently, Mikkola \textit{et al.} showed a clever formulation~\cite{pmlr-v119-mikkola20a}.
 \begin{align*}
-\vtheta                 &\sim p\,(\theta) \\
+\epsilon_{\vf}           &\sim p\,(\epsilon_{\vf}) \\
 \sigma                  &\sim p\,(\sigma) \\
-\vf \mid \vtheta        &\sim \mathcal{GP}(0, K_{\theta}) \\
-\epsilon                &\sim \mathcal{GP}(0, \sigma) \\
-  f(\alpha\,\vxi + \vx) > f(\beta_i \,\vxi + \vx) \mid \vf,\, \epsilon
+\vf \mid \epsilon_{\vf}  &\sim \mathcal{GP}(0, \mK + \epsilon_{\vf}^2\mI) \\
+  f(\alpha\,\vxi + \vx) > f(\beta_i \,\vxi + \vx) \mid \vf,\, \sigma
   &\sim p\,(\alpha,\, \beta_i,\, \vx,\,\vxi,\, \mid \epsilon,\, \vf)  \\
 \end{align*}
 
@@ -20,19 +20,22 @@ Recently, Mikkola \textit{et al.} showed a clever formulation~\cite{pmlr-v119-mi
   \begin{algorithm2e}[H]
     \DontPrintSemicolon
     \SetAlgoLined
-    \KwIn{Covariance matrix \(\mK\),
+    \KwIn{Precomputed Cholesky decomposition of \(\mK\),
       convergence criterion, 
       gradient function of the likelihood \(\nabla_{\vf}\, p(\mathcal{D}\mid\vf)\),
-      Hessian function of the joint \(\nabla^2_{\vf}\, p(\mathcal{D},\, \vf)\)
+      Hessian function of the joint \(\nabla^2_{\vf}\, p(\mathcal{D},\, \vf)\).
+    }
+    \KwOut{
+      \(\vf_{t}\), \(\mW_t\).
     }
     \( \vf_1 \leftarrow \mathbf{0} \)\;
     \Repeat{ until convergence } {
       \(\valpha        \leftarrow \mK\backslash\vf_{t} \)\;
       \(\vg            \leftarrow \nabla_{\vf}\, p(\mathcal{D}\mid\vf)|_{\vf = \vf_t} - \valpha \)\;
-      \(\mW            \leftarrow -  \nabla^2_{\vf}\, p(\mathcal{D},\, \vf) \)\;
+      \(\mW_t          \leftarrow -  \nabla^2_{\vf}\, p(\mathcal{D},\, \vf) \)\;
       \(\mB           \leftarrow \mI + \mK \mW \)\;
-      \(\mL, \mU      \leftarrow \mathrm{lu}\,(\mB) \)\;
-      \(\vp           \leftarrow \mL \backslash \mU \backslash \mK \vg \)\;
+      \(\mL_{\mB}, \mU_{\mB} \leftarrow \mathrm{lu}\,(\mB) \)\;
+      \(\vp           \leftarrow \mL_{\mB} \backslash \mU_{\mB} \backslash \mK \vg \)\;
       \(\vf_{t+1}      \leftarrow \vf_t + \eta \, \vp \)\;
       \(t \leftarrow t + 1\)\;
     }
@@ -40,42 +43,82 @@ Recently, Mikkola \textit{et al.} showed a clever formulation~\cite{pmlr-v119-mi
   \end{algorithm2e}
 \end{figure}
 %
-\paragraph{Laplace's Approximation}
+\subsubsection{Laplace's Approximation}
 We approximate the posterior \(p\,(\vf\,|\,\vtheta,\, \mathcal{D})\) with Laplace's approximation~\cite{williams_bayesian_1998}.
 Laplace's approximation performs a second order Taylor expansion around the maximum of the posterior such that
 \begin{align}
-q\,(\vf) = \mathcal{N}(f;\, \vf^*,\, {(\mK^{-1} + \mW)}^{-1}) \approx p\,(\vf \mid \vtheta,\, \mathcal{D})
+q\,(\vf) = \mathcal{N}\left(\vf;\, \vf^*,\, {(\mK^{-1} + \mW)}^{-1}\right) \approx p\,(\vf \mid \vtheta,\, \mathcal{D})
 \end{align}
 where \(\vf^*\) is the maximum a-posteriori estimate such that \(\nabla_{\vf}\, p\,(\mathcal{D},\, \vf)|_{\vf = \vf^*} = 0\), \(\mW = -\nabla^2_{\vf}\, p\,(\mathcal{D},\,\vf)|_{\vf=\vf^*} \) is the negative Hessian of the likelihood at \(\vf^*\), and \(\mK\) is the covariance matrix.
 In general, \(\mH\), the Hessian of \(p\,(\mathcal{D},\vf)\) turns out structured.
 This allows efficient implementations of Newton's method for finding \(\vf^*\).
 For example,~\cite{rasmussen_gaussian_2006} discusses cases where \(\mH\) is diagonal or block-diagonal.
 Unfortunately, in our case, the structure of \(\mH\) is neither.
-We thus provide a different implementation of Newton's iteration in~\cref{alg:newton} that uses the identity
+We thus provide a different implementation of Newton's iteration that uses the identities
 \begin{align}
-  {(\mK^{-1} + \mW)}^{-1} = {(\mI + \mK \mW )}^{-1} \mK = \mB^{-1} \mK ,
+  {\big(\mK^{-1} + \mW\big)}^{-1}
+  &= {\Big(\mK^{-1} \big(\mI + \mK \mW \big)\Big)}^{-1} \\
+  &= {{\big(\mI + \mK \mW \big)}^{-1} \mK} \\
+  &= \mB^{-1} \mK \\
+  &= \mU_{\mB}^{-1} \, \mL_{\mB}^{-1} \, \mK \label{eq:BinvK}
+\;.
 \end{align}
-which follows from Woodburry's matrix identity.
-The stepsize \(\eta\) is found using backtracking line search with Armijo's condition~\cite{nocedal_numerical_2006}.
+where \cref{eq:BinvK} is computed using the LU decomposition of \(\mB\) and back-substitution.
+A detailed illustration is provided in~\cref{alg:newton} where \(\vp\) is the Newton direction, the stepsize \(\eta\) is found using backtracking line search with Armijo's condition~\cite{nocedal_numerical_2006}.
 
-\paragraph{Pseudo-Marginal MCMC}
-Using our approximation \(q\,(\vf)\), we use pseudo-marginal MCMC~\cite{filippone_pseudomarginal_2014} for sampling both \(\vf\) and \(\vtheta\) from the posterior.
-The marignal likelihood is approximated using importance sampling such that
+\subsubsection{Predictive Distribution}
+For prediction, we use a formulation of \({\big(\mK^{-1} + \mW\big)}^{-1}\) different from~\cref{eq:BinvK}.
+This is because the variance prediction \(\sigma^2(\vx)\) which requires to compute a inverse quadratic term \(\mK^{\top}(\vx) {\big(\mK^{-1} + \mW\big)}^{-1} \vk(\vx)\), which can be efficiently computed when a Cholesky decomposition of \(\mL_{\mathcal{L}} \, \mL^{-1}_{\mathcal{L}}  = {\big(\mK^{-1} + \mW\big)}\) is available.
+The formulation of~\cref{eq:BinvK} does not directly provide a closed form expression for the Cholesky.
+We thus use the indentities
 \begin{align}
-  \tilde{p}\,(\mathcal{D}\mid\theta)
-  &= \int p\,(\mathcal{D}\mid\vf)\,p\,(\vf\mid\vtheta) d\vf \\
-  &\approx \frac{1}{N_{\mathrm{pm}}} \sum^{N_{\mathrm{pm}}}_{i=1} \frac{p\,(\mathcal{D}\mid\vf_i)\,p\,(\vf_i\mid\vtheta)}{q\,(\vf_i)}
+  {\big(\mK^{-1} + \mW\big)}^{-1}
+  &= { \Big({\big(\mL\,\mL^{\top}\big)}^{-1} + \mW \Big) }^{-1} \label{eq:Kcholid}  \\
+  &= { \big(\mL^{-\top}\,\mL^{-1} + \mW \big) }^{-1}  \\
+  &= { \Big( \mL^{-\top}\,\big(\mI + \mL^{\top}\,\mW\,\mL \big)\,\mL^{-1} \Big) }^{-1}  \\
+  &= \mL\,{\big(\mI + \mL^{\top}\,\mW\,\mL \big)}^{-1}\,\mL^{\top}  \\
+  &= \mL\, \mC^{-1} \,\mL^{\top}  \\
+  &= \big( \mL\, \mL_{\mC}^{-1} \big)\, {\big( \mL\, \mL_{\mC}^{-1} \big)}^{\top} \label{eq:Ccholid} \\
+  &= \mL_{\mathcal{L}} \, { \mL_{\mathcal{L}} }^{\top}
 \end{align}
-where \(\vf_i\) are samples from \(q\,(\vf)\) and \(N_{\mathrm{pm}}\) is the number of samples.
-For simplicity, we use the maximum a-posteriori estimate \(\vf^*\).
+where~\cref{eq:Kcholid} uses the precomputed Cholesky decomposition of \(\mK\) and~\cref{eq:Ccholid} requires the Cholesky decomposition of \(\mC = \mI + \mL^{\top}\,\mW\,\mL\).
 
-For sampling \(\theta\) and \(\sigma\), we use elliptical slice sampling~\cite{murray_elliptical_2010}.
-To resolve this problem, Murray \& Graham propose pseudo-marginal slice sampling~\cite{pmlr-v51-murray16}.
+The GP prediction using \(q\,(\vf)\) are computed as
+\begin{align}
+  \mu\,(\vx)
+  &= {\vk(\vx)}^{\top} \mK^{-1} \, \vf^*  \\
+  \sigma^2\,(\vx)
+  &= k(\vx, \vx) - \vk^{\top}(\vx) \, {(\mK^{-1} + \mW)}^{-1} \, \vk(\vx) \\
+  &= k(\vx, \vx) - {\big( \mL_{\mathcal{L}} \vk(\vx) \big)}^2
+\end{align}
 
-Using the ARD hyperparameters alone for sensitivity analysis results is not very effective~\cite{pmlr-v89-paananen19a}.
-Also, the non-identifiability of ARD hyperparameters complicates their statistical analysis~\cite{zhang_inconsistent_2004a}.
-ARD is severely affected by dimensionality.
-This manifests as low acceptance rates in MCMC procedures~\cite{filippone_pseudomarginal_2014}.
+\subsubsection{Hyperparameter Treatment}
+While previous works observed that the full Bayesian approach improves performance~\cite{henrandez-lobato_predictive_2014, snoek_practical_2012}, recent experimental results suggest that such performance improvement may not be significant~\cite{ath_bayesian_2021}.
+In our case, the exact marginal likelihood is not available.
+Thus, full Bayesian inference requires pseudo-marginal MCMC~\cite{filippone_pseudomarginal_2014, pmlr-v51-murray16} methods, which suffer from low statistical effieciency for high-dimensions.
+Also, the real-time nature of our application makes the use of these methods very delicate in terms of computational efficiency and robustness.
+We experimented with full Bayesian inference using pseudo-marginal slice-sampling~\cite{pmlr-v51-murray16} and concluded that it is not worth the computational cost.
+
+Some theoretical~\cite{berkenkamp_noregret_2019} and practical~\cite{wang_adaptive_2013} works have suggested that expert tuned hyperparameters achieve better performance than full Bayesian treatments.
+
+%% \paragraph{Pseudo-Marginal MCMC}
+%% Using our approximation \(q\,(\vf)\), we use  for sampling both \(\vf\) and \(\vtheta\) from the posterior.
+%% The marignal likelihood is approximated using importance sampling such that
+%% \begin{align}
+%%   \tilde{p}\,(\mathcal{D}\mid\theta)
+%%   &= \int p\,(\mathcal{D}\mid\vf)\,p\,(\vf\mid\vtheta) d\vf \\
+%%   &\approx \frac{1}{N_{\mathrm{pm}}} \sum^{N_{\mathrm{pm}}}_{i=1} \frac{p\,(\mathcal{D}\mid\vf_i)\,p\,(\vf_i\mid\vtheta)}{q\,(\vf_i)}
+%% \end{align}
+%% where \(\vf_i\) are samples from \(q\,(\vf)\) and \(N_{\mathrm{pm}}\) is the number of samples.
+%% For simplicity, we use the maximum a-posteriori estimate \(\vf^*\).
+
+%% For sampling \(\theta\) and \(\sigma\), we use elliptical slice sampling~\cite{murray_elliptical_2010}.
+%% To resolve this problem, Murray \& Graham propose pseudo-marginal slice sampling~\cite{}.
+
+%% Using the ARD hyperparameters alone for sensitivity analysis results is not very effective~\cite{pmlr-v89-paananen19a}.
+%% Also, the non-identifiability of ARD hyperparameters complicates their statistical analysis~\cite{zhang_inconsistent_2004a}.
+%% ARD is severely affected by dimensionality.
+%% This manifests as low acceptance rates in MCMC procedures~\cite{filippone_pseudomarginal_2014}.
 
 \subsection{Optimizing \User~Preference with Preferential Bayesian Optimization}\label{section:bo}
 

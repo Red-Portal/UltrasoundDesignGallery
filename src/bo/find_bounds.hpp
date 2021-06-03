@@ -36,30 +36,25 @@ namespace usdg
 
     for (size_t i = 0; i < n_dims; ++i)
     {
-      if(std::abs(xi[i]) < 1e-5)
+      if (std::abs(xi[i]) < 1e-5)
       {
 	/* no change in this direction */
 	continue;
       }
 
-      double alpha = (1 - x[i]) / xi[i];
-      if(alpha > 0)
+      if (xi[i] > 0)
       {
-	ub = std::min(alpha, ub);
+	double alpha_ub = (1 - x[i]) / xi[i];
+	double alpha_lb = -x[i]      / xi[i];
+	lb = std::max(alpha_lb, lb);
+	ub = std::min(alpha_ub, ub);
       }
       else
       {
-	lb = std::max(alpha, lb);
-      }
-
-      alpha = -x[i] / xi[i];
-      if(alpha > 0)
-      {
-	ub = std::min(alpha, ub);
-      }
-      else
-      {
-	lb = std::max(alpha, lb);
+	double alpha_lb = (1 - x[i]) / xi[i];
+	double alpha_ub = -x[i]      / xi[i];
+	lb = std::max(alpha_lb, lb);
+	ub = std::min(alpha_ub, ub);
       }
     }
     return {lb, ub};
@@ -85,42 +80,37 @@ namespace usdg
 	continue;
       }
 
-      double alpha = (1 - x[i]) / xi[i];
-      if(alpha > 0)
+      if(xi[i] > 0)
       {
-	if(ub > alpha)
+	double alpha_ub = (1 - x[i]) / xi[i];
+	double alpha_lb = -x[i]      / xi[i];
+	if(ub > alpha_ub)
 	{
-	  ub          = alpha;
-	  ub_grad_val = alpha / -xi[i];
+	  ub          = alpha_ub;
+	  ub_grad_val = alpha_ub / -xi[i];
 	  ub_grad_idx = i;
 	}
-      }
-      else
-      {
-	if(lb < alpha)
+	if(lb < alpha_lb)
 	{
-	  lb          = alpha;
-	  lb_grad_val = alpha / -xi[i];
+	  lb          = alpha_lb;
+	  lb_grad_val = alpha_lb / -xi[i];
 	  lb_grad_idx = i;
 	}
       }
-
-      alpha = -x[i] / xi[i];
-      if(alpha > 0)
-      {
-	if(ub > alpha)
-	{
-	  ub          = alpha;
-	  ub_grad_val = alpha / -xi[i];
-	  ub_grad_idx = i;
-	}
-      }
       else
       {
-	if(lb < alpha)
+	double alpha_lb = (1 - x[i]) / xi[i];
+	double alpha_ub = -x[i]      / xi[i];
+	if(ub > alpha_ub)
 	{
-	  lb          = alpha;
-	  lb_grad_val = alpha / -xi[i];
+	  ub          = alpha_ub;
+	  ub_grad_val = alpha_ub / -xi[i];
+	  ub_grad_idx = i;
+	}
+	if(lb < alpha_lb)
+	{
+	  lb          = alpha_lb;
+	  lb_grad_val = alpha_lb / -xi[i];
 	  lb_grad_idx = i;
 	}
       }

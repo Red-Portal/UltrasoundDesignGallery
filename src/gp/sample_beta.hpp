@@ -27,15 +27,12 @@
 
 namespace usdg
 {
-  template <typename Rng>
-  inline blaze::DynamicVector<double>
-  sample_beta(Rng& prng,
-	      double alpha,
-	      double lb,
-	      double ub,
-	      size_t iter,
-	      size_t n_samples,
-	      size_t n_dims)
+  inline decltype(auto)
+  beta_pdf(double alpha,
+	   double lb,
+	   double ub,
+	   size_t iter,
+	   size_t n_dims)
   {
     double t     = static_cast<double>(iter); 
     double n     = static_cast<double>(n_dims);
@@ -49,21 +46,24 @@ namespace usdg
     auto pdf = [=](double x) {
       return phi((x - alpha) / sigma);
     };
-    auto samples = usdg::imh(prng, pdf, lb, ub, n_samples*8, 64, 8);
+    return pdf;
+  }
 
-    // size_t idx = 0;
-    // if (std::abs(alpha - lb) > 1e-2)
-    // {
-    //   samples[idx] = lb;
-    //   ++idx;
-    // }
-    // if (std::abs(alpha - ub) > 1e-2)
-    // {
-    //   samples[idx] = ub;
-    //   ++idx;
-    // }
+  template <typename Rng>
+  inline blaze::DynamicVector<double>
+  sample_beta(Rng& prng,
+	      double alpha,
+	      double lb,
+	      double ub,
+	      size_t iter,
+	      size_t n_samples,
+	      size_t n_dims)
+  {
+    auto pdf     = usdg::beta_pdf(alpha, lb, ub, iter, n_dims);
+    auto samples = usdg::imh(prng, pdf, lb, ub, n_samples*8, 64, 8);
     return samples;
   }
+
 }
 
 #endif

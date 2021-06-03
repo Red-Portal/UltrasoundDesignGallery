@@ -22,13 +22,15 @@
 #include "../src/bo/find_bounds.hpp"
 #include "../src/bo/acquisition.hpp"
 #include "../src/gp/gp_prior.hpp"
+#include "../src/gp/sample_beta.hpp"
 #include "../src/math/cholesky.hpp"
 #include "../src/math/mvnormal.hpp"
 #include "../src/math/prng.hpp"
 
+#include "finitediff.hpp"
 #include "utils.hpp"
 
-TEST_CASE("Thompson sampling gradient", "[bo]")
+TEST_CASE("expected improvement gradient with x", "[bo]")
 {
   auto key        = GENERATE(range(0u, 8u));
   auto prng       = usdg::Random123(key);
@@ -42,28 +44,62 @@ TEST_CASE("Thompson sampling gradient", "[bo]")
   auto kernel    = usdg::SquaredExpIso{sigma, scale};
   auto gram      = usdg::compute_gram_matrix(kernel, data_mat);
   auto z         = usdg::rmvnormal(prng, n_points);
-  auto dxi       = usdg::rmvnormal(prng, n_dims);
+  auto dx        = usdg::rmvnormal(prng, n_dims);
   auto chol      = usdg::cholesky_nothrow(gram).value();
   auto x         = usdg::rmvnormal(prng, n_dims);
-  size_t n_beta  = 32;
+  auto y_opt     = blaze::max(z);
   auto gp        = usdg::GP<decltype(kernel)>{std::move(chol), z, kernel};
 
-  auto func = [&data_mat, &x, &gp, n_beta](blaze::DynamicVector<double> const& xi_in)
+  auto func = [&](blaze::DynamicVector<double> const& x_in)
     {
-      auto [lb, ub]   = usdg::pbo_find_bounds(x, xi_in);
-      auto beta_delta = (ub - lb)/(static_cast<double>(n_beta) - 1);
-      auto y_avg      = 0.0;
-      for (size_t i = 0; i < n_beta; ++i)
-      {
-	auto beta        = lb + beta_delta*static_cast<double>(i);
-	auto [mean, var] = gp.predict(data_mat, x + beta*xi_in);
-	y_avg += mean;
-      }
-      return y_avg/static_cast<double>(n_beta);
+      auto [value, _] = usdg::ei_with_deidx(gp, data_mat, y_opt, x_in, false);
+      return value; 
     };
 
+  auto grad_truth  = finitediff_gradient(func, dx);
+  auto [val, grad] = usdg::ei_with_deidx(gp, data_mat, y_opt, dx, true);
+
+  REQUIRE( func(dx) == Approx(val) );
+  REQUIRE( blaze::norm(grad_truth - grad) < 1e-6 );
+}
+
+TEST_CASE("expected improvement gradient with xi", "[bo]")
+{
+  auto key        = GENERATE(range(0u, 8u));
+  auto prng       = usdg::Random123(key);
+  size_t n_dims   = 4;
+  size_t n_points = 32;
+
+  auto data_mat  = generate_mvsamples(prng, n_dims, n_points);
+  auto norm_dist = std::normal_distribution<double>(0, 1);
+  auto sigma     = exp(norm_dist(prng));
+  auto scale     = exp(norm_dist(prng) + 1);
+  auto kernel    = usdg::SquaredExpIso{sigma, scale};
+  auto gram      = usdg::compute_gram_matrix(kernel, data_mat);
+  auto z         = usdg::rmvnormal(prng, n_points);
+  auto chol      = usdg::cholesky_nothrow(gram).value();
+
+  auto x   = usdg::rmvuniform(prng, n_dims, 0.0, 1.0);
+  auto dxi = usdg::rmvnormal(prng, n_dims);
+  dxi     /= blaze::max(dxi); 
+
+  std::cout << "dxi: " << dxi << std::endl;
+  std::cout << "x:   " << x << std::endl;
+  auto y_opt    = blaze::max(z);
+  auto gp       = usdg::GP<decltype(kernel)>{std::move(chol), z, kernel};
+  size_t n_beta = 32;
+
+  auto func = [&](blaze::DynamicVector<double> const& x_in)
+  {
+    auto [value, _] = usdg::ei_with_deidxi(gp, data_mat, n_beta, y_opt, x, x_in, false);
+    return value; 
+  };
+
   auto grad_truth  = finitediff_gradient(func, dxi);
-  auto [val, grad] = usdg::thompson_xi_gradient(gp, data_mat, n_beta, x, dxi, true);
+  auto [val, grad] = usdg::ei_with_deidxi(gp, data_mat, n_beta, y_opt, x, dxi, true);
+
+  std::cout << grad_truth << std::endl;
+  std::cout << grad       << std::endl;
 
   REQUIRE( func(dxi) == Approx(val) );
   REQUIRE( blaze::norm(grad_truth - grad) < 1e-6 );

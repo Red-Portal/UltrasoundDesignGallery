@@ -50,6 +50,8 @@ namespace usdg
     inline std::tuple<blaze::DynamicVector<double>,
 		      blaze::DynamicVector<double>>
     next_query(Rng& prng,
+	       size_t iter,
+	       size_t n_pseudo,
 	       BudgetType budget,
 	       blaze::DynamicVector<double> const& linescales,
 	       usdg::Profiler* profiler,

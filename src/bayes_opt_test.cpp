@@ -63,6 +63,7 @@ bayesian_optimization(usdg::Random123& prng,
 		      blaze::DynamicVector<double> linescales,
 		      spdlog::logger* logger)
 {
+  double eps      = 1e-2;
   size_t n_params = 4;
   auto prior_mean = blaze::DynamicVector<double>(n_params, -1.0);
   auto prior_var  = blaze::DynamicVector<double>(n_params, 1.0);
@@ -82,8 +83,13 @@ bayesian_optimization(usdg::Random123& prng,
     auto [lb, ub] = usdg::pbo_find_bounds(x, xi);
     auto alpha    = naive_linesearch(noisy_objective, lb, ub, 1000);
     auto y        = objective(x + xi*alpha);
-    auto betas    = usdg::sample_beta(prng, alpha, lb, ub, 0, n_pseudo, n_dims);
 
+    auto betas    = blaze::DynamicVector<double>(n_pseudo);
+    blaze::subvector(betas, 2, n_pseudo-2) =  usdg::sample_beta(prng, alpha,
+								lb + eps,
+								ub - eps,
+								0, n_pseudo-2,
+								n_dims);
     if (y > y_opt)
     {
       y_opt = y;
@@ -98,6 +104,8 @@ bayesian_optimization(usdg::Random123& prng,
   for (size_t iter = 1; iter < n_iter; ++iter)
   {
     auto [x, xi]  = optimizer.next_query(prng,
+					 iter,
+					 n_pseudo,
 					 budget,
 					 linescales,
 					 &profiler,
@@ -110,9 +118,23 @@ bayesian_optimization(usdg::Random123& prng,
       return objective(x + alpha_in*xi) + noise_dist(prng);
     };
     auto [lb, ub] = usdg::pbo_find_bounds(x, xi);
+
+    std::cout << x  << std::endl;
+    std::cout << xi << std::endl;
+    std::cout << "lb: " << lb << " ub: " << ub << std::endl;
+
     auto alpha    = naive_linesearch(noisy_objective, lb, ub, 1000);
     auto y        = objective(x + xi*alpha);
-    auto betas    = usdg::sample_beta(prng, alpha, ub, lb, iter, n_pseudo, n_dims);
+    auto betas    = blaze::DynamicVector<double>(n_pseudo);
+    blaze::subvector(betas, 2, n_pseudo-2) = usdg::sample_beta(prng, alpha,
+							       lb + eps,
+							       ub - eps,
+							       iter,
+							       n_pseudo-2,
+							       n_dims);
+    betas[0] = lb;
+    betas[1] = ub;
+
     if (y > y_opt)
     {
       y_opt = y;
@@ -165,7 +187,27 @@ hartmann(blaze::DynamicVector<double> const& x_in)
     }
     res += alpha[i]*exp(-local_sum);
   }
-  return res;
+  return -res;
+}
+
+inline double
+ackley(blaze::DynamicVector<double> const& x_in)
+{
+  double a   = 20.0;
+  double b   = 0.2;
+  double c   = 2 * 3.141592;
+  double d   = x_in.size();
+
+  auto x = (x_in - 0.5)*2*32;
+  
+  auto t1    = -a * exp( -b * sqrt( blaze::dot(x, x)/d ) );
+  double res = 0.0;
+  for (size_t i = 0; i < d; ++i)
+  {
+    res += cos(c * x[i]);
+  }
+  auto t2 = -exp(res / d);
+  return -(t1 + t2 + a + exp(1));
 }
 
 int main()
@@ -177,7 +219,7 @@ int main()
   spdlog::set_level(spdlog::level::info);
   auto logger  = spdlog::get("console");
 
-  size_t n_dims    = 6;
+  size_t n_dims    = 8;
   size_t n_init    = 4;
   size_t n_iter    = 50;
   size_t budget    = 1000;
@@ -187,13 +229,17 @@ int main()
 
   //std::cout << hartmann(blaze::DynamicVector<double>({0.20169, 0.150011, 0.476874, 0.275332, 0.311652, 0.6573})) << std::endl;
   //usdg::render_function(hartmann);
+  //usdg::render_function(rosenbrock);
 
   bayesian_optimization<usdg::ExpectedImprovementKoyama>(
+  //bayesian_optimization<usdg::ExpectedImprovementCoordinate>(
   //bayesian_optimization<usdg::ExpectedImprovement>(
   //bayesian_optimization<usdg::ThompsonSampling>(
   //bayesian_optimization<usdg::ThompsonSamplingKoyama>(
     prng,
-    hartmann,//rosenbrock,
+    //hartmann,
+    rosenbrock,
+    //ackley,
     n_dims,					   
     n_init,
     n_iter,
@@ -202,6 +248,7 @@ int main()
     sigma,
     linescales,
     logger.get());
+
 
   //auto optimizer  = usdg::BayesianOptimization<>(
   //auto optimizer  = usdg::BayesianOptimization<usdg::ThompsonSampling>(

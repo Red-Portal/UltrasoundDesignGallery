@@ -24,6 +24,7 @@
 #include "../inference/laplace.hpp"
 
 #include <nlopt.hpp>
+#include <iostream>
 
 namespace usdg
 {
@@ -83,8 +84,6 @@ namespace usdg
     optimizer.optimize(x_init, y_buf);
     auto x_found = blaze::DynamicVector<double>(n_dims);
     std::copy(x_init.begin(), x_init.end(), x_found.begin());
-
-    std::cout << mll(x_buf) << " " << y_buf << std::endl;
     return x_found;
   }
 
@@ -101,7 +100,11 @@ namespace usdg
     {
       throw std::runtime_error("Failed to fit Gaussian process");
     }
-    return std::move(IpLtBL_chol_opt.value());
+    auto IpLtBL_chol   = std::move(IpLtBL_chol_opt.value());
+    auto laplace_cov_U = blaze::solve(IpLtBL_chol.L, blaze::trans(K_chol.L));
+    auto laplace_cov_L = blaze::trans(laplace_cov_U);
+    auto laplace_cov   = laplace_cov_L * laplace_cov_U;
+    return usdg::Cholesky<DenseChol>(laplace_cov, blaze::evaluate(blaze::decllow(laplace_cov_L)));
   }
 
   template <typename Rng>
@@ -145,12 +148,12 @@ namespace usdg
 	return std::numeric_limits<double>::lowest();
       }
       auto gram_chol   = std::move(gram_chol_opt.value());
-      auto laplace_res = laplace_approximation(gram_chol,
-					       n_dims,
-					       grad_neghess,
-					       loglike,
-					       20,
-					       nullptr);
+      auto laplace_res = usdg::laplace_approximation(gram_chol,
+						     n_dims,
+						     grad_neghess,
+						     loglike,
+						     20,
+						     nullptr);
       if(!laplace_res)
       {
 	return std::numeric_limits<double>::lowest();
@@ -158,31 +161,32 @@ namespace usdg
       auto [ f_mode, Blu, _ ] = laplace_res.value();
       double t1    = loglike(f_mode);
       double t2    = usdg::invquad(gram_chol, f_mode) / -0.5;
-      double t3    = abs(usdg::logabsdet(Blu)) / -0.5 ;
+      double t3    = usdg::logabsdet(Blu) / -0.5 ;
       double prior = logprior(theta_in);
       return t1 + t2 + t3 + prior;
     };
 
-    auto theta = map_inference(prng, laplace_marginal);
+    auto theta = usdg::map_inference(prng, laplace_marginal);
     auto gram  = make_gram(theta);
     auto gram_chol_opt = usdg::cholesky_nothrow(gram);
     if(!gram_chol_opt)
     {
       throw std::runtime_error("Failed to fit Gaussian process");
     }
+
     auto gram_chol   = std::move(gram_chol_opt.value());
-    auto laplace_res = laplace_approximation(gram_chol,
-					     n_dims,
-					     grad_neghess,
-					     loglike,
-					     20,
-					     logger);
+    auto laplace_res = usdg::laplace_approximation(gram_chol,
+						   n_dims,
+						   grad_neghess,
+						   loglike,
+						   20,
+						   logger);
     if(!laplace_res)
     {
       throw std::runtime_error("Failed to fit Gaussian process");
     }
     auto [f_mode, _, W]   = laplace_res.value();
-    auto laplacecov_chol  = laplace_marginal_covariance(W, gram_chol);
+    auto laplacecov_chol  = usdg::laplace_marginal_covariance(W, gram_chol);
     auto kernel           = usdg::Matern52ARD{1.0, linescales};
     auto alpha            = usdg::solve(laplacecov_chol, f_mode);
     return usdg::GP<decltype(kernel)>{

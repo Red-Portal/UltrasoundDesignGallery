@@ -22,6 +22,8 @@
 #include <cmath>
 #include <random>
 
+#include "blaze.hpp"
+
 namespace usdg
 {
   inline double
@@ -56,6 +58,22 @@ namespace usdg
   {
     auto dist = std::uniform_real_distribution<double>(a, b);
     return dist(prng);
+  }
+
+  template <typename Rng>
+  inline blaze::DynamicVector<double>
+  rmvuniform(Rng& prng,
+	     size_t n_dims,
+	     double a,
+	     double b)
+  {
+    auto res  = blaze::DynamicVector<double>(n_dims); 
+    auto dist = std::uniform_real_distribution<double>(a, b);
+    for (size_t i = 0; i < n_dims; ++i)
+    {
+      res[i] = dist(prng);
+    }
+    return res;
   }
 }
 

@@ -103,25 +103,23 @@ bayesian_optimization(usdg::Random123& prng,
 
   for (size_t iter = 1; iter < n_iter; ++iter)
   {
-    auto [x, xi]  = optimizer.next_query(prng,
-					 iter,
-					 n_pseudo,
-					 budget,
-					 linescales,
-					 &profiler,
-					 logger);
+    auto [x, xi, x_opt, _]  = optimizer.next_query(prng,
+						   iter,
+						   n_pseudo,
+						   budget,
+						   linescales,
+						   &profiler,
+						   logger);
 
-    std::cout << "x: " << x << std::endl;
-    std::cout << "y: " << objective(x) << std::endl;
+    std::cout << "x: "     << x << std::endl;
+    std::cout << "xi: "    << xi << std::endl;
+    std::cout << "y: "     << objective(x) << std::endl;
+    std::cout << "y_opt: " << objective(x_opt) << std::endl;
 
     auto noisy_objective = [&](double alpha_in) {
       return objective(x + alpha_in*xi) + noise_dist(prng);
     };
     auto [lb, ub] = usdg::pbo_find_bounds(x, xi);
-
-    std::cout << x  << std::endl;
-    std::cout << xi << std::endl;
-    std::cout << "lb: " << lb << " ub: " << ub << std::endl;
 
     auto alpha    = naive_linesearch(noisy_objective, lb, ub, 1000);
     auto y        = objective(x + xi*alpha);
@@ -187,7 +185,7 @@ hartmann(blaze::DynamicVector<double> const& x_in)
     }
     res += alpha[i]*exp(-local_sum);
   }
-  return -res;
+  return res;
 }
 
 inline double
@@ -219,10 +217,10 @@ int main()
   spdlog::set_level(spdlog::level::info);
   auto logger  = spdlog::get("console");
 
-  size_t n_dims    = 8;
+  size_t n_dims    = 6;
   size_t n_init    = 4;
   size_t n_iter    = 50;
-  size_t budget    = 1000;
+  size_t budget    = 10000;
   size_t n_pseudo  = 8;
   double sigma     = 0.0001;
   auto linescales  = blaze::DynamicVector<double>(n_dims, 0.2);
@@ -232,13 +230,12 @@ int main()
   //usdg::render_function(rosenbrock);
 
   bayesian_optimization<usdg::ExpectedImprovementKoyama>(
-  //bayesian_optimization<usdg::ExpectedImprovementCoordinate>(
+  //bayesian_optimization<usdg::ExpectedImprovementDTS>(
+  //bayesian_optimization<usdg::ExpectedImprovementRandom>(
   //bayesian_optimization<usdg::ExpectedImprovement>(
-  //bayesian_optimization<usdg::ThompsonSampling>(
-  //bayesian_optimization<usdg::ThompsonSamplingKoyama>(
     prng,
-    //hartmann,
-    rosenbrock,
+    hartmann,
+    //rosenbrock,
     //ackley,
     n_dims,					   
     n_init,

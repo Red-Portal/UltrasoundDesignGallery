@@ -34,6 +34,7 @@ add_executable(usgallery_tests
     #sample_beta.cpp
     gp_prior.cpp
     bayesian_optimization.cpp
+    spsa.cpp
     )
 target_link_libraries(usgallery_tests
     INTERFACE

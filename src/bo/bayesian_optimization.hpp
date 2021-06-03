@@ -48,7 +48,9 @@ namespace usdg
     template <typename Rng,
 	      typename BudgetType>
     inline std::tuple<blaze::DynamicVector<double>,
-		      blaze::DynamicVector<double>>
+		      blaze::DynamicVector<double>,
+		      blaze::DynamicVector<double>,
+		      double>
     next_query(Rng& prng,
 	       size_t iter,
 	       size_t n_pseudo,

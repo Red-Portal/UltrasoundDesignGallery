@@ -259,7 +259,7 @@ namespace usdg
   {
     if(logger)
     {
-      logger->info("Finding next Bayesian optimization query with expected improvement and Koyama scheme: {}",
+      logger->info("Finding next Bayesian optimization query with approximate expected improvement: {}",
 		   usdg::file_name(__FILE__));
     }
     if(profiler)
@@ -348,7 +348,7 @@ namespace usdg
   {
     if(logger)
     {
-      logger->info("Finding next Bayesian optimization query with expected improvement and Koyama scheme: {}",
+      logger->info("Finding next Bayesian optimization query with expected improvement and random search: {}",
 		   usdg::file_name(__FILE__));
     }
     if(profiler)
@@ -410,7 +410,7 @@ namespace usdg
   {
     if(logger)
     {
-      logger->info("Finding next Bayesian optimization query with expected improvement and Coordinate Projections: {}",
+      logger->info("Finding next Bayesian optimization query with expected improvement and a Random direction: {}",
 		   usdg::file_name(__FILE__));
     }
     if(profiler)
@@ -476,7 +476,7 @@ namespace usdg
   {
     if(logger)
     {
-      logger->info("Finding next Bayesian optimization query with expected improvement and Koyama scheme: {}",
+      logger->info("Finding next Bayesian optimization query with expected improvement and the Koyama scheme: {}",
 		   usdg::file_name(__FILE__));
     }
     if(profiler)

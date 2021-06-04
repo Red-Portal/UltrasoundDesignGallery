@@ -53,9 +53,11 @@ TEST_CASE("gaussian process mean gradient", "[gp]")
       auto [mean, var] = gp.predict(data_mat, x);
       return mean;
     }, dx);
-  auto grad = usdg::gradient_mean(gp, data_mat, dx);
+  auto [mean, grad]    = usdg::gradient_mean(gp, data_mat, dx);
+  auto [mean_truth, _] = gp.predict(data_mat, dx);
 
   REQUIRE( blaze::norm(grad_truth - grad) < 1e-4 );
+  REQUIRE( mean == Approx(mean_truth) );
 }
 
 TEST_CASE("gaussian process prediction mean and variance gradient", "[gp]")
@@ -140,8 +142,10 @@ TEST_CASE("gaussian process prediction gradient regression1", "[gp]")
       auto [mean, var] = gp.predict(data_mat, x);
       return mean;
     }, dx);
-  auto grad = usdg::gradient_mean(gp, data_mat, dx);
+  auto [mean, grad]    = usdg::gradient_mean(gp, data_mat, dx);
+  auto [mean_truth, _] = gp.predict(data_mat, dx);
 
   REQUIRE( blaze::norm(grad_truth - grad) < 1e-4 );
+  REQUIRE( mean == Approx(mean_truth) );
 }
 

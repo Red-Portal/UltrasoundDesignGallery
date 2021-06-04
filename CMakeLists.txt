@@ -68,7 +68,6 @@ find_package(Threads    REQUIRED)
 find_package(FMT        REQUIRED)
 find_package(OpenMP     REQUIRED)
 find_package(Blaze      REQUIRED)
-find_package(Eigen3     REQUIRED)
 find_package(NLOPT      REQUIRED)
 
 add_compile_definitions(SPDLOG_FMT_EXTERNAL)
@@ -123,8 +122,6 @@ target_link_libraries(bayesopt_benchmark
     project_warnings
     BLAS::BLAS
     spdlog::spdlog
-    Eigen3::Eigen
-    LBFGSpp
     NLOPT::nlopt
     Random123)
 

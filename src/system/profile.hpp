@@ -81,6 +81,13 @@ namespace usdg
     }
     return os;
   }
+
+  inline usdg::second
+  compute_duration(usdg::clock::time_point const& start)
+  {
+    auto stop = usdg::clock::now();
+    return std::chrono::duration_cast<usdg::second>(stop - start);
+  }
 }
 
 #endif

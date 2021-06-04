@@ -373,13 +373,10 @@ namespace usdg
     auto xi_koyama = delta / blaze::max(blaze::abs(delta));
 
     size_t n_montecarlo = 32;
-    size_t n_eval       = budget / n_montecarlo;
+    size_t n_eval       = budget / n_montecarlo / 2;
     auto xi_next        = usdg::find_xi_ei_random(prng, gp, data_mat, n_pseudo,
 						  n_montecarlo, iter, y_opt,
 						  x_next, xi_koyama, n_eval);
-    std::cout << x_next << std::endl;
-    std::cout << xi_next<< std::endl;
-
     if(profiler)
     {
       profiler->stop("optimize_acquisition"s);
@@ -446,9 +443,6 @@ namespace usdg
     }
     while (beta_range < 1e-4);
 
-    std::cout << x_next << std::endl;
-    std::cout << xi_next<< std::endl;
-
     if(profiler)
     {
       profiler->stop("optimize_acquisition"s);
@@ -506,9 +500,6 @@ namespace usdg
 
     auto delta   = x_opt - x_next;
     auto xi_next = blaze::evaluate(delta / blaze::max(blaze::abs(delta)));
-
-    std::cout << x_next  << std::endl;
-    std::cout << xi_next << std::endl;
 
     if(profiler)
     {

@@ -25,9 +25,8 @@
 #include "math/uniform.hpp"
 #include "system/profile.hpp"
 
+#include <csv.hpp>
 #include <progressbar.hpp>
-#include <pagmo/algorithms/cmaes.hpp>
-#include <pagmo/algorithms/nlopt.hpp>
 #include <matplotlib-cpp/matplotlibcpp.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
@@ -52,7 +51,8 @@ naive_linesearch(Func f, double lb, double ub, size_t resol)
 }
 
 template <typename Acq, typename Func, typename BudgetType>
-void
+std::pair<std::vector<double>,
+	  std::vector<double>>
 bayesian_optimization(usdg::Random123& prng,
 		      Func objective,
 		      size_t n_dims,
@@ -75,6 +75,9 @@ bayesian_optimization(usdg::Random123& prng,
   auto optimizer  = usdg::BayesianOptimization<Acq>(n_dims, n_pseudo);
   auto noise_dist = std::normal_distribution<double>(0.0, sigma);
   auto init_x     = optimizer.initial_queries(prng, n_init, logger);
+  auto start      = usdg::clock::now();
+  auto hist_y_opt = std::vector<double>();
+  auto hist_time  = std::vector<double>();
   for (auto& [x, xi] : init_x)
   {
     auto noisy_objective = [&](double alpha_in) {
@@ -97,11 +100,9 @@ bayesian_optimization(usdg::Random123& prng,
     logger->info("iter = {:>4}", 0);
   }
 
-  auto pb      = progressbar(static_cast<int>(n_iter)); 
   double y_opt = std::numeric_limits<double>::lowest();
   for (size_t iter = 1; iter < n_iter; ++iter)
   {
-    pb.update();
     auto [x, xi, x_opt, _]  = optimizer.next_query(prng, iter, n_pseudo,
 						   budget, linescales,
 						   &profiler, logger);
@@ -114,6 +115,7 @@ bayesian_optimization(usdg::Random123& prng,
     auto alpha    = naive_linesearch(noisy_objective, lb, ub, 1000);
     auto y        = objective(x + xi*alpha);
     auto betas    = blaze::DynamicVector<double>(n_pseudo);
+
     blaze::subvector(betas, 2, n_pseudo-2) = usdg::sample_beta(prng, alpha,
 							       lb + eps,
 							       ub - eps,
@@ -125,12 +127,18 @@ bayesian_optimization(usdg::Random123& prng,
 
     y_opt = std::max(objective(x_opt), y_opt);
     optimizer.push_data(x, xi, betas, alpha);
+
+    auto elapsed = usdg::compute_duration(start);
+    hist_y_opt.push_back(y_opt);
+    hist_time.push_back(elapsed.count());
     if (logger)
     {
-      logger->info("iter = {:>4}, y = {:g}, y opt = {:g}", iter, y, y_opt);
+      logger->info("iter = {:>4}, time = {:.2f}, y = {:g}, y opt = {:g}",
+		   iter, elapsed.count(), y, y_opt);
     }
-    std::cout << profiler;
+    //std::cout << profiler;
   }
+  return { std::move(hist_y_opt), std::move(hist_time) };
 }
 
 inline double
@@ -148,20 +156,22 @@ rosenbrock(blaze::DynamicVector<double> const& x_in)
   return -res;
 }
 
-auto A = blaze::DynamicMatrix<double>({{10, 3, 17, 3.5, 1.7, 8},
-				       {0.05, 10, 17, 0.1, 8, 14},
-				       {3, 3.5, 1.7, 10, 17, 8},
-				       {17, 8, 0.05, 10, 0.1, 14}});
-
-auto P = blaze::DynamicMatrix<double>({{1312, 1696, 5569, 124, 8283, 5886},
-				       {2329, 4135, 8307, 3736, 1004, 9991},
-				       {2348, 1451, 3522, 2883, 3047, 6650},
-				       {4047, 8828, 8732, 5743, 1091, 381}});
-auto alpha = blaze::DynamicVector<double>({1.0, 1.2, 3.0, 3.2});
 
 inline double
 hartmann(blaze::DynamicVector<double> const& x_in)
 {
+  auto const A = blaze::DynamicMatrix<double>({{  10,   3,   17, 3.5, 1.7,  8},
+					       {0.05,  10,   17, 0.1,   8, 14},
+					       {   3, 3.5,  1.7,  10,  17,  8},
+					       {  17,   8, 0.05,  10, 0.1, 14}});
+
+  auto const P = blaze::DynamicMatrix<double>({{1312, 1696, 5569, 124,  8283, 5886},
+					       {2329, 4135, 8307, 3736, 1004, 9991},
+					       {2348, 1451, 3522, 2883, 3047, 6650},
+					       {4047, 8828, 8732, 5743, 1091,  381}});
+  auto const alpha = blaze::DynamicVector<double>({1.0, 1.2, 3.0, 3.2});
+
+
   double res = 0.0;
   for (size_t i = 0; i < 4; ++i)
   {
@@ -203,45 +213,163 @@ stablinskytang(blaze::DynamicVector<double> const& x_in)
     0.5*(blaze::pow(x, 4) - 17*blaze::pow(x, 2) + 5*x));
 }
 
+template <typename Strategy,
+	  typename ObjFunc>
+void
+run_benchmark(std::string const& fname,
+	      ObjFunc objective,
+	      size_t n_dims)
+{
+  size_t n_reps   = 100;
+  size_t n_init   = 4;
+  size_t n_iter   = 100;
+  size_t budget   = 20000;
+  size_t n_pseudo = 8;
+  double sigma    = 0.0001;
+  auto linescales = blaze::DynamicVector<double>(n_dims, 0.2);
+
+  auto pb     = progressbar(static_cast<int>(n_reps)); 
+  auto stream = std::ofstream(fname);
+  auto writer = csv::make_csv_writer(stream);
+  for (size_t i = 0; i < n_reps; ++i)
+  {
+    pb.update();
+    auto prng = usdg::Random123(i);
+    auto [hist_y, hist_t] = bayesian_optimization<Strategy>(
+      prng, objective,  n_dims, n_init, n_iter, budget,
+      n_pseudo, sigma, linescales, nullptr);
+    writer << hist_y;
+  }
+}
+
+template <typename ObjFunc>
+void
+run_randomsearch(std::string const& fname,
+		 ObjFunc objective,
+		 size_t n_dims)
+{
+  size_t n_reps   = 100;
+  size_t n_init   = 4;
+  size_t n_iter   = 100;
+  double sigma    = 0.0001;
+
+  auto pb     = progressbar(static_cast<int>(n_reps)); 
+  auto stream = std::ofstream(fname);
+  auto writer = csv::make_csv_writer(stream);
+  for (size_t i = 0; i < n_reps; ++i)
+  {
+    pb.update();
+    auto prng       = usdg::Random123(i);
+    double y_opt    = std::numeric_limits<double>::lowest();
+    auto hist_y_opt = std::vector<double>();
+    for (size_t t = 0; t < n_iter+n_init; ++t)
+    {
+      auto x  = usdg::rmvuniform(prng, n_dims, 0, 1);
+      auto xi = usdg::rmvnormal(prng, n_dims);
+      xi     /= blaze::max(blaze::abs(xi));
+
+      auto noise_dist = std::normal_distribution<double>(0.0, sigma);
+      auto noisy_objective = [&](double alpha_in) {
+	return objective(x + alpha_in*xi) + noise_dist(prng);
+      };
+
+      auto [lb, ub] = usdg::pbo_find_bounds(x, xi);
+      auto alpha    = naive_linesearch(noisy_objective, lb, ub, 1000);
+
+      double y = objective(x + alpha*xi);
+      y_opt    = std::max(y, y_opt);
+
+      if(t > n_init)
+      {
+	hist_y_opt.push_back(y_opt);
+      }
+    }
+    writer << hist_y_opt;
+  }
+}
+
 int main()
 {
-  auto key  = 0u;
-  auto prng = usdg::Random123(key);
+  using namespace std::string_literals;
 
   auto console  = spdlog::stdout_color_mt("console");
   spdlog::set_level(spdlog::level::info);
   auto logger  = spdlog::get("console");
 
-  size_t n_dims    = 8;
-  size_t n_init    = 4;
-  size_t n_iter    = 50;
-  size_t budget    = 10000;
-  size_t n_pseudo  = 8;
-  double sigma     = 0.0001;
-  auto linescales  = blaze::DynamicVector<double>(n_dims, 0.2);
+  {
+    auto objective      = rosenbrock;
+    size_t n_dims       = 10;
+    auto objective_name = "rosenbrock10D"s;
+    run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
+    run_benchmark<usdg::EI_AEI>(   objective_name + "_EI_AEI.csv"s,    objective, n_dims);
+    run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims);
+    run_benchmark<usdg::EI_Random>(objective_name + "_EI_Random.csv"s, objective, n_dims);
+    run_benchmark<usdg::EI_Koyama>(objective_name + "_EI_Koyama.csv"s, objective, n_dims);
+  }
 
-  //std::cout << hartmann(blaze::DynamicVector<double>({0.20169, 0.150011, 0.476874, 0.275332, 0.311652, 0.6573})) << std::endl;
-  //usdg::render_function(stablinskytang);
-  //usdg::render_function(rosenbrock);
+  {
+    auto objective      = rosenbrock;
+    size_t n_dims       = 20;
+    auto objective_name = "rosenbrock20D"s;
+    run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
+    run_benchmark<usdg::EI_AEI>(   objective_name + "_EI_AEI.csv"s,    objective, n_dims);
+    run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims);
+    run_benchmark<usdg::EI_Random>(objective_name + "_EI_Random.csv"s, objective, n_dims);
+    run_benchmark<usdg::EI_Koyama>(objective_name + "_EI_Koyama.csv"s, objective, n_dims);
+  }
 
-  bayesian_optimization<usdg::EI_AEI>(
-  //bayesian_optimization<usdg::AEI_AEI>(
-  //bayesian_optimization<usdg::EI_Random>(
-  //bayesian_optimization<usdg::EI_Koyama>(
-    prng,
-    hartmann,
-    //rosenbrock,
-    //ackley,
-    n_dims,					   
-    n_init,
-    n_iter,
-    budget,
-    n_pseudo,
-    sigma,
-    linescales,
-    logger.get());
+  {
+    auto objective      = ackley;
+    size_t n_dims       = 10;
+    auto objective_name = "ackley10D"s;
+    run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
+    run_benchmark<usdg::EI_AEI>(   objective_name + "_EI_AEI.csv"s,    objective, n_dims);
+    run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims);
+    run_benchmark<usdg::EI_Random>(objective_name + "_EI_Random.csv"s, objective, n_dims);
+    run_benchmark<usdg::EI_Koyama>(objective_name + "_EI_Koyama.csv"s, objective, n_dims);
+  }
 
-  //auto optimizer  = usdg::BayesianOptimization<>(
-  //auto optimizer  = usdg::BayesianOptimization<usdg::ThompsonSampling>(
-  //auto optimizer  = usdg::BayesianOptimization<usdg::ThompsonSamplingKoyama>(
+  {
+    auto objective      = ackley;
+    size_t n_dims       = 20;
+    auto objective_name = "ackley20D"s;
+    run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
+    run_benchmark<usdg::EI_AEI>(   objective_name + "_EI_AEI.csv"s,    objective, n_dims);
+    run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims);
+    run_benchmark<usdg::EI_Random>(objective_name + "_EI_Random.csv"s, objective, n_dims);
+    run_benchmark<usdg::EI_Koyama>(objective_name + "_EI_Koyama.csv"s, objective, n_dims);
+  }
+
+  {
+    auto objective      = hartmann;
+    size_t n_dims       = 6;
+    auto objective_name = "hartmann6D"s;
+    run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
+    run_benchmark<usdg::EI_AEI>(   objective_name + "_EI_AEI.csv"s,    objective, n_dims);
+    run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims);
+    run_benchmark<usdg::EI_Random>(objective_name + "_EI_Random.csv"s, objective, n_dims);
+    run_benchmark<usdg::EI_Koyama>(objective_name + "_EI_Koyama.csv"s, objective, n_dims);
+  }
+
+  {
+    auto objective      = stablinskytang;
+    size_t n_dims       = 10;
+    auto objective_name = "stablinskytang10D"s;
+    run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
+    run_benchmark<usdg::EI_AEI>(   objective_name + "_EI_AEI.csv"s,    objective, n_dims);
+    run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims);
+    run_benchmark<usdg::EI_Random>(objective_name + "_EI_Random.csv"s, objective, n_dims);
+    run_benchmark<usdg::EI_Koyama>(objective_name + "_EI_Koyama.csv"s, objective, n_dims);
+  }
+
+  {
+    auto objective      = stablinskytang;
+    size_t n_dims       = 20;
+    auto objective_name = "stablinskytang20D"s;
+    run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
+    run_benchmark<usdg::EI_AEI>(   objective_name + "_EI_AEI.csv"s,    objective, n_dims);
+    run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims);
+    run_benchmark<usdg::EI_Random>(objective_name + "_EI_Random.csv"s, objective, n_dims);
+    run_benchmark<usdg::EI_Koyama>(objective_name + "_EI_Koyama.csv"s, objective, n_dims);
+  }
 }

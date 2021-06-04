@@ -116,54 +116,37 @@ namespace usdg
   }
 
   template <typename Rng,
-	    typename KernelType>
+	    typename KernelType,
+	    typename XVec,
+	    typename XiVec>
   inline double
-  projective_expected_improvement(Rng& prng,
-				  usdg::GP<KernelType> const& gp,
-				  blaze::DynamicMatrix<double> const& data_mat,
-				  size_t n_beta,
-				  size_t iter,
-				  double y_opt,
-				  blaze::DynamicVector<double> const& x,
-				  blaze::DynamicVector<double> const& xi)
+  approximate_expected_improvement(Rng& prng,
+				   usdg::GP<KernelType> const& gp,
+				   blaze::DynamicMatrix<double> const& data_mat,
+				   size_t n_beta,
+				   size_t n_montecarlo,
+				   size_t iter,
+				   double y_opt,
+				   XVec const& x,
+				   XiVec const& xi)
   {
-    size_t n_dims = x.size();
-    auto grad_buf = blaze::DynamicVector<double>(n_dims, 0.0);
-
-    auto [lb, ub] = usdg::pbo_find_bounds(x, xi);
-    auto betas    = usdg::rmvuniform(prng, n_beta, lb, ub);
-    auto p_beta   = usdg::beta_pdf(0.0, lb, ub, iter, n_dims);
-    auto q_beta   = 1.0 / (ub - lb);
-    double ei_sum = 0.0;
-    for (double beta_i : betas)
+    auto unit_normal = std::normal_distribution<double>();
+    size_t n_dims    = x.size();
+    auto [lb, ub]    = usdg::pbo_find_bounds(x, xi);
+    double ei_sum    = 0.0;
+    for (size_t k = 0; k < n_montecarlo; ++k)
     {
-      auto x_beta      = x + beta_i*xi;
-      auto [mean, var] = gp.predict(data_mat, x_beta);
-      auto ei          = usdg::expected_improvement(mean, var, y_opt);
-      ei_sum          += ei * p_beta(beta_i) / q_beta;
-    }
-    return ei_sum / static_cast<double>(n_beta);
-  }
-
-  template <typename KernelType>
-  inline std::pair<blaze::DynamicVector<double>, double>
-  find_best_alpha(usdg::Dataset const& data,
-		  blaze::DynamicMatrix<double> const& data_mat,
-		  usdg::GP<KernelType> const& gp)
-  {
-    double y_opt = std::numeric_limits<double>::lowest(); 
-    auto x_opt   = blaze::DynamicVector<double>();
-    for (size_t i = 0; i < data.num_data(); ++i)
-    {
-      auto x_alpha     = blaze::column(data_mat, data.alpha_index(i));
-      auto [mean, var] = gp.predict(data_mat, x_alpha);
-      if (mean > y_opt)
+      auto betas        = usdg::sample_beta(prng, 0.0, lb, ub, iter, n_beta, n_dims);
+      double y_beta_opt = std::numeric_limits<double>::lowest();
+      for (size_t j = 0; j < n_beta; ++j)
       {
-	y_opt = mean;
-	x_opt = x_alpha;
+	auto [pred_mean, pred_var] = gp.predict(data_mat, x + betas[j]*xi);
+	double y_beta = unit_normal(prng)*sqrt(pred_var) + pred_mean;
+	y_beta_opt    = std::max(y_beta, y_beta_opt);
       }
+      ei_sum += std::max(y_beta_opt - y_opt, 0.0);
     }
-    return { std::move(x_opt), y_opt };
+    return ei_sum / static_cast<double>(n_montecarlo);
   }
 
   template <typename Rng,
@@ -173,6 +156,7 @@ namespace usdg
 		    usdg::GP<KernelType> const& gp,
 		    blaze::DynamicMatrix<double> const& data_mat,
 		    size_t n_beta,
+		    size_t n_mc,
 		    size_t iter,
 		    double y_opt,
 		    blaze::DynamicVector<double> const& x,
@@ -196,8 +180,9 @@ namespace usdg
       }
       while (beta_range < 1e-4);
 
-      auto ei = projective_expected_improvement(prng, gp, data_mat, n_beta,
-						iter, y_opt, x, xi);
+      auto ei = usdg::approximate_expected_improvement(prng, gp, data_mat,
+						       n_beta, n_mc, iter,
+						       y_opt, x, xi);
       if(ei > ei_opt)
       {
 	ei_opt = ei;
@@ -206,6 +191,29 @@ namespace usdg
     }
     return xi_opt;
   }
+
+  template <typename Rng,
+	    typename KernelType>
+  inline std::pair<blaze::DynamicVector<double>, double>
+  find_best_x_lbfgs(Rng& prng,
+		    blaze::DynamicMatrix<double> const& data_mat,
+		    usdg::GP<KernelType> const& gp,
+		    size_t n_dims,
+		    size_t budget,
+		    spdlog::logger* logger)
+  {
+    auto mean_with_grad = [&](blaze::DynamicVector<double> const& x, bool)
+      -> std::pair<double, blaze::DynamicVector<double>>
+    {
+      auto [mean, dmudx] = usdg::gradient_mean(gp, data_mat, x);
+      return {mean, dmudx};
+    };
+
+    size_t n_restarts = 8;
+    return usdg::lbfgs_multistage_box_optimize(
+      prng, mean_with_grad, n_dims, budget/n_restarts, n_restarts, logger);
+  }
+
 
   template <typename Rng,
 	    typename KernelType>
@@ -232,7 +240,7 @@ namespace usdg
     return x_next;
   }
 
-  class ExpectedImprovementDTS {};
+  class AEI_AEI {};
 
   template <>
   template <typename Rng, typename BudgetType>
@@ -240,7 +248,7 @@ namespace usdg
 		    blaze::DynamicVector<double>,
 		    blaze::DynamicVector<double>,
 		    double>
-  BayesianOptimization<usdg::ExpectedImprovementDTS>::
+  BayesianOptimization<usdg::AEI_AEI>::
   next_query(Rng& prng,
 	     size_t iter,
 	     size_t n_pseudo,
@@ -257,6 +265,7 @@ namespace usdg
     if(profiler)
     {
       profiler->start("next_query"s);
+      profiler->start("fit_gp"s);
     }
 
     auto data_mat = this->_data.data_matrix();
@@ -264,34 +273,20 @@ namespace usdg
 
     if(profiler)
     {
-      profiler->stop("sample_gp_hyper"s);
+      profiler->stop("fit_gp"s);
       profiler->start("optimize_acquisition"s);
     }
 
-    auto [x_opt, y_opt] = usdg::find_best_alpha(this->_data, data_mat, gp);
+    size_t n_dims       = this->_n_dims;
+    auto [x_opt, y_opt] = usdg::find_best_x_lbfgs(prng, data_mat, gp,
+						  n_dims, budget, logger);
 
-    size_t n_dims    = this->_n_dims;
-    size_t K         = 16;
-    size_t J         = 8;
-    auto unit_normal = std::normal_distribution<double>();
-    auto obj = [&](blaze::DynamicVector<double> const& x_xi) {
-      auto x        = blaze::subvector(x_xi, 0,      n_dims);
-      auto xi       = blaze::subvector(x_xi, n_dims, n_dims);
-      auto [lb, ub] = usdg::pbo_find_bounds(x, xi);
-      double ei_sum = 0.0;
-      for (size_t k = 0; k < K; ++k)
-      {
-	auto betas        = usdg::sample_beta(prng, 0.0, lb, ub, iter, J, n_dims);
-	double y_beta_opt = std::numeric_limits<double>::lowest();
-	for (size_t j = 0; j < J; ++j)
-	{
-	  auto [pred_mean, pred_var] = gp.predict(data_mat, x + betas[j]*xi);
-	  double y_beta = unit_normal(prng)*sqrt(pred_var) + pred_mean;
-	  y_beta_opt    = std::max(y_beta, y_beta_opt);
-	}
-	ei_sum += std::max(y_beta_opt - y_opt, 0.0);
-      }
-      return ei_sum / K;
+    size_t n_montecarlo = 32;
+    auto obj = [&](blaze::DynamicVector<double> const& x_xi) -> double {
+      auto x  = blaze::subvector(x_xi, 0,      n_dims);
+      auto xi = blaze::subvector(x_xi, n_dims, n_dims);
+      return usdg::approximate_expected_improvement(
+	prng, gp, data_mat, n_pseudo, n_montecarlo, iter, y_opt, x, xi);
     };
 
     auto proj = [&](blaze::DynamicVector<double> const& x_xi) {
@@ -314,15 +309,15 @@ namespace usdg
     blaze::subvector(x_xi_init, n_dims, n_dims) = xi_init;
 
     double noise_sd = 1.0;
-    double stepsize = 0.01*sqrt(static_cast<double>(n_dims));
+    double stepsize = 0.001/sqrt(static_cast<double>(n_dims));
     auto x_xi_next = usdg::spsa_maximize(prng, obj, proj, noise_sd,
-					 stepsize, x_xi_init, budget/K);
+					 stepsize, x_xi_init,
+					 budget/n_montecarlo/2);
     auto x_next    = blaze::subvector(x_xi_next, 0,      n_dims);
     auto xi_next   = blaze::subvector(x_xi_next, n_dims, n_dims);
 
     if(profiler)
     {
-      profiler->stop("optimize_acquisition"s);
       profiler->stop("next_query"s);
     }
     if(logger)
@@ -332,64 +327,7 @@ namespace usdg
     return { x_next, xi_next, std::move(x_opt), y_opt };
   }
 
-  // class ExpectedImprovementRandom {};
-
-  // template <>
-  // template <typename Rng, typename BudgetType>
-  // inline std::tuple<blaze::DynamicVector<double>,
-  // 		    blaze::DynamicVector<double>>
-  // BayesianOptimization<usdg::ExpectedImprovementRandom>::
-  // next_query(Rng& prng,
-  // 	     size_t iter,
-  // 	     size_t n_pseudo,
-  // 	     BudgetType budget,
-  // 	     blaze::DynamicVector<double> const& linescales,
-  // 	     usdg::Profiler* profiler,
-  // 	     spdlog::logger* logger) const
-  // {
-  //   if(logger)
-  //   {
-  //     logger->info("Finding next Bayesian optimization query with expected improvement and Koyama scheme: {}",
-  // 		   usdg::file_name(__FILE__));
-  //   }
-  //   if(profiler)
-  //   {
-  //     profiler->start("next_query"s);
-  //   }
-
-  //   auto data_mat = this->_data.data_matrix();
-  //   auto gp       = fit_gp(prng, this->_data, data_mat, linescales, logger);
-
-  //   if(profiler)
-  //   {
-  //     profiler->stop("sample_gp_hyper"s);
-  //     profiler->start("optimize_acquisition"s);
-  //   }
-
-  //   auto [x_opt, y_opt] = usdg::find_best_alpha(this->_data, data_mat, gp);
-  //   auto x_next         = usdg::find_x_ei_lbfgs(prng, gp, data_mat, y_opt,
-  // 						this->_n_dims, budget, logger);
-  //   auto delta     = x_opt - x_next;
-  //   auto xi_koyama = delta / blaze::max(blaze::abs(delta));
-  //   auto xi_next   = usdg::find_xi_ei_random(prng, gp, data_mat, n_pseudo, iter,
-  // 					     y_opt, x_next, xi_koyama, budget);
-
-  //   std::cout << x_next << std::endl;
-  //   std::cout << xi_next<< std::endl;
-
-  //   if(profiler)
-  //   {
-  //     profiler->stop("optimize_acquisition"s);
-  //     profiler->stop("next_query"s);
-  //   }
-  //   if(logger)
-  //   {
-  //     logger->info("Found next Bayesian optimization query.");
-  //   }
-  //   return { std::move(x_next), std::move(xi_next) };
-  // }
-
-  class ExpectedImprovement {};
+  class EI_AEI {};
 
   template <>
   template <typename Rng, typename BudgetType>
@@ -397,7 +335,7 @@ namespace usdg
 		    blaze::DynamicVector<double>,
 		    blaze::DynamicVector<double>,
 		    double>
-  BayesianOptimization<usdg::ExpectedImprovement>::
+  BayesianOptimization<usdg::EI_AEI>::
   next_query(Rng& prng,
 	     size_t iter,
 	     size_t n_pseudo,
@@ -414,6 +352,7 @@ namespace usdg
     if(profiler)
     {
       profiler->start("next_query"s);
+      profiler->start("fit_gp"s);
     }
 
     auto data_mat = this->_data.data_matrix();
@@ -421,18 +360,23 @@ namespace usdg
 
     if(profiler)
     {
-      profiler->stop("sample_gp_hyper"s);
+      profiler->stop("fit_gp"s);
       profiler->start("optimize_acquisition"s);
     }
 
-    auto [x_opt, y_opt] = usdg::find_best_alpha(this->_data, data_mat, gp);
+    size_t n_dims       = this->_n_dims;
+    auto [x_opt, y_opt] = usdg::find_best_x_lbfgs(prng, data_mat, gp,
+						  n_dims, budget, logger);
     auto x_next         = usdg::find_x_ei_lbfgs(prng, gp, data_mat, y_opt,
 						this->_n_dims, budget/2, logger);
     auto delta     = x_opt - x_next;
     auto xi_koyama = delta / blaze::max(blaze::abs(delta));
-    auto xi_next   = usdg::find_xi_ei_random(prng, gp, data_mat, n_pseudo, iter,
-					     y_opt, x_next, xi_koyama, budget/2);
 
+    size_t n_montecarlo = 32;
+    size_t n_eval       = budget / n_montecarlo;
+    auto xi_next        = usdg::find_xi_ei_random(prng, gp, data_mat, n_pseudo,
+						  n_montecarlo, iter, y_opt,
+						  x_next, xi_koyama, n_eval);
     std::cout << x_next << std::endl;
     std::cout << xi_next<< std::endl;
 
@@ -448,7 +392,7 @@ namespace usdg
     return { std::move(x_next), std::move(xi_next), std::move(x_opt), y_opt };
   }
 
-  class ExpectedImprovementRandom {};
+  class EI_Random {};
 
   template <>
   template <typename Rng, typename BudgetType>
@@ -456,7 +400,7 @@ namespace usdg
 		    blaze::DynamicVector<double>,
 		    blaze::DynamicVector<double>,
 		    double>
-  BayesianOptimization<usdg::ExpectedImprovementRandom>::
+  BayesianOptimization<usdg::EI_Random>::
   next_query(Rng& prng,
 	     size_t,
 	     size_t,
@@ -473,6 +417,7 @@ namespace usdg
     if(profiler)
     {
       profiler->start("next_query"s);
+      profiler->start("fit_gp"s);
     }
 
     auto data_mat = this->_data.data_matrix();
@@ -480,11 +425,13 @@ namespace usdg
 
     if(profiler)
     {
-      profiler->stop("sample_gp_hyper"s);
+      profiler->stop("fit_gp"s);
       profiler->start("optimize_acquisition"s);
     }
 
-    auto [x_opt, y_opt] = usdg::find_best_alpha(this->_data, data_mat, gp);
+    size_t n_dims       = this->_n_dims;
+    auto [x_opt, y_opt] = usdg::find_best_x_lbfgs(prng, data_mat, gp,
+						  n_dims, budget, logger);
     auto x_next         = usdg::find_x_ei_lbfgs(prng, gp, data_mat, y_opt,
 						this->_n_dims, budget, logger);
     /* sample random direction for xi with a feasible range for beta */
@@ -514,7 +461,7 @@ namespace usdg
     return { std::move(x_next), std::move(xi_next), std::move(x_opt), y_opt  };
   }
 
-  class ExpectedImprovementKoyama {};
+  class EI_Koyama {};
 
   template <>
   template <typename Rng, typename BudgetType>
@@ -522,7 +469,7 @@ namespace usdg
 		    blaze::DynamicVector<double>,
 		    blaze::DynamicVector<double>,
 		    double>
-  BayesianOptimization<usdg::ExpectedImprovementKoyama>::
+  BayesianOptimization<usdg::EI_Koyama>::
   next_query(Rng& prng,
 	     size_t,
 	     size_t,
@@ -539,6 +486,7 @@ namespace usdg
     if(profiler)
     {
       profiler->start("next_query"s);
+      profiler->start("fit_gp"s);
     }
 
     auto data_mat = this->_data.data_matrix();
@@ -546,19 +494,21 @@ namespace usdg
 
     if(profiler)
     {
-      profiler->stop("sample_gp_hyper"s);
+      profiler->stop("fit_gp"s);
       profiler->start("optimize_acquisition"s);
     }
 
-    auto [x_opt, y_opt] = usdg::find_best_alpha(this->_data, data_mat, gp);
+    size_t n_dims       = this->_n_dims;
+    auto [x_opt, y_opt] = usdg::find_best_x_lbfgs(prng, data_mat, gp,
+						  n_dims, budget, logger);
     auto x_next         = usdg::find_x_ei_lbfgs(prng, gp, data_mat, y_opt,
 						this->_n_dims, budget, logger);
 
     auto delta   = x_opt - x_next;
-    auto xi_next = delta / blaze::max(blaze::abs(delta));
+    auto xi_next = blaze::evaluate(delta / blaze::max(blaze::abs(delta)));
 
-    std::cout << x_next << std::endl;
-    std::cout << xi_next<< std::endl;
+    std::cout << x_next  << std::endl;
+    std::cout << xi_next << std::endl;
 
     if(profiler)
     {

@@ -43,11 +43,17 @@ namespace usdg
 
   template <typename Rng,
 	    typename MarginalLogLikeFunc>
-  inline blaze::DynamicVector<double>
+  inline std::pair<blaze::DynamicVector<double>, double>
   map_inference(Rng& prng,
 		MarginalLogLikeFunc mll,
 		spdlog::logger* logger = nullptr)
   {
+    if(logger)
+    {
+      logger->info("Optimizing hyperparameters with MAP-II: {}",
+		   usdg::file_name(__FILE__));
+    }
+
     size_t n_dims = 2;
     auto x_init   = std::vector<double>(n_dims, 0.0);
     auto x_buf    = blaze::DynamicVector<double>(n_dims, 0.0);
@@ -84,7 +90,12 @@ namespace usdg
     optimizer.optimize(x_init, y_buf);
     auto x_found = blaze::DynamicVector<double>(n_dims);
     std::copy(x_init.begin(), x_init.end(), x_found.begin());
-    return x_found;
+
+    if(logger)
+    {
+      logger->info("Optimized hyperparameters with MAP-II");
+    }
+    return { x_found, y_buf };
   }
 
   inline usdg::Cholesky<usdg::DenseChol>
@@ -115,6 +126,12 @@ namespace usdg
 	 blaze::DynamicVector<double> const& linescales,
 	 spdlog::logger* logger = nullptr)
   {
+    if(logger)
+    {
+      logger->info("Fitting Gaussian process with Laplace's approximation and MAP-II: {}",
+		   usdg::file_name(__FILE__));
+    }
+
     auto n_dims      = data_mat.columns();
     double sigma_buf = 0.1;
     auto I           = blaze::IdentityMatrix<double>(data_mat.columns());
@@ -166,8 +183,8 @@ namespace usdg
       return t1 + t2 + t3 + prior;
     };
 
-    auto theta = usdg::map_inference(prng, laplace_marginal);
-    auto gram  = make_gram(theta);
+    auto [theta, mll] = usdg::map_inference(prng, laplace_marginal);
+    auto gram         = make_gram(theta);
     auto gram_chol_opt = usdg::cholesky_nothrow(gram);
     if(!gram_chol_opt)
     {
@@ -189,6 +206,12 @@ namespace usdg
     auto laplacecov_chol  = usdg::laplace_marginal_covariance(W, gram_chol);
     auto kernel           = usdg::Matern52ARD{1.0, linescales};
     auto alpha            = usdg::solve(laplacecov_chol, f_mode);
+
+    if(logger)
+    {
+      logger->info("Fitted Gaussian process: σ_f = {:.2f}, σ_ε = {:.2f}, mll = {:.2f}",
+		   exp(theta[0]), exp(theta[1]), mll);
+    }
     return usdg::GP<decltype(kernel)>{
       std::move(laplacecov_chol),
       std::move(alpha),

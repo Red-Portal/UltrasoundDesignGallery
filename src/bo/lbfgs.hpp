@@ -181,7 +181,7 @@ namespace usdg
       try
       {
 	double yval; 
-	auto result  = optimizer.optimize(x_init, yval);
+	[[maybe_unused]] auto result  = optimizer.optimize(x_init, yval);
 	auto x_found = blaze::DynamicVector<double>(n_dims);
 	std::copy(x_init.begin(), x_init.end(), x_found.begin());
 

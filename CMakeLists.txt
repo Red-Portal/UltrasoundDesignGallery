@@ -105,8 +105,8 @@ if(ENABLE_TESTING)
 endif()
 
 # Bayesian optimization test
-add_executable(bayes_opt_test src/bayes_opt_test.cpp)
-target_link_libraries(bayes_opt_test
+add_executable(bayesopt_benchmark src/bayesopt_benchmark.cpp)
+target_link_libraries(bayesopt_benchmark
     INTERFACE
     blaze::blaze
     Threads::threads

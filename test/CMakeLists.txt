@@ -47,6 +47,7 @@ target_link_libraries(usgallery_tests
     Python::Python
     progressbar
     BLAS::BLAS
+	LAPACK::LAPACK
     Random123
     project_warnings
     project_options catch_main)

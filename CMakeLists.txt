@@ -77,7 +77,8 @@ add_compile_definitions(FMT_HEADER_ONLY)
 find_package(FMT        REQUIRED)
 
 set(BLA_STATIC ON)
-find_package(BLAS REQUIRED)
+find_package(BLAS   REQUIRED)
+find_package(LAPACK REQUIRED)
 
 add_library(csvparser INTERFACE)
 target_include_directories(csvparser SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/csv-parser/single_include")
@@ -87,9 +88,6 @@ target_include_directories(progressbar SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/t
 
 add_library(Random123 INTERFACE)
 target_include_directories(Random123 SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/Random123")
-
-add_library(LBFGSpp INTERFACE)
-target_include_directories(LBFGSpp SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/LBFGSpp/include")
 
 find_package(Python COMPONENTS Development NumPy REQUIRED)
 
@@ -120,7 +118,8 @@ target_link_libraries(bayesopt_benchmark
     progressbar
     project_options
     project_warnings
-    BLAS::BLAS
+	BLAS::BLAS
+	LAPACK::LAPACK
     spdlog::spdlog
     NLOPT::nlopt
     Random123)
@@ -142,5 +141,6 @@ target_link_libraries(usgallery
     fmt::fmt-header-only
     spdlog::spdlog
     BLAS::BLAS
+	LAPACK::LAPACK
     Random123
     ImGui-SFML::ImGui-SFML)

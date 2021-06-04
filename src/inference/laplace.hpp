@@ -133,23 +133,19 @@ namespace usdg
     }
     //std::cout << std::endl;
 
-    if(it == max_iter || g_norm > 1e-1)
+    if(log)
     {
-      if(log)
+      if(it == max_iter || g_norm > 1e-1)
       {
 	log->warn("Laplace approximation didn't converge within {} steps.", max_iter);
       }
-      return std::nullopt;
-    }
-    else
-    {
-      if(log)
+      else
       {
 	log->info("Laplace approximation converged.");
       }
-      return std::tuple<decltype(f), decltype(Blu), decltype(W)>{
-	std::move(f), std::move(Blu), std::move(W)};
     }
+    return std::tuple<decltype(f), decltype(Blu), decltype(W)>{
+      std::move(f), std::move(Blu), std::move(W)};
   }
 }
 

@@ -115,7 +115,7 @@ namespace usdg
     auto laplace_cov_U = blaze::solve(IpLtBL_chol.L, blaze::trans(K_chol.L));
     auto laplace_cov_L = blaze::trans(laplace_cov_U);
     auto laplace_cov   = laplace_cov_L * laplace_cov_U;
-    return usdg::Cholesky<DenseChol>(laplace_cov, blaze::evaluate(blaze::decllow(laplace_cov_L)));
+    return usdg::Cholesky<DenseChol>{laplace_cov, blaze::evaluate(blaze::decllow(laplace_cov_L))};
   }
 
   template <typename Rng>

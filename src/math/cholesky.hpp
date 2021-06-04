@@ -59,9 +59,9 @@ namespace usdg
       return false;
     }
 
-    auto n    = blaze::numeric_cast<blaze::blas_int_t>( A.rows()    );
-    auto lda  = blaze::numeric_cast<blaze::blas_int_t>( A.spacing() );
-    auto info = blaze::blas_int_t( 0 );
+    blaze::blas_int_t n   ( blaze::numeric_cast<blaze::blas_int_t>( A.rows()    ) );
+    blaze::blas_int_t lda ( blaze::numeric_cast<blaze::blas_int_t>( A.spacing() ) );
+    blaze::blas_int_t info( 0 );
 
     if( n == 0 )
     {

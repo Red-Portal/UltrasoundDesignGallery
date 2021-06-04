@@ -282,7 +282,9 @@ namespace usdg
 						  n_dims, budget, logger);
 
     size_t n_montecarlo = 32;
-    auto obj = [&](blaze::DynamicVector<double> const& x_xi) -> double {
+    auto obj = [&,y_opt=y_opt](blaze::DynamicVector<double> const& x_xi)
+      -> double
+    {
       auto x  = blaze::subvector(x_xi, 0,      n_dims);
       auto xi = blaze::subvector(x_xi, n_dims, n_dims);
       return usdg::approximate_expected_improvement(

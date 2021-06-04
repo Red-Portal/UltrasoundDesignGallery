@@ -80,7 +80,7 @@ bayesian_optimization(usdg::Random123& prng,
   auto hist_time  = std::vector<double>();
   for (auto& [x, xi] : init_x)
   {
-    auto noisy_objective = [&](double alpha_in) {
+    auto noisy_objective = [&, x=x, xi=xi](double alpha_in) {
       return objective(x + alpha_in*xi) + noise_dist(prng);
     };
     auto [lb, ub] = usdg::pbo_find_bounds(x, xi);
@@ -107,7 +107,7 @@ bayesian_optimization(usdg::Random123& prng,
 						   budget, linescales,
 						   &profiler, logger);
 
-    auto noisy_objective = [&](double alpha_in) {
+    auto noisy_objective = [&, x=x, xi=xi](double alpha_in) {
       return objective(x + alpha_in*xi) + noise_dist(prng);
     };
     auto [lb, ub] = usdg::pbo_find_bounds(x, xi);

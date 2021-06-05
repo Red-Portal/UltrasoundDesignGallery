@@ -220,9 +220,11 @@ run_benchmark(std::string const& fname,
 	      size_t n_dims,
 	      spdlog::logger* logger)
 {
+  logger->info("Running benchmark for {}", fname);
+
   size_t n_reps   = 100;
   size_t n_init   = 4;
-  size_t n_iter   = 100;
+  size_t n_iter   = 50;
   size_t budget   = 10000;
   size_t n_pseudo = 25;
   double sigma    = 0.001;
@@ -231,15 +233,22 @@ run_benchmark(std::string const& fname,
   auto pb     = progressbar(static_cast<int>(n_reps)); 
   auto stream = std::ofstream(fname);
   auto writer = csv::make_csv_writer(stream);
+  auto start  = usdg::clock::now();
+#pragma omp parallel for
   for (size_t i = 0; i < n_reps; ++i)
   {
+#pragma omp critical
     pb.update();
     auto prng = usdg::Random123(i);
     auto [hist_y, hist_t] = bayesian_optimization<Strategy>(
       prng, objective,  n_dims, n_init, n_iter, budget,
-      n_pseudo, sigma, linescales, logger);
+      n_pseudo, sigma, linescales, nullptr);
+#pragma omp critical
     writer << hist_y;
   }
+  std::cout << std::endl;
+  auto elapsed = usdg::compute_duration(start);
+  logger->info("Finished running benchmark for {:.2f} seconds", elapsed.count());
 }
 
 template <typename ObjFunc>
@@ -250,7 +259,7 @@ run_randomsearch(std::string const& fname,
 {
   size_t n_reps   = 100;
   size_t n_init   = 4;
-  size_t n_iter   = 100;
+  size_t n_iter   = 50;
   double sigma    = 0.001;
 
   auto pb     = progressbar(static_cast<int>(n_reps)); 

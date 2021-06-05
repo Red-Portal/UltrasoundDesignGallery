@@ -156,7 +156,6 @@ rosenbrock(blaze::DynamicVector<double> const& x_in)
   return -res;
 }
 
-
 inline double
 hartmann(blaze::DynamicVector<double> const& x_in)
 {
@@ -209,7 +208,7 @@ inline double
 stablinskytang(blaze::DynamicVector<double> const& x_in)
 {
   auto x = 10*x_in - 5;
-  return blaze::sum(
+  return -blaze::sum(
     0.5*(blaze::pow(x, 4) - 17*blaze::pow(x, 2) + 5*x));
 }
 
@@ -225,8 +224,8 @@ run_benchmark(std::string const& fname,
   size_t n_init   = 4;
   size_t n_iter   = 100;
   size_t budget   = 10000;
-  size_t n_pseudo = 8;
-  double sigma    = 0.0001;
+  size_t n_pseudo = 25;
+  double sigma    = 0.001;
   auto linescales = blaze::DynamicVector<double>(n_dims, 0.2);
 
   auto pb     = progressbar(static_cast<int>(n_reps)); 
@@ -252,7 +251,7 @@ run_randomsearch(std::string const& fname,
   size_t n_reps   = 100;
   size_t n_init   = 4;
   size_t n_iter   = 100;
-  double sigma    = 0.0001;
+  double sigma    = 0.001;
 
   auto pb     = progressbar(static_cast<int>(n_reps)); 
   auto stream = std::ofstream(fname);
@@ -297,6 +296,14 @@ int main()
   spdlog::set_level(spdlog::level::info);
   auto logger  = spdlog::get("console");
 
+  // auto _objective      = rosenbrock;
+  // auto _objective_name = "rosenbrock10D"s;
+  // run_benchmark<usdg::AEI_AEI>( _objective_name + "_AEI_AEI.csv"s,   _objective, 10, logger.get());
+
+  // auto _objective      = ackley;
+  // auto _objective_name = "ackley20D"s;
+  // run_benchmark<usdg::AEI_AEI>( _objective_name + "_AEI_AEI.csv"s,  _objective, 20, logger.get());
+  // exit(1);
 
   {
     auto objective      = rosenbrock;
@@ -304,7 +311,7 @@ int main()
     auto objective_name = "rosenbrock10D"s;
     //run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
     run_benchmark<usdg::EI_AEI>(   objective_name + "_EI_AEI.csv"s,    objective, n_dims, logger.get());
-    run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims, logger.get());
+    //run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims, logger.get());
     run_benchmark<usdg::EI_Random>(objective_name + "_EI_Random.csv"s, objective, n_dims, logger.get());
     run_benchmark<usdg::EI_Koyama>(objective_name + "_EI_Koyama.csv"s, objective, n_dims, logger.get());
   }
@@ -313,9 +320,9 @@ int main()
     auto objective      = rosenbrock;
     size_t n_dims       = 20;
     auto objective_name = "rosenbrock20D"s;
-    run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
+    //run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
     run_benchmark<usdg::EI_AEI>(   objective_name + "_EI_AEI.csv"s,    objective, n_dims, logger.get());
-    run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims, logger.get());
+    //run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims, logger.get());
     run_benchmark<usdg::EI_Random>(objective_name + "_EI_Random.csv"s, objective, n_dims, logger.get());
     run_benchmark<usdg::EI_Koyama>(objective_name + "_EI_Koyama.csv"s, objective, n_dims, logger.get());
   }
@@ -324,9 +331,9 @@ int main()
     auto objective      = ackley;
     size_t n_dims       = 10;
     auto objective_name = "ackley10D"s;
-    run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
+    //run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
     run_benchmark<usdg::EI_AEI>(   objective_name + "_EI_AEI.csv"s,    objective, n_dims, logger.get());
-    run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims, logger.get());
+    //run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims, logger.get());
     run_benchmark<usdg::EI_Random>(objective_name + "_EI_Random.csv"s, objective, n_dims, logger.get());
     run_benchmark<usdg::EI_Koyama>(objective_name + "_EI_Koyama.csv"s, objective, n_dims, logger.get());
   }
@@ -335,9 +342,9 @@ int main()
     auto objective      = ackley;
     size_t n_dims       = 20;
     auto objective_name = "ackley20D"s;
-    run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
+    //run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
     run_benchmark<usdg::EI_AEI>(   objective_name + "_EI_AEI.csv"s,    objective, n_dims, logger.get());
-    run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims, logger.get());
+    //run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims, logger.get());
     run_benchmark<usdg::EI_Random>(objective_name + "_EI_Random.csv"s, objective, n_dims, logger.get());
     run_benchmark<usdg::EI_Koyama>(objective_name + "_EI_Koyama.csv"s, objective, n_dims, logger.get());
   }
@@ -346,9 +353,9 @@ int main()
     auto objective      = hartmann;
     size_t n_dims       = 6;
     auto objective_name = "hartmann6D"s;
-    run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
+    //run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
     run_benchmark<usdg::EI_AEI>(   objective_name + "_EI_AEI.csv"s,    objective, n_dims, logger.get());
-    run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims, logger.get());
+    //run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims, logger.get());
     run_benchmark<usdg::EI_Random>(objective_name + "_EI_Random.csv"s, objective, n_dims, logger.get());
     run_benchmark<usdg::EI_Koyama>(objective_name + "_EI_Koyama.csv"s, objective, n_dims, logger.get());
   }
@@ -357,9 +364,9 @@ int main()
     auto objective      = stablinskytang;
     size_t n_dims       = 10;
     auto objective_name = "stablinskytang10D"s;
-    run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
+    //run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
     run_benchmark<usdg::EI_AEI>(   objective_name + "_EI_AEI.csv"s,    objective, n_dims, logger.get());
-    run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims, logger.get());
+    //run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims, logger.get());
     run_benchmark<usdg::EI_Random>(objective_name + "_EI_Random.csv"s, objective, n_dims, logger.get());
     run_benchmark<usdg::EI_Koyama>(objective_name + "_EI_Koyama.csv"s, objective, n_dims, logger.get());
   }
@@ -368,9 +375,9 @@ int main()
     auto objective      = stablinskytang;
     size_t n_dims       = 20;
     auto objective_name = "stablinskytang20D"s;
-    run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
+    //run_randomsearch(objective_name + "_random.csv"s,    objective, n_dims);
     run_benchmark<usdg::EI_AEI>(   objective_name + "_EI_AEI.csv"s,    objective, n_dims, logger.get());
-    run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims, logger.get());
+    //run_benchmark<usdg::AEI_AEI>(  objective_name + "_AEI_AEI.csv"s,   objective, n_dims, logger.get());
     run_benchmark<usdg::EI_Random>(objective_name + "_EI_Random.csv"s, objective, n_dims, logger.get());
     run_benchmark<usdg::EI_Koyama>(objective_name + "_EI_Koyama.csv"s, objective, n_dims, logger.get());
   }

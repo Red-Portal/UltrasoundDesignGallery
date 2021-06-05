@@ -123,7 +123,7 @@ namespace usdg
 	log->info("{:>4}   {:g}", it,  f_norm);
       }
 
-      if(f_norm < 1e-2 && g_norm < 1e-2)
+      if(f_norm < 1e-4 && g_norm < 1e-4)
       {
 	break;
       }

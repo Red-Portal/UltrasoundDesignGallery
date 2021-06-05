@@ -209,7 +209,7 @@ namespace usdg
       return {mean, dmudx};
     };
 
-    size_t n_restarts = 8;
+    size_t n_restarts = 4;
     return usdg::lbfgs_multistage_box_optimize(
       prng, mean_with_grad, n_dims, budget/n_restarts, n_restarts, logger);
   }
@@ -234,7 +234,7 @@ namespace usdg
 	return {ei, deidx};
       };
 
-    size_t n_restarts = 8;
+    size_t n_restarts = 4;
     auto [x_next, _]  = usdg::lbfgs_multistage_box_optimize(
       prng, ei_x_acq, n_dims, budget/n_restarts, n_restarts, logger);
     return x_next;
@@ -311,10 +311,9 @@ namespace usdg
     blaze::subvector(x_xi_init, n_dims, n_dims) = xi_init;
 
     double noise_sd = 1.0;
-    double stepsize = 0.001/sqrt(static_cast<double>(n_dims));
-    auto x_xi_next = usdg::spsa_maximize(prng, obj, proj, noise_sd,
-					 stepsize, x_xi_init,
-					 budget/n_montecarlo/2);
+    double stepsize = 1.0/static_cast<double>(n_dims);
+    auto x_xi_next = usdg::spsa_maximize(prng, obj, proj, noise_sd, stepsize,
+					 x_xi_init, budget/n_montecarlo/2);
     auto x_next    = blaze::subvector(x_xi_next, 0,      n_dims);
     auto xi_next   = blaze::subvector(x_xi_next, n_dims, n_dims);
 

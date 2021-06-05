@@ -19,8 +19,9 @@
 #ifndef __US_GALLERY_SGD_HPP__
 #define __US_GALLERY_SGD_HPP__
 
-#include <iostream>
+#include <algorithm>
 #include <cmath>
+#include <iostream>
 
 #include "../math/blaze.hpp"
 #include "../math/uniform.hpp"
@@ -50,38 +51,58 @@ namespace usdg
      * by Spall, James C., 1998, IEEE Tran. Aerospace Electronic Syst.
      */
     double c     = noise_stddev;
-    double alpha = 0.602;
     double gamma = 0.101;
     double A     = static_cast<double>(n_iters)/10;
-    double a     = stepsize * pow(A + 1, alpha);
+    double a     = stepsize * pow(A + 1, 0.5);
     double p     = 0.5;
 
     auto x          = blaze::DynamicVector<double>(x_init);
     size_t n_dims   = x.size();
     auto delta      = blaze::DynamicVector<double>(n_dims);
     auto delta_dist = std::bernoulli_distribution(p);
+    auto ghat_prev  = blaze::DynamicVector<double>(n_dims);
+    double sk       = 0.0;
+    double q        = 0.5;
+
     for (size_t t = 1; t <= n_iters; ++t)
     {
-      double ak  = a / pow(static_cast<double>(t) + A, alpha);
+      double ak  = a / pow(static_cast<double>(t) + A, q);
       double ck  = c / pow(static_cast<double>(t), gamma);
       
       for (size_t i = 0; i < n_dims; ++i)
       {
-	if(delta_dist(prng))
+	if (delta_dist(prng))
 	  delta[i] = 1;
 	else
 	  delta[i] = -1;
       }
 
-      auto x_plus   = x + ck*delta;
-      auto x_minus  = x - ck*delta;
-      double yplus  = obj(x_plus);
-      double yminus = obj(x_minus);
-      auto ghat     = (yplus - yminus) / (2*ck*delta);
+      auto cdelta    = ck*delta;
+      auto x_plus    = x + cdelta;
+      auto x_minus   = x - cdelta;
+      double y_plus  = obj(x_plus);
+      double y_minus = obj(x_minus);
+      auto ghat      = (y_plus - y_minus) / (2*ck*delta);
 
-      x += ak*ghat;
-      x  = proj(x);
-      //std::cout << "t = " << t << ", y = " << obj(x) << std::endl;
+      if(t == 1)
+      {
+	a /= blaze::max(blaze::abs(ghat));
+      }
+
+      if(t > 2)
+      {
+	sk += [&]{
+	  if(blaze::dot(ghat, ghat_prev) < 0)
+	    return 1;
+	  else
+	    return 0;
+	}();
+	q   = std::max(1 - abs(sk/static_cast<double>(t) - 0.5), 0.501);
+      }
+
+      x        += ak*ghat;
+      x         = proj(x);
+      ghat_prev = ghat;
     }
     return x;
   }

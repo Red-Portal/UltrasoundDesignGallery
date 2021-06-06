@@ -243,8 +243,10 @@ run_benchmark(std::string const& fname,
     auto [hist_y, hist_t] = bayesian_optimization<Strategy>(
       prng, objective,  n_dims, n_init, n_iter, budget,
       n_pseudo, sigma, linescales, nullptr);
+
+    auto& hist_y_local = hist_y;
 #pragma omp critical
-    writer << hist_y;
+    writer << hist_y_local;
   }
   std::cout << std::endl;
   auto elapsed = usdg::compute_duration(start);

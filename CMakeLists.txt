@@ -65,20 +65,21 @@ endif()
 find_package(SFML 2.5 COMPONENTS system window graphics network audio REQUIRED)
 find_package(ImGui-SFML REQUIRED)
 find_package(Threads    REQUIRED)
-find_package(FMT        REQUIRED)
 find_package(OpenMP     REQUIRED)
 find_package(Blaze      REQUIRED)
 find_package(NLOPT      REQUIRED)
 
-add_compile_definitions(SPDLOG_FMT_EXTERNAL)
-find_package(spdlog     REQUIRED)
-
-add_compile_definitions(FMT_HEADER_ONLY)
-find_package(FMT        REQUIRED)
-
 set(BLA_STATIC ON)
 find_package(BLAS   REQUIRED)
 find_package(LAPACK REQUIRED)
+
+add_compile_definitions(SPDLOG_FMT_EXTERNAL)
+add_library(spdlog INTERFACE)
+target_include_directories(spdlog SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/spdlog/include")
+
+add_compile_definitions(FMT_HEADER_ONLY)
+add_library(FMT INTERFACE)
+target_include_directories(FMT SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/fmt/include")
 
 add_library(csvparser INTERFACE)
 target_include_directories(csvparser SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/csv-parser/single_include")
@@ -118,9 +119,10 @@ target_link_libraries(bayesopt_benchmark
     progressbar
     project_options
     project_warnings
-	BLAS::BLAS
-	LAPACK::LAPACK
-    spdlog::spdlog
+    BLAS::BLAS
+    LAPACK::LAPACK
+    spdlog
+    FMT
     NLOPT::nlopt
     Random123)
 
@@ -138,9 +140,9 @@ target_link_libraries(usgallery
     Python::Python
     project_options
     project_warnings
-    fmt::fmt-header-only
-    spdlog::spdlog
+    FMT
+    spdlog
     BLAS::BLAS
-	LAPACK::LAPACK
+    LAPACK::LAPACK
     Random123
     ImGui-SFML::ImGui-SFML)

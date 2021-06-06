@@ -226,7 +226,7 @@ run_benchmark(std::string const& fname,
   size_t n_init   = 4;
   size_t n_iter   = 50;
   size_t budget   = 10000;
-  size_t n_pseudo = 25;
+  size_t n_pseudo = 16;
   double sigma    = 0.001;
   auto linescales = blaze::DynamicVector<double>(n_dims, 0.2);
 

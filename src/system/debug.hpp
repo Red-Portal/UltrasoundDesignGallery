@@ -21,7 +21,7 @@
 
 #include "../math/blaze.hpp"
 
-#include <matplotlib-cpp/matplotlibcpp.h>
+//#include <matplotlib-cpp/matplotlibcpp.h>
 #include <spdlog/spdlog.h>
 //#include <spdlog/sinks/stdout_color_sinks.h>
 
@@ -48,26 +48,26 @@ namespace usdg
     return file;
   }
 
-  template <typename Func>
-  inline void
-  render_function(Func func)
-  {
-    std::vector<std::vector<double>> x_plt, y_plt, z_plt;
-    for (double i = 0; i <= 1.0;  i += 0.03) {
-      std::vector<double> x_row, y_row, z_row;
-      for (double j = 0; j <= 1.0; j += 0.03) {
-	x_row.push_back(i);
-	y_row.push_back(j);
-	z_row.push_back(
-	  func(blaze::DynamicVector<double>({i, j})));
-      }
-      x_plt.push_back(x_row);
-      y_plt.push_back(y_row);
-      z_plt.push_back(z_row);
-    }
-    matplotlibcpp::plot_surface(x_plt,y_plt,z_plt);
-    matplotlibcpp::show();
-  }
+  // template <typename Func>
+  // inline void
+  // render_function(Func func)
+  // {
+  //   std::vector<std::vector<double>> x_plt, y_plt, z_plt;
+  //   for (double i = 0; i <= 1.0;  i += 0.03) {
+  //     std::vector<double> x_row, y_row, z_row;
+  //     for (double j = 0; j <= 1.0; j += 0.03) {
+  // 	x_row.push_back(i);
+  // 	y_row.push_back(j);
+  // 	z_row.push_back(
+  // 	  func(blaze::DynamicVector<double>({i, j})));
+  //     }
+  //     x_plt.push_back(x_row);
+  //     y_plt.push_back(y_row);
+  //     z_plt.push_back(z_row);
+  //   }
+  //   matplotlibcpp::plot_surface(x_plt,y_plt,z_plt);
+  //   matplotlibcpp::show();
+  // }
 }
 
 #endif

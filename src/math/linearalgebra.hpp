@@ -24,6 +24,7 @@
 #include "blaze.hpp"
 
 #include <optional>
+#include <iostream>
 
 namespace usdg
 {
@@ -54,6 +55,15 @@ namespace usdg
   {
     auto y = blaze::solve(chol.L, x);
     return blaze::dot(y, y);
+  }
+
+  inline blaze::DynamicVector<double>
+  invquad_batch(usdg::Cholesky<usdg::DenseChol> const& chol,
+		blaze::DynamicMatrix<double> const& X)
+  {
+    auto Y   = blaze::evaluate(blaze::solve(chol.L, X));
+    auto YpY = blaze::evaluate(Y%Y);
+    return blaze::trans(blaze::sum<blaze::columnwise>(YpY));
   }
 
   inline double

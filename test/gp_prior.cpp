@@ -102,6 +102,42 @@ TEST_CASE("gaussian process prediction mean and variance gradient", "[gp]")
   REQUIRE( blaze::norm(var_grad_truth  - var_grad)  < 1e-4 );
 }
 
+TEST_CASE("gaussian process batch prediction", "[gp]")
+{
+  auto key        = GENERATE(range(0u, 8u));
+  auto prng       = usdg::Random123(key);
+  size_t n_dims   = 8;
+  size_t n_points = 32;
+
+  auto data_mat  = generate_mvsamples(prng, n_dims, n_points);
+  auto norm_dist = std::normal_distribution<double>(0, 1);
+  auto sigma     = exp(norm_dist(prng));
+  auto scale     = exp(norm_dist(prng) + 1);
+  auto kernel    = usdg::SquaredExpIso(sigma, scale);
+  auto gram      = usdg::compute_gram_matrix(kernel, data_mat);
+  auto z         = usdg::rmvnormal(prng, n_points);
+  auto dx        = usdg::rmvnormal(prng, n_dims);
+  auto chol      = usdg::cholesky_nothrow(gram).value();
+  auto gp        = usdg::GP<decltype(kernel)>{std::move(chol), z, kernel};
+
+  auto means_truth = blaze::DynamicVector<double>(32);
+  auto vars_truth  = blaze::DynamicVector<double>(32);
+  auto X           = generate_mvsamples(prng, n_dims, 32);
+  for (size_t i = 0; i < X.columns(); ++i)
+  {
+    auto [mean, var] = gp.predict(data_mat, blaze::column(X, i));
+    means_truth[i] = mean;
+    vars_truth[i]  = var;
+  }
+
+  auto [means, vars] = gp.predict(data_mat, X);
+  for (size_t i = 0; i < X.columns(); ++i)
+  {
+    REQUIRE( means[i] == Approx(means_truth[i]) );
+    REQUIRE( vars[i]  == Approx(vars_truth[i]) );
+  }
+}
+
 TEST_CASE("gaussian process prediction gradient regression1", "[gp]")
 {
   auto data_mat  = blaze::DynamicMatrix<double>{

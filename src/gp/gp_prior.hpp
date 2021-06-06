@@ -38,7 +38,7 @@ namespace usdg
     KernelFunc                      kernel;
     
     template <typename MatType, typename VecType>
-    inline std::pair<double, double>
+    inline decltype(auto)
     predict(MatType const& data, VecType const& x) const;
   };
 
@@ -66,9 +66,39 @@ namespace usdg
     return {mean, var};
   }
 
+  template <typename Kernel,
+	    typename MatType,
+	    typename AlphaVecType>
+  inline std::pair<blaze::DynamicVector<double>,
+		   blaze::DynamicVector<double>>
+  predict(Kernel const& kernel,
+	  MatType const& data,
+	  usdg::Cholesky<usdg::DenseChol> const& cov_chol,
+	  AlphaVecType const& alpha,
+	  blaze::DynamicMatrix<double> const& X)
+  {
+    size_t n_data  = data.columns();
+    size_t n_input = X.columns();
+    auto k_stars    = blaze::DynamicMatrix<double>(n_data, n_input);
+    for (size_t i = 0; i < n_data; ++i) {
+      for (size_t j = 0; j < n_input; ++j) {
+	k_stars(i, j) = kernel(blaze::column(data, i), blaze::column(X, j));
+      }
+    }
+    auto k_selves  = blaze::DynamicVector<double>(n_input);
+    for (size_t i = 0; i < n_input; ++i)
+    {
+      k_selves[i] = kernel(blaze::column(X, i), blaze::column(X, i));
+    }
+    auto means   = blaze::trans(k_stars)*alpha;
+    auto gp_vars = usdg::invquad_batch(cov_chol, k_stars);
+    auto vars    = k_selves - gp_vars;
+    return {means, vars};
+  }
+
   template <typename KernelFunc>
   template <typename MatType, typename VecType>
-  inline std::pair<double, double>
+  inline decltype(auto)
   GP<KernelFunc>::
   predict(MatType const& data, VecType const& x) const
   {

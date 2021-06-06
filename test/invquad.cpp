@@ -20,6 +20,8 @@
 #define BLAZE_USE_DEBUG_MODE 1
 
 #include "../src/math/linearalgebra.hpp"
+#include "../src/math/prng.hpp"
+#include "utils.hpp"
 
 #include <limits>
 #include <cmath>
@@ -45,7 +47,29 @@ TEST_CASE("Dense inverse quadratic", "[linear algebra]")
   REQUIRE( usdg::invquad(chol, x) == Approx(truth) );
 }
 
-TEST_CASE("Diagonal inverse quadratic", "[linear algebra]")
+TEST_CASE("dense batch inverse quadratic", "[linear algebra]")
+{
+  auto A = blaze::DynamicMatrix<double>(
+    {{3, 1, 1},
+     {1, 3, 1},
+     {1, 1, 3}});
+
+  auto chol = usdg::Cholesky<usdg::DenseChol>();
+  REQUIRE_NOTHROW( chol = usdg::cholesky_nothrow(A).value() );
+
+  auto key  = GENERATE(range(0u, 8u));
+  auto prng = usdg::Random123(key);
+
+  auto X  = generate_mvsamples(prng, 3, 6);
+  auto ys = usdg::invquad_batch(chol, X);
+
+  for (size_t i = 0; i < 6; ++i)
+  {
+    REQUIRE( ys[i] == Approx(usdg::invquad(chol, blaze::column(X, i))) );
+  }
+}
+
+TEST_CASE("diagonal inverse quadratic", "[linear algebra]")
 {
   auto A = blaze::DynamicVector<double>({1, 2, 3});
 

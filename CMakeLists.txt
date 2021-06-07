@@ -62,12 +62,17 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 # Dependencies
-find_package(SFML 2.5 COMPONENTS system window graphics network audio REQUIRED)
+find_package(SFML 2.5   REQUIRED COMPONENTS system window graphics network audio )
 find_package(ImGui-SFML REQUIRED)
 find_package(Threads    REQUIRED)
 find_package(OpenMP     REQUIRED)
 find_package(Blaze      REQUIRED)
 find_package(NLOPT      REQUIRED)
+find_package(OpenCV     REQUIRED COMPONENTS core imgproc ximgproc highgui)
+
+add_library(opencv INTERFACE)
+target_include_directories(opencv INTERFACE "${OpenCV_INCLUDE_DIRS}")
+target_link_libraries(opencv INTERFACE "${OpenCV_LIBS}")
 
 set(BLA_STATIC ON)
 find_package(BLAS   REQUIRED)
@@ -103,31 +108,44 @@ if(ENABLE_TESTING)
 endif()
 
 # Bayesian optimization test
-add_executable(bayesopt_benchmark src/bayesopt_benchmark.cpp)
-target_link_libraries(bayesopt_benchmark
+# add_executable(bayesopt_benchmark src/bayesopt_benchmark.cpp)
+# target_link_libraries(bayesopt_benchmark
+#     INTERFACE
+#     blaze::blaze
+#     Threads::threads
+
+#     PUBLIC
+#     Python::NumPy
+#     Python::Python
+#     OpenMP::OpenMP_CXX
+#     csvparser
+#     progressbar
+#     project_options
+#     project_warnings
+#     BLAS::BLAS
+#     LAPACK::LAPACK
+#     spdlog
+#     FMT
+#     NLOPT::nlopt
+#     Random123)
+
+# Image processing demo
+add_executable(image_processing_demo src/image_processing_demo.cpp)
+target_link_libraries(image_processing_demo
     INTERFACE
     blaze::blaze
     Threads::threads
 
     PUBLIC
-    Python::NumPy
-    Python::Python
-    Python::NumPy
-    Python::Python
-    OpenMP::OpenMP_CXX
-    csvparser
-    progressbar
     project_options
     project_warnings
     BLAS::BLAS
     LAPACK::LAPACK
-    spdlog
-    FMT
-    NLOPT::nlopt
+    opencv
     Random123)
 
 # Ultrasound Design Gallery
-add_executable(usgallery src/main.cpp)
+add_executable(usgallery src/ultrasound_design_gallery.cpp)
 target_include_directories(usgallery PUBLIC ${SFML_INCLUDE_DIRS})
 target_link_libraries(usgallery
     INTERFACE
@@ -142,6 +160,7 @@ target_link_libraries(usgallery
     project_warnings
     FMT
     spdlog
+    opencv
     BLAS::BLAS
     LAPACK::LAPACK
     Random123

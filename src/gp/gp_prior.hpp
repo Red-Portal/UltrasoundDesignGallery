@@ -79,9 +79,9 @@ namespace usdg
   {
     size_t n_data  = data.columns();
     size_t n_input = X.columns();
-    auto k_stars    = blaze::DynamicMatrix<double>(n_data, n_input);
-    for (size_t i = 0; i < n_data; ++i) {
-      for (size_t j = 0; j < n_input; ++j) {
+    auto k_stars   = blaze::DynamicMatrix<double>(n_data, n_input);
+    for (size_t j = 0; j < n_input; ++j) {
+      for (size_t i = 0; i < n_data; ++i) {
 	k_stars(i, j) = kernel(blaze::column(data, i), blaze::column(X, j));
       }
     }
@@ -90,7 +90,7 @@ namespace usdg
     {
       k_selves[i] = kernel(blaze::column(X, i), blaze::column(X, i));
     }
-    auto means   = blaze::trans(k_stars)*alpha;
+    auto means   = blaze::trans(blaze::trans(alpha)*k_stars);
     auto gp_vars = usdg::invquad_batch(cov_chol, k_stars);
     auto vars    = k_selves - gp_vars;
     return {means, vars};

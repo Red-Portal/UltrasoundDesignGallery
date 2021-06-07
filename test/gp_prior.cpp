@@ -24,6 +24,7 @@
 #include "../src/math/cholesky.hpp"
 #include "../src/math/mvnormal.hpp"
 #include "../src/math/prng.hpp"
+#include "../src/system/profile.hpp"
 
 #include "finitediff.hpp"
 #include "utils.hpp"
@@ -120,16 +121,17 @@ TEST_CASE("gaussian process batch prediction", "[gp]")
   auto chol      = usdg::cholesky_nothrow(gram).value();
   auto gp        = usdg::GP<decltype(kernel)>{std::move(chol), z, kernel};
 
-  auto means_truth = blaze::DynamicVector<double>(32);
-  auto vars_truth  = blaze::DynamicVector<double>(32);
-  auto X           = generate_mvsamples(prng, n_dims, 32);
+  size_t n_x       = 128;
+  auto means_truth = blaze::DynamicVector<double>(n_x);
+  auto vars_truth  = blaze::DynamicVector<double>(n_x);
+  auto X           = generate_mvsamples(prng, n_dims, n_x);
+
   for (size_t i = 0; i < X.columns(); ++i)
   {
     auto [mean, var] = gp.predict(data_mat, blaze::column(X, i));
     means_truth[i] = mean;
     vars_truth[i]  = var;
   }
-
   auto [means, vars] = gp.predict(data_mat, X);
   for (size_t i = 0; i < X.columns(); ++i)
   {

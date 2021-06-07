@@ -116,14 +116,15 @@ bayesian_optimization(usdg::Random123& prng,
     auto y        = objective(x + xi*alpha);
     auto betas    = blaze::DynamicVector<double>(n_pseudo);
 
-    blaze::subvector(betas, 2, n_pseudo-2) = usdg::sample_beta(prng, alpha,
+    blaze::subvector(betas, 3, n_pseudo-3) = usdg::sample_beta(prng, alpha,
 							       lb + eps,
 							       ub - eps,
 							       iter,
-							       n_pseudo-2,
+							       n_pseudo-3,
 							       n_dims);
     betas[0] = lb;
     betas[1] = ub;
+    betas[2] = 0.0;
 
     y_opt = std::max(objective(x_opt), y_opt);
     optimizer.push_data(x, xi, betas, alpha);
@@ -223,29 +224,29 @@ run_benchmark(std::string const& fname,
   logger->info("Running benchmark for {}", fname);
 
   size_t n_reps   = 100;
-  size_t n_init   = 4;
+  size_t n_init   = 20;
   size_t n_iter   = 50;
   size_t budget   = 10000;
   size_t n_pseudo = 16;
   double sigma    = 0.001;
-  auto linescales = blaze::DynamicVector<double>(n_dims, 0.2);
+  auto linescales = blaze::DynamicVector<double>(n_dims, 1.0);
 
   auto pb     = progressbar(static_cast<int>(n_reps)); 
   auto stream = std::ofstream(fname);
   auto writer = csv::make_csv_writer(stream);
   auto start  = usdg::clock::now();
-#pragma omp parallel for
+//#pragma omp parallel for
   for (size_t i = 0; i < n_reps; ++i)
   {
-#pragma omp critical
+//#pragma omp critical
     pb.update();
     auto prng = usdg::Random123(i);
     auto [hist_y, hist_t] = bayesian_optimization<Strategy>(
       prng, objective,  n_dims, n_init, n_iter, budget,
-      n_pseudo, sigma, linescales, nullptr);
+      n_pseudo, sigma, linescales, logger);
 
     auto& hist_y_local = hist_y;
-#pragma omp critical
+//#pragma omp critical
     writer << hist_y_local;
   }
   std::cout << std::endl;
@@ -309,11 +310,11 @@ int main()
 
   // auto _objective      = rosenbrock;
   // auto _objective_name = "rosenbrock10D"s;
-  // run_benchmark<usdg::AEI_AEI>( _objective_name + "_AEI_AEI.csv"s,   _objective, 10, logger.get());
+  // run_benchmark<usdg::EI_AEI>( _objective_name + "_AEI_AEI.csv"s,   _objective, 10, logger.get());
 
-  // auto _objective      = ackley;
-  // auto _objective_name = "ackley20D"s;
-  // run_benchmark<usdg::AEI_AEI>( _objective_name + "_AEI_AEI.csv"s,  _objective, 20, logger.get());
+  auto _objective      = ackley;
+  auto _objective_name = "ackley20D"s;
+  run_benchmark<usdg::EI_AEI>( _objective_name + "_AEI_AEI.csv"s,  _objective, 20, logger.get());
   // exit(1);
 
   {

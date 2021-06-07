@@ -16,8 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __US_GALLERY_GPINFERENCE_HPP__
-#define __US_GALLERY_GPINFERENCE_HPP__
+#ifndef __US_GALLERY_FITGP_HPP__
+#define __US_GALLERY_FITGP_HPP__
 
 #include "../gp/gp_prior.hpp"
 #include "../gp/likelihood.hpp"
@@ -31,14 +31,18 @@ namespace usdg
   inline double
   logprior(blaze::DynamicVector<double> const& theta_in)
   {
+    double linescale_mean  = -1.0;
+    double linescale_sd    = 1.0;
+
     double sigmalike_mean   = 0.0;
     double sigmalike_sd     = 1.0;
 
     double sigmanoise_mean  = 0.0;
     double sigmanoise_sd    = 1.0;
 
-    return usdg::dnormal((theta_in[0] - sigmalike_mean) / sigmalike_sd, true)
-      + usdg::dnormal((theta_in[1] - sigmanoise_mean) / sigmanoise_sd, true);
+    return usdg::dnormal((theta_in[0] - linescale_mean) / linescale_sd, true)
+      + usdg::dnormal((theta_in[1] - sigmalike_mean) / sigmalike_sd, true)
+      + usdg::dnormal((theta_in[2] - sigmanoise_mean) / sigmanoise_sd, true);
   }
 
   template <typename Rng,
@@ -54,7 +58,7 @@ namespace usdg
 		   usdg::file_name(__FILE__));
     }
 
-    size_t n_dims = 2;
+    size_t n_dims = 3;
     auto x_init   = std::vector<double>(n_dims, 0.0);
     auto x_buf    = blaze::DynamicVector<double>(n_dims, 0.0);
     auto objective_lambda = [&mll, &x_buf](
@@ -81,8 +85,8 @@ namespace usdg
     auto optimizer = nlopt::opt(nlopt::LN_NELDERMEAD,
 				static_cast<unsigned int>(x_init.size()));
     optimizer.set_max_objective(objective_invoke, &objective_wrapped);
-    optimizer.set_xtol_rel(1e-4);
-    optimizer.set_ftol_rel(1e-5);
+    optimizer.set_xtol_rel(1e-3);
+    optimizer.set_ftol_rel(1e-4);
     optimizer.set_maxeval(1024);
     nlopt::srand(static_cast<unsigned long>(prng()));
 
@@ -138,10 +142,10 @@ namespace usdg
     auto make_gram   = [&](blaze::DynamicVector<double> const& theta_in)
       ->blaze::DynamicMatrix<double>
       {
-	auto kernel = usdg::Matern52ARD{1.0, linescales};
+	auto kernel = usdg::Matern52ARD{1.0, exp(theta_in[0])*linescales};
 	auto gram   = usdg::compute_gram_matrix(kernel, data_mat);
-	sigma_buf   = exp(theta_in[0]);
-	return gram + (exp(theta_in[1])*I);
+	sigma_buf   = exp(theta_in[1]);
+	return gram + (exp(theta_in[2])*I);
       };
     
     auto grad_neghess = [&](blaze::DynamicVector<double> const& f_in)
@@ -204,13 +208,13 @@ namespace usdg
     }
     auto [f_mode, _, W]   = laplace_res.value();
     auto laplacecov_chol  = usdg::laplace_marginal_covariance(W, gram_chol);
-    auto kernel           = usdg::Matern52ARD{1.0, linescales};
+    auto kernel           = usdg::Matern52ARD{1.0, exp(theta[0])*linescales};
     auto alpha            = usdg::solve(laplacecov_chol, f_mode);
 
     if(logger)
     {
-      logger->info("Fitted Gaussian process: σ_f = {:.2f}, σ_ε = {:.2f}, mll = {:.2f}",
-		   exp(theta[0]), exp(theta[1]), mll);
+      logger->info("Fitted Gaussian process: l = {:.2f}, σ_f = {:.2f}, σ_ε = {:.2f}, mll = {:.2f}",
+		   exp(theta[0]), exp(theta[1]), exp(theta[2]), mll);
     }
     return usdg::GP<decltype(kernel)>{
       std::move(laplacecov_chol),

@@ -12,6 +12,7 @@
 # GNU General Public License for more details.
 
 cmake_minimum_required(VERSION 3.15)
+enable_language(CXX CUDA)
 
 # Set the project name to your project name, my project isn't very descriptive
 project(us_gallery CXX)
@@ -95,7 +96,12 @@ target_include_directories(progressbar SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/t
 add_library(Random123 INTERFACE)
 target_include_directories(Random123 SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/Random123")
 
+add_library(PortableFileDialogs INTERFACE)
+target_include_directories(PortableFileDialogs SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/portable-file-dialogs")
+
 find_package(Python COMPONENTS Development NumPy REQUIRED)
+
+find_package(CUDA REQUIRED)
 
 option(BUILD_SHARED_LIBS "Enable compilation of shared libraries" OFF)
 option(ENABLE_TESTING "Enable Test Builds" ON)
@@ -130,22 +136,29 @@ endif()
 #     Random123)
 
 # Image processing demo
-add_executable(image_processing_demo src/image_processing_demo.cpp)
+add_executable(image_processing_demo
+    src/imaging/diffusion.cu
+    src/image_processing_demo.cpp)
 target_link_libraries(image_processing_demo
     INTERFACE
-    blaze::blaze
-    Threads::threads
-
     PUBLIC
     project_options
     project_warnings
-    BLAS::BLAS
-    LAPACK::LAPACK
     opencv
-    Random123)
+    -static-libstdc++)
+set_target_properties(image_processing_demo
+    PROPERTIES
+    CUDA_SEPARABLE_COMPILATION ON)
+
 
 # Ultrasound Design Gallery
-add_executable(usgallery src/ultrasound_design_gallery.cpp)
+add_executable(usgallery
+    src/ultrasound_design_gallery.cpp
+    src/ui/ui.cpp
+    src/ui/video_player.cpp
+    src/ui/line_search.cpp
+    )
+
 target_include_directories(usgallery PUBLIC ${SFML_INCLUDE_DIRS})
 target_link_libraries(usgallery
     INTERFACE
@@ -164,4 +177,8 @@ target_link_libraries(usgallery
     BLAS::BLAS
     LAPACK::LAPACK
     Random123
+    PortableFileDialogs
     ImGui-SFML::ImGui-SFML)
+target_compile_definitions(usgallery
+    PUBLIC
+    "USGALLERY_ROOT=\"${PROJECT_SOURCE_DIR}\"")

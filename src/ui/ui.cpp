@@ -70,10 +70,10 @@ namespace usdg
   {
     render_menubar();
     _linesearch.render();
-    auto param = _linesearch.selected_parameter();
+    //auto param = _linesearch.selected_parameter();
     if(_video_player)
     {
-      _video_player->update_parameter(param);
+      //_video_player->update_parameter(param);
       _video_player->render();
     }
   }

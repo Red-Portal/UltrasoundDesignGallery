@@ -19,24 +19,45 @@
 #ifndef __US_GALLERY_VIDEOPLAYER_HPP__
 #define __US_GALLERY_VIDEOPLAYER_HPP__
 
+#include <mutex>
+#include <thread>
+#include <functional>
+
 #include <SFML/Graphics.hpp>	
+#include <opencv4/opencv2/core/utility.hpp>
+
+#include "../math/blaze.hpp"
+#include "../custom_image_processing.hpp"
 
 namespace usdg
 {
   class VideoPlayer
   {
-    sf::Image _image;
-    sf::Texture _front_buffer;
+  private:
+    cv::Mat                      _image_base;
+    sf::Image                    _back_buffer;
+    sf::Texture                  _front_buffer;
+    std::mutex                   _buffer_lock;
+
+    blaze::DynamicVector<double> _parameter;
+    std::mutex                   _parameter_lock;
+    std::thread                  _imageproc_thread;
+    usdg::CustomImageProcessing  _image_processing;
 
     sf::Texture _play_icon;
     sf::Texture _pause_icon;
     sf::Texture _stop_icon;
     sf::Texture _loop_icon;
-    
+
+    void quantize(cv::Mat const& src,
+		  cv::Mat& dst);
+
   public:
-    VideoPlayer(std::string const& fpath) noexcept;
+    VideoPlayer(std::string const& fpath);
 
     void render();
+
+    void update_parameter(blaze::DynamicVector<double> const& param);
   };
 }
 

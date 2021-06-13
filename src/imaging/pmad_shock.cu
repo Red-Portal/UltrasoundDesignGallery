@@ -155,7 +155,6 @@ namespace usdg
     float dshock = -r*(1 - pmad_coefficient(G_g_mag, K))*sign(Ieta)*L_g_mag;
     output(i, j) = (L_c + dt*(Cw*L_w + Cn*L_n + Ce*L_e + Cs*L_s + dshock))
       / (1 + dt*(Cw + Cn + Ce + Cs));
-    //output(i, j) = L_c + dt*dshock;
   }
   
   void

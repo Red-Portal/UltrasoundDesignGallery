@@ -22,7 +22,7 @@
 
 #include <SFML/Graphics.hpp>	
 #include "../math/blaze.hpp"
-#include "optimization_manager.hpp"
+//#include "optimization_manager.hpp"
 
 namespace usdg
 {
@@ -41,7 +41,7 @@ namespace usdg
     bool   _select_button_pressed;
     ImVec4 _select_button_disabled_color;      
 
-    usdg::OptimizationManager _opt_manager;
+    //usdg::OptimizationManager _opt_manager;
 
     void color_button_disabled();
 

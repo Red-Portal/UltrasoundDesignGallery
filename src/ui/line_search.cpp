@@ -137,7 +137,8 @@ namespace usdg
   blaze::DynamicVector<double>
   LineSearch::selected_parameter()
   {
-    return _opt_manager->query(_slider_pos);
+    //return _opt_manager->query(_slider_pos);
+    return {};
   }
 }
 

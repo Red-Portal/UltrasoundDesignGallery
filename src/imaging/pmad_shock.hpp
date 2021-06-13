@@ -37,7 +37,9 @@ namespace usdg
     cv::Ptr<cv::cuda::Filter> _eta_filter;
 
   public:
-    PMADShock(size_t n_rows, size_t n_cols);
+    PMADShock();
+
+    void preallocate(size_t n_rows, size_t n_cols);
 
     void apply(cv::Mat const& G,
 	       cv::Mat const& L,

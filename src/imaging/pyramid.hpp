@@ -21,67 +21,58 @@
 
 #include <vector>
 #include <utility>
+#include <iostream>
 
 #include <opencv4/opencv2/core/utility.hpp>
 #include <opencv4/opencv2/imgproc.hpp>
 
 namespace usdg
 {
-  inline std::pair<cv::Mat, std::vector<cv::Mat>>
-  init_pyramid(cv::Mat const& image, size_t n_scale)
+  inline std::tuple<std::vector<cv::Mat>,
+		    std::vector<cv::Mat>,
+		    std::vector<cv::Mat>>
+  init_pyramid(size_t n_rows,
+	       size_t n_cols,
+	       size_t n_scale)
   {
     double factor   = pow(2, static_cast<double>(n_scale-1));
-    int cols_padded = static_cast<int>(factor*ceil(image.cols / factor));
-    int rows_padded = static_cast<int>(factor*ceil(image.rows / factor));
-    int col_pad     = cols_padded - image.cols;
-    int row_pad     = rows_padded - image.rows;
+    int rows_padded = static_cast<int>(
+      factor*ceil(static_cast<double>(n_rows) / factor));
+    int cols_padded = static_cast<int>(
+      factor*ceil(static_cast<double>(n_cols) / factor));
 
-    auto image_padded = cv::Mat(rows_padded, cols_padded, CV_32F);
-    cv::copyMakeBorder(image, image_padded,
-		       0, row_pad, 0, col_pad,
-		       cv::BORDER_CONSTANT,
-		       cv::Scalar(0));
-    auto L_buf = std::vector<cv::Mat>(n_scale);
+    auto L_in  = std::vector<cv::Mat>(n_scale);
+    auto G_in  = std::vector<cv::Mat>(n_scale);
+    auto L_out = std::vector<cv::Mat>(n_scale);
     for (size_t i = 0; i < n_scale; ++i)
     {
-      double scaling = exp2(static_cast<double>(i));
-      L_buf[i] = cv::Mat(static_cast<int>(image_padded.rows / scaling),
-			 static_cast<int>(image_padded.cols / scaling),
-			 CV_32F);
+      int scaling = static_cast<int>(exp2(static_cast<double>(i)));
+      G_in[i]  = cv::Mat(rows_padded / scaling, cols_padded / scaling, CV_32F);
+      L_in[i]  = cv::Mat(rows_padded / scaling, cols_padded / scaling, CV_32F);
+      L_out[i] = cv::Mat(rows_padded / scaling, cols_padded / scaling, CV_32F);
     }
-    return {std::move(image_padded), std::move(L_buf)};
+    return {std::move(G_in), std::move(L_in), std::move(L_out)};
   }
 
   inline void
-  analyze_pyramid(cv::Mat const& src, std::vector<cv::Mat>& L)
-  { /* Highly optimized, dirty, Laplacian pyramid decomposition */
-    auto G_curr     = src.clone();
-    auto G_next     = src.clone();
+  analyze_pyramid(std::vector<cv::Mat>& G,
+		  std::vector<cv::Mat>& L)
+  /* The input padded image is in G[0] */
+  { 
     size_t n_scale  = L.size();
-    auto next_shape = std::vector<int>(2);
     for (size_t i = 0; i < n_scale - 1; ++i)
     {
-      /* setup buffer for G_{k+1} */
-      next_shape[0] = L[i+1].rows;
-      next_shape[1] = L[i+1].cols;
-      G_next.reshape(0, next_shape);
-
-      /* G_{k+1} = down(G_{k}) */
-      cv::pyrDown(G_curr, G_next);
-
-      /* L_k = G_k - up(L_{k+1}) */
-      cv::pyrUp(G_next, L[i]);
-      L[i] = G_curr - L[i];
-
-      /* G_next <- G_curr */
-      cv::swap(G_curr, G_next);
+      cv::pyrDown(G[i], G[i+1]);
+      cv::pyrUp(G[i+1], L[i]);
+      L[i] = G[i] - L[i];
     }
-    L[n_scale-1] = G_curr;
+    L[n_scale-1] = G[n_scale-1];
   }
 
   inline void
-  synthesize_pyramid_inplace(std::vector<cv::Mat>& L)
-  { /* Highly optimized, dirty, Laplacian pyramid decomposition */
+  synthesize_pyramid(std::vector<cv::Mat>& L)
+  /* The output is stored in-place in L[0] */
+  { 
     size_t n_scale  = L.size();
     auto L_prev     = cv::Mat(L[0].rows, L[0].cols, CV_32F);
     auto curr_shape = std::vector<int>(2);
@@ -89,7 +80,6 @@ namespace usdg
     for (int i = static_cast<int>(n_scale)-2; i >= 0; --i)
     {
       size_t idx = static_cast<size_t>(i);
-      /* setup buffer for G_{k+1} */
       curr_shape[0] = L[idx].cols;
       curr_shape[1] = L[idx].rows;
       L_prev.reshape(0, curr_shape);

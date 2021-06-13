@@ -79,11 +79,13 @@ namespace usdg
    * IEEE Transactions on Pattern Analysis and Machine Intelligence (PAMI), 1990.
    */
   {
-    size_t M  = buf1.rows;
-    size_t N  = buf1.cols;
+    size_t M  = static_cast<size_t>(buf1.rows);
+    size_t N  = static_cast<size_t>(buf1.cols);
     const dim3 block(8,8);
-    const dim3 grid(ceil(static_cast<float>(M)/block.x),
-		    ceil(static_cast<float>(N)/block.y));
+    const dim3 grid(static_cast<unsigned int>(
+		      ceil(static_cast<float>(M)/block.x)),
+		    static_cast<unsigned int>(
+		      ceil(static_cast<float>(N)/block.y)));
     for (size_t i = 0; i < niters; ++i)
     {
       usdg::pmad_kernel<<<grid, block>>>(buf1, buf2, lambda, K);
@@ -93,9 +95,14 @@ namespace usdg
   }
 
   PMAD::
-  PMAD(size_t n_rows, size_t n_cols)
+  PMAD()
     : _device_buf1(),
       _device_buf2()
+  {}
+
+  void
+  PMAD::
+  preallocate(size_t n_rows, size_t n_cols)
   {
     _device_buf1.create(n_rows, n_cols, CV_32F);
     _device_buf2.create(n_rows, n_cols, CV_32F);

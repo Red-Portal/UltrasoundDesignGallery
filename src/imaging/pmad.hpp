@@ -31,7 +31,9 @@ namespace usdg
     cv::cuda::GpuMat _device_buf2;
 
   public:
-    PMAD(size_t n_rows, size_t n_cols);
+    PMAD();
+
+    void preallocate(size_t n_rows, size_t n_cols);
 
     void apply(cv::Mat const& image,
 	       cv::Mat&       output,

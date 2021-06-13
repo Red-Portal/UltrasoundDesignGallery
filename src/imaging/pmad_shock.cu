@@ -176,11 +176,13 @@ namespace usdg
    * IEEE Transactions on Pattern Analysis and Machine Intelligence (PAMI), 1990.
    */
   {
-    size_t M  = L_buf1.rows;
-    size_t N  = L_buf1.cols;
+    size_t M  = static_cast<size_t>(L_buf1.rows);
+    size_t N  = static_cast<size_t>(L_buf1.cols);
     const dim3 block(8,8);
-    const dim3 grid(ceil(static_cast<float>(M)/block.x),
-		    ceil(static_cast<float>(N)/block.y));
+    const dim3 grid(static_cast<unsigned int>(
+		      ceil(static_cast<float>(M)/block.x)),
+		    static_cast<unsigned int>(
+		      ceil(static_cast<float>(N)/block.y)));
 
     for (size_t i = 0; i < niters; ++i)
     {
@@ -194,15 +196,19 @@ namespace usdg
   }
 
   PMADShock::
-  PMADShock(size_t n_rows, size_t n_cols)
+  PMADShock()
     : _G_buf1(),
     _G_buf2(),
     _L_buf1(),
     _L_buf2(),
     _eta_buf1(),
     _eta_buf2(),
-    _eta_filter(
-      cv::cuda::createGaussianFilter(CV_32F, CV_32F, cv::Size(5,5), 1.0))
+    _eta_filter()
+  {}
+
+  void
+  PMADShock::
+  preallocate(size_t n_rows, size_t n_cols)
   {
     _G_buf1.create(n_rows, n_cols, CV_32F);
     _G_buf2.create(n_rows, n_cols, CV_32F);
@@ -210,6 +216,8 @@ namespace usdg
     _L_buf2.create(n_rows, n_cols, CV_32F);
     _eta_buf1.create(n_rows, n_cols, CV_32F);
     _eta_buf2.create(n_rows, n_cols, CV_32F);
+    _eta_filter = cv::cuda::createGaussianFilter(
+      CV_32F, CV_32F, cv::Size(5,5), 1.0);
   }
 
   void

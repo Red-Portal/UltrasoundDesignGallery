@@ -137,7 +137,9 @@ endif()
 
 # Image processing demo
 add_executable(image_processing_demo
-    src/imaging/diffusion.cu
+    src/imaging/pmad.cu
+    src/imaging/pmad_shock.cu
+    src/imaging/lpndsf.cpp
     src/image_processing_demo.cpp)
 target_link_libraries(image_processing_demo
     INTERFACE
@@ -145,6 +147,7 @@ target_link_libraries(image_processing_demo
     project_options
     project_warnings
     opencv
+    opencv_cudafilters
     -static-libstdc++)
 set_target_properties(image_processing_demo
     PROPERTIES

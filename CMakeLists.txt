@@ -12,10 +12,9 @@
 # GNU General Public License for more details.
 
 cmake_minimum_required(VERSION 3.15)
-enable_language(CXX CUDA)
 
 # Set the project name to your project name, my project isn't very descriptive
-project(us_gallery CXX)
+project(us_gallery LANGUAGES CUDA CXX)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 # Link this 'library' to set the c++ standard / compile-time options requested
@@ -69,7 +68,7 @@ find_package(Threads    REQUIRED)
 find_package(OpenMP     REQUIRED)
 find_package(Blaze      REQUIRED)
 find_package(NLOPT      REQUIRED)
-find_package(OpenCV     REQUIRED COMPONENTS core imgproc ximgproc highgui)
+find_package(OpenCV     REQUIRED COMPONENTS core imgproc highgui cudafilters)
 
 add_library(opencv INTERFACE)
 target_include_directories(opencv INTERFACE "${OpenCV_INCLUDE_DIRS}")
@@ -135,24 +134,40 @@ endif()
 #     NLOPT::nlopt
 #     Random123)
 
-# Image processing demo
-add_executable(image_processing_demo
+
+# Image processing core
+add_library(ipcore
     src/imaging/pmad.cu
     src/imaging/pmad_shock.cu
-    src/imaging/lpndsf.cpp
-    src/image_processing_demo.cpp)
-target_link_libraries(image_processing_demo
+    src/imaging/lpndsf.cpp)
+
+target_link_libraries(ipcore
     INTERFACE
-    PUBLIC
     project_options
     project_warnings
-    opencv
+
+    PUBLIC
+    opencv_core
     opencv_cudafilters
-    -static-libstdc++)
-set_target_properties(image_processing_demo
+    )
+
+set_target_properties(ipcore
     PROPERTIES
     CUDA_SEPARABLE_COMPILATION ON)
 
+# Image processing demo
+
+add_executable(image_processing_demo
+        src/image_processing_demo.cpp)
+
+target_link_libraries(image_processing_demo
+    INTERFACE
+    project_options
+    project_warnings
+
+    PUBLIC
+    opencv_highgui
+    ipcore)
 
 # Ultrasound Design Gallery
 add_executable(usgallery
@@ -170,6 +185,8 @@ target_link_libraries(usgallery
 
     PUBLIC
     #OpenMP::OpenMP_CXX
+    opencv_highgui
+    ipcore
     Python::NumPy
     Python::Python
     project_options

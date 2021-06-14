@@ -41,6 +41,7 @@ namespace usdg
       _parameter(),
       _parameter_lock(),
       _imageproc_thread(),
+      _terminate_thread(false),
       _image_processing(static_cast<size_t>(_image_base.rows),
 			static_cast<size_t>(_image_base.cols)),
       _play_icon(),
@@ -70,7 +71,7 @@ namespace usdg
       auto output_gray     = cv::Mat(_image_base.rows, _image_base.cols, CV_32FC1);
       auto output_quant    = cv::Mat(_image_base.rows, _image_base.cols, CV_8UC1);
       auto output_rgba     = cv::Mat(_image_base.rows, _image_base.cols, CV_8UC4);
-      while(true)
+      while(!_terminate_thread.load())
       {
 	_parameter_lock.lock();
 	parameter_local = _parameter;
@@ -87,7 +88,13 @@ namespace usdg
 	_buffer_lock.unlock();
       }
     });
-    _imageproc_thread.detach();
+  }
+
+  VideoPlayer::
+  ~VideoPlayer()
+  {
+    _terminate_thread.store(true);
+    _imageproc_thread.join();
   }
 
   void 

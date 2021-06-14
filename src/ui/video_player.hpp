@@ -19,9 +19,10 @@
 #ifndef __US_GALLERY_VIDEOPLAYER_HPP__
 #define __US_GALLERY_VIDEOPLAYER_HPP__
 
+#include <atomic>
+#include <functional>
 #include <mutex>
 #include <thread>
-#include <functional>
 
 #include <SFML/Graphics.hpp>	
 #include <opencv4/opencv2/core/utility.hpp>
@@ -42,6 +43,7 @@ namespace usdg
     blaze::DynamicVector<double> _parameter;
     std::mutex                   _parameter_lock;
     std::thread                  _imageproc_thread;
+    std::atomic<bool>            _terminate_thread;
     usdg::CustomImageProcessing  _image_processing;
 
     sf::Texture _play_icon;
@@ -54,6 +56,8 @@ namespace usdg
 
   public:
     VideoPlayer(std::string const& fpath);
+
+    ~VideoPlayer();
 
     void render();
 

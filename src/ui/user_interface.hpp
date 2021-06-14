@@ -26,7 +26,7 @@
 
 namespace usdg
 {
-  class UI
+  class UserInterface
   {
   private:
     std::optional<usdg::VideoPlayer> _video_player;

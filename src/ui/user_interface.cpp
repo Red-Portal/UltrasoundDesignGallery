@@ -22,14 +22,15 @@
 #include <imgui-SFML.h>
 #include <portable-file-dialogs.h>
 
-#include "ui.hpp"
+#include "user_interface.hpp"
 
 using namespace std::literals::string_literals;
 
 namespace usdg
 {
   void
-  UI::render_menubar()
+  UserInterface::
+  render_menubar()
   {
     if (ImGui::BeginMainMenuBar())
     {
@@ -66,13 +67,15 @@ namespace usdg
   }
 
   void
-  UI::render()
+  UserInterface::
+  render()
   {
     render_menubar();
     _linesearch.render();
-    //auto param = _linesearch.selected_parameter();
     if(_video_player)
     {
+      double param = _linesearch.selected_parameter();
+      std::cout << param << std::endl;
       //_video_player->update_parameter(param);
       _video_player->render();
     }

@@ -172,7 +172,7 @@ target_link_libraries(image_processing_demo
 # Ultrasound Design Gallery
 add_executable(usgallery
     src/ultrasound_design_gallery.cpp
-    src/ui/ui.cpp
+    src/ui/user_interface.cpp
     src/ui/video_player.cpp
     src/ui/line_search.cpp
     )

@@ -25,17 +25,6 @@
 
 namespace usdg
 {
-  void
-  LineSearch::
-  color_button_disabled()
-  {
-    auto style  = &ImGui::GetStyle();
-    auto colors = style->Colors;
-    auto color  = colors[ImGuiCol_Button];
-    color.w     = 30u;
-    _select_button_disabled_color = color;
-  }
-
   LineSearch::
   LineSearch()
     : _slider_pos(0.5f),
@@ -69,7 +58,6 @@ namespace usdg
 	_select_icon_disabled_image.setPixel(x, y, pixel);
       }
     }
-
     _slider_next_icon.loadFromFile(ICON("next_white.png"));
     _slider_prev_icon.loadFromFile(ICON("prev_white.png"));
   }
@@ -97,48 +85,62 @@ namespace usdg
       ImGui::ImageButton(_select_icon);
       ImGui::PopStyleColor(3);
       ImGui::PopID();
-      // if (ImGui::IsItemClicked(0))
-      // {
-      // 	_select_button_pressed = !_select_button_pressed;
-      // 	_select_icon.loadFromImage(_select_icon_image);
-      // }
     }
   }
 
   void
-  LineSearch::render()
+  LineSearch::
+  render_slider_fine_control()
+  {
+    if (ImGui::TreeNode("Slider Fine Control"))
+    {
+      ImGui::PushItemWidth(52);
+      ImGui::InputFloat("step size", &_slider_fine_step);
+      ImGui::PopItemWidth();
+      ImGui::SameLine();
+      if (ImGui::ImageButton(_slider_prev_icon)) {
+	_slider_pos -= _slider_fine_step;
+      }
+      ImGui::SameLine();
+      if (ImGui::ImageButton(_slider_next_icon)) {
+	_slider_pos += _slider_fine_step;
+      }
+      ImGui::TreePop();
+    }
+  }
+
+  void
+  LineSearch::
+  render()
   {
     if(ImGui::Begin("Line Search"))
     {
       ImGui::SliderFloat("Settings", &_slider_pos, 0.0, 1.0);
-
-      if (ImGui::TreeNode("Slider Fine Control"))
-      {
-	ImGui::PushItemWidth(52);
-	ImGui::InputFloat("step size", &_slider_fine_step);
-	ImGui::PopItemWidth();
-	ImGui::SameLine();
-	if (ImGui::ImageButton(_slider_prev_icon)) {
-	  _slider_pos -= _slider_fine_step;
-	}
-	ImGui::SameLine();
-	if (ImGui::ImageButton(_slider_next_icon)) {
-	  _slider_pos += _slider_fine_step;
-	}
-	ImGui::TreePop();
-      }
-
-      //ImGui::Separator();
+      this->render_slider_fine_control();
       this->render_select_button();
     }
     ImGui::End();
   }
 
-  blaze::DynamicVector<double>
-  LineSearch::selected_parameter()
+  double
+  LineSearch::
+  selected_parameter() noexcept
   {
-    //return _opt_manager->query(_slider_pos);
-    return {};
+    return _slider_pos;
+  }
+
+  bool
+  LineSearch::
+  is_select_pressed() noexcept
+  {
+    return _select_button_pressed;
+  }
+
+  void
+  LineSearch::
+  enable_select_button() noexcept
+  {
+    _select_button_pressed = true;
   }
 }
 

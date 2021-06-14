@@ -47,12 +47,18 @@ namespace usdg
 
     void render_select_button();
 
-    blaze::DynamicVector<double> selected_parameter();
+    void render_slider_fine_control();
 
   public:
     LineSearch();
 
     void render();
+
+    double selected_parameter() noexcept;
+
+    bool is_select_pressed() noexcept;
+
+    void enable_select_button() noexcept;
   };
 }
 

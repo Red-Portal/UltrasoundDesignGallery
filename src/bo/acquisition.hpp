@@ -256,48 +256,48 @@ namespace usdg
   //   // return ei_sum / static_cast<double>(n_montecarlo);
   // }
 
-  template <typename Rng,
-	    typename KernelType>
-  inline blaze::DynamicVector<double>
-  find_xi_ei_random(Rng& prng,
-		    usdg::GP<KernelType> const& gp,
-		    blaze::DynamicMatrix<double> const& data_mat,
-		    size_t n_beta,
-		    size_t n_mc,
-		    size_t iter,
-		    double y_opt,
-		    blaze::DynamicVector<double> const& x,
-		    blaze::DynamicVector<double> const& xi_init,
-		    size_t n_eval)
-  {
-    size_t n_dims = xi_init.size();
-    auto xi_opt   = blaze::DynamicVector<double>(n_dims);
-    auto xi       = blaze::DynamicVector<double>(n_dims);
-    auto ei_opt   = std::numeric_limits<double>::lowest();
+  // template <typename Rng,
+  // 	    typename KernelType>
+  // inline blaze::DynamicVector<double>
+  // find_xi_ei_random(Rng& prng,
+  // 		    usdg::GP<KernelType> const& gp,
+  // 		    blaze::DynamicMatrix<double> const& data_mat,
+  // 		    size_t n_beta,
+  // 		    size_t n_mc,
+  // 		    size_t iter,
+  // 		    double y_opt,
+  // 		    blaze::DynamicVector<double> const& x,
+  // 		    blaze::DynamicVector<double> const& xi_init,
+  // 		    size_t n_eval)
+  // {
+  //   size_t n_dims = xi_init.size();
+  //   auto xi_opt   = blaze::DynamicVector<double>(n_dims);
+  //   auto xi       = blaze::DynamicVector<double>(n_dims);
+  //   auto ei_opt   = std::numeric_limits<double>::lowest();
 
-    for (size_t i = 0; i < n_eval; ++i)
-    {
-      double beta_range = 0.0;
-      do
-      {
-	xi  = usdg::rmvnormal(prng, n_dims);
-	xi /= blaze::max(blaze::abs(xi));
-	auto [ub, lb] = usdg::pbo_find_bounds(x, xi);
-	beta_range    = abs(ub - lb);
-      }
-      while (beta_range < 1e-4);
+  //   for (size_t i = 0; i < n_eval; ++i)
+  //   {
+  //     double beta_range = 0.0;
+  //     do
+  //     {
+  // 	xi  = usdg::rmvnormal(prng, n_dims);
+  // 	xi /= blaze::max(blaze::abs(xi));
+  // 	auto [ub, lb] = usdg::pbo_find_bounds(x, xi);
+  // 	beta_range    = abs(ub - lb);
+  //     }
+  //     while (beta_range < 1e-4);
 
-      auto ei = usdg::approximate_expected_improvement(prng, gp, data_mat,
-						       n_beta, n_mc, iter,
-						       y_opt, x, xi);
-      if(ei > ei_opt)
-      {
-	ei_opt = ei;
-	xi_opt = xi;
-      }
-    }
-    return xi_opt;
-  }
+  //     auto ei = usdg::approximate_expected_improvement(prng, gp, data_mat,
+  // 						       n_beta, n_mc, iter,
+  // 						       y_opt, x, xi);
+  //     if(ei > ei_opt)
+  //     {
+  // 	ei_opt = ei;
+  // 	xi_opt = xi;
+  //     }
+  //   }
+  //   return xi_opt;
+  // }
 
   template <typename Rng,
 	    typename KernelType>

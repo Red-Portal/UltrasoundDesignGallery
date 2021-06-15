@@ -26,8 +26,6 @@
 #include "../math/blaze.hpp"
 #include "../math/uniform.hpp"
 
-#include "../system/debug.hpp"
-
 namespace usdg
 {
   template <typename ObjFunc,
@@ -59,8 +57,6 @@ namespace usdg
     double a     = stepsize * pow(A + 1, alpha);
     double p     = 0.5;
 
-    auto hist = std::vector<double>();
-
     auto x          = blaze::DynamicVector<double>(x_init);
     size_t n_dims   = x.size();
     auto delta      = blaze::DynamicVector<double>(n_dims);
@@ -91,11 +87,7 @@ namespace usdg
 
       x += ak*ghat;
       x  = proj(x);
-
-      hist.push_back(obj(x));
     }
-    matplotlibcpp::plot(hist);
-    matplotlibcpp::show();
     return x;
   }
 }

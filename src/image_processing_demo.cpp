@@ -18,18 +18,17 @@ int main()
   auto fname     = std::string("../data/image/thyroid.png");
   auto wname     = "Demo";
   auto image     = cv::imread(fname);
-  size_t n_scale = 4;
 
   //image.convertTo(image, CV_32FC1);
-  size_t M             = image.rows;
-  size_t N             = image.cols;
+  size_t M             = static_cast<size_t>(image.rows);
+  size_t N             = static_cast<size_t>(image.cols);
   auto image_gray      = cv::Mat();
-  auto image_gray_norm = cv::Mat(M, N, CV_32F);
+  auto image_gray_norm = cv::Mat(static_cast<int>(M), static_cast<int>(N), CV_32F);
   cv::cvtColor(image, image_gray, cv::COLOR_RGB2GRAY);
   cv::normalize(image_gray, image_gray_norm, 0, 1, cv::NORM_MINMAX, CV_32F);
 
-  auto processing = usdg::LPNDSF(image_gray_norm.rows,
-				 image_gray_norm.cols);
+  auto processing = usdg::LPNDSF(static_cast<size_t>(image_gray_norm.rows),
+				 static_cast<size_t>(image_gray_norm.cols));
 
   auto start = std::chrono::steady_clock::now();
 
@@ -47,8 +46,8 @@ int main()
   float t2 = 2.0f;
   float t3 = 2.0f;
 
-  float alpha = 0.8;
-  float beta  = 1.2;
+  float alpha = 0.8f;
+  float beta  = 1.2f;
 
   auto output = cv::Mat();
   processing.apply(image_gray_norm, output,
@@ -71,10 +70,10 @@ int main()
   //cv::imwrite("output.png", L_buf[0]);
 
   auto output_8u = cv::Mat(output.rows, output.cols, CV_8UC1);
-  for (size_t i = 0; i < output.rows; ++i) {
-    for (size_t j = 0; j < output.cols; ++j) {
+  for (int i = 0; i < output.rows; ++i) {
+    for (int j = 0; j < output.cols; ++j) {
       output_8u.at<unsigned char>(i,j) = cv::saturate_cast<unsigned char>(
-	output.at<float>(i,j)*255.0);
+	ceil(output.at<float>(i,j)*255.0f));
     }
   }
   cv::namedWindow(wname);

@@ -39,7 +39,10 @@ namespace usdg
     sf::Texture _slider_prev_icon;
 
     bool   _select_button_pressed;
+
     ImVec4 _select_button_disabled_color;      
+    ImVec4 _select_button_enabled_hovered_color;      
+    ImVec4 _select_button_enabled_active_color;      
 
     //usdg::OptimizationManager _opt_manager;
 

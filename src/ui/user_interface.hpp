@@ -23,19 +23,56 @@
 
 #include "video_player.hpp"
 #include "line_search.hpp"
+#include "optimization_manager.hpp"
 
 namespace usdg
 {
   class UserInterface
   {
+/*
+ *  Internal state machine:
+ *
+ *                        ┌─reset──┐
+ *                        │        │
+ *                        │        ▼
+ *  ┌────┐               ┌┴────────┐            ┌───────────┐             ┌──────────┐
+ *  │idle├──────────────►│rendering├─selected──►│optimizing │─optimized──►│optimized │
+ *  └────┘               └────┬────┘            └───────────┘             └─────┬────┘
+ *     ▲                      │ ▲                                               │
+ *     └─close player window──┘ └───────────────────────────────────────────────┘
+ * 
+ *  Idle:       line search module does not work, no video player window
+ *  Rendering:  line search module works, select button is enabled
+ *  optimizing: select button is disabled, reset does not work (error message?)
+ *  optimized:  select button is enabled back, reset does not work
+ *
+ *  Note: "Reset" is not part of the actual state machine execution flow.
+ */
+
+    enum class UIState
+    {
+      idle,
+      rendering,
+      optimizing,
+      optimized
+    };
+    
   private:
     std::optional<usdg::VideoPlayer> _video_player;
-    usdg::LineSearch _linesearch;
+    usdg::LineSearch                 _linesearch;
+    UIState                          _state;
+    usdg::OptimizationManager        _opt_manager;
 
     void render_menubar();
 
   public:
-    void render();
+    void state_render();
+
+    void state_action();
+
+    void state_transition();
+
+    friend std::ostream& operator<<(std::ostream& os, UserInterface const&);
   };
 }
 

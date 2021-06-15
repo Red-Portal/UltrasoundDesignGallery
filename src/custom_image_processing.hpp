@@ -26,6 +26,18 @@
 
 namespace usdg
 {
+  inline size_t 
+  custom_ip_dimension()
+  {
+    return 13;
+  }
+
+  inline blaze::DynamicVector<double>
+  custom_ip_scale()
+  {
+    return blaze::DynamicVector<double>(custom_ip_dimension(), 1.0);
+  }
+
   struct CustomImageProcessing
   {
     usdg::LPNDSF _process;

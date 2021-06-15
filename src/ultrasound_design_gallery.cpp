@@ -67,7 +67,7 @@
 #include <SFML/System/Clock.hpp>
 #include <SFML/Window/Event.hpp>
 
-#include "ui/ui.hpp"
+#include "ui/user_interface.hpp"
 #include "ui/utils.hpp"
 
 void
@@ -93,7 +93,7 @@ int main()
   // for instructions on using std::string with ImGui
   char windowTitle[] = "Ultrasound Design Gallery";
 
-  auto ui = std::optional<usdg::UI>();
+  auto ui = std::optional<usdg::UserInterface>();
 
   window.setTitle(windowTitle);
   window.resetGLStates(); // call it if you only draw ImGui. Otherwise not needed.
@@ -112,7 +112,10 @@ int main()
     {
       ui.emplace();
     }
-    ui->render();
+    ui->state_render();
+    ui->state_action();
+    ui->state_transition();
+    std::cout << *ui << std::endl;
 
     window.clear();
     ImGui::SFML::Render(window);

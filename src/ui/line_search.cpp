@@ -35,7 +35,10 @@ namespace usdg
       _slider_next_icon(),
       _slider_prev_icon(),
       _select_button_pressed(false),
-      _select_button_disabled_color()
+      _select_button_disabled_color(),
+      _select_button_enabled_color(),
+      _select_button_enabled_hovered_color(),
+      _select_button_enabled_active_color()
   {
     auto desktopMode = sf::VideoMode::getDesktopMode();
     float width      = std::min(static_cast<float>(desktopMode.width)*0.8f, 450.0f);
@@ -54,12 +57,18 @@ namespace usdg
       for (unsigned int y = 0; y < icon_size.y; ++y)
       {
 	auto pixel = _select_icon_disabled_image.getPixel(x, y);
-	pixel.a    = 30u;
+	pixel.a    = 100u;
 	_select_icon_disabled_image.setPixel(x, y, pixel);
       }
     }
     _slider_next_icon.loadFromFile(ICON("next_white.png"));
     _slider_prev_icon.loadFromFile(ICON("prev_white.png"));
+
+    auto style  = &ImGui::GetStyle();
+    auto colors = style->Colors;
+    _select_button_disabled_color        = colors[ImGuiCol_Button];
+    _select_button_enabled_hovered_color = colors[ImGuiCol_ButtonHovered];
+    _select_button_enabled_active_color  = colors[ImGuiCol_ButtonActive];
   }
 
   void
@@ -68,22 +77,26 @@ namespace usdg
   {
     ImGui::Text("approve setting");
     ImGui::SameLine();
-    if (!_select_button_pressed)
+
+    ImGui::PushID("select");
+    if(_select_button_pressed)
     {
-      if (ImGui::ImageButton(_select_icon))
-      {
-	_select_button_pressed = true;
-	_select_icon.loadFromImage(_select_icon_disabled_image);
-      }
-    }
-    else
-    {
-      ImGui::PushID("select");
-      ImGui::PushStyleColor(ImGuiCol_Button,        _select_button_disabled_color);
       ImGui::PushStyleColor(ImGuiCol_ButtonHovered, _select_button_disabled_color);
       ImGui::PushStyleColor(ImGuiCol_ButtonActive,  _select_button_disabled_color);
       ImGui::ImageButton(_select_icon);
-      ImGui::PopStyleColor(3);
+      ImGui::PopStyleColor(2);
+      ImGui::PopID();
+    }
+    else
+    {
+      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, _select_button_enabled_hovered_color);
+      ImGui::PushStyleColor(ImGuiCol_ButtonActive,  _select_button_enabled_active_color);
+      if(ImGui::ImageButton(_select_icon))
+      {
+	_select_icon.loadFromImage(_select_icon_disabled_image);
+	_select_button_pressed = true;
+      }
+      ImGui::PopStyleColor(2);
       ImGui::PopID();
     }
   }
@@ -140,7 +153,8 @@ namespace usdg
   LineSearch::
   enable_select_button() noexcept
   {
-    _select_button_pressed = true;
+    _select_button_pressed = false;
+    _select_icon.loadFromImage(_select_icon_image);
   }
 }
 

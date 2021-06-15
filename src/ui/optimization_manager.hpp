@@ -1,5 +1,4 @@
 
-
 /*
  * Copyright (C) 2021  Ray Kim
  *
@@ -23,27 +22,47 @@
 #include "../bo/bayesian_optimization.hpp"
 #include "../bo/acquisition.hpp"
 #include "../math/blaze.hpp"
+#include "../math/prng.hpp"
 
+#include <atomic>
+#include <mutex>
 #include <optional>
+#include <thread>
 
 namespace usdg
 {
   class OptimizationManager
   {
   private:
+    usdg::Random123              _prng;
+    std::mutex                   _lock;
+
+    size_t                       _n_dims;
     blaze::DynamicVector<double> _x;
     blaze::DynamicVector<double> _xi;
-    double _beta_lb;
-    double _beta_ub;
+    blaze::DynamicVector<double> _x_opt;
+    std::thread                  _thread;
+    size_t                       _iteration;
+    std::atomic<bool>            _is_optimizing;
 
     usdg::BayesianOptimization<usdg::EI_Koyama> _optimizer;
+
+    blaze::DynamicVector<double>
+    transform_unit_beta(double beta_unit,
+			blaze::DynamicVector<double> const& x,
+			blaze::DynamicVector<double> const& xi);
+
+    void find_next_query_impl(double beta);
   public:
+    OptimizationManager();
+
+    void find_next_query(double beta);
     
     blaze::DynamicVector<double> query(double beta);
 
-    blaze::DynamicVector<double> best(double beta);
+    blaze::DynamicVector<double> best();
 
-    void reset();
+    bool is_optimizing();
   };
 }
 

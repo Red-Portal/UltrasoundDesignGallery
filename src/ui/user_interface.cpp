@@ -38,13 +38,17 @@ namespace usdg
       {
 	if (ImGui::MenuItem("Open File"))
 	{
+	  std::cout << __LINE__ << std::endl;
 	  if(_video_player)
 	    _video_player.reset();
+
+	  std::cout << __LINE__ << std::endl;
 	  auto result = pfd::open_file(
-	    "Select File"s,
-	    {"Image Files", "*.png *.jpg *.jpeg *.bmp *.tga *.gif *.psd *.hdr *.pic",
+	    "Select File"s, "../data",
+	    { "Image Files", "*.png *.jpg *.jpeg *.bmp *.tga *.gif *.psd *.hdr *.pic"
 	     // "Video Files"s, "*.mp4 *.wav", automate this by ffmpeg -demuxers
 	    }).result();
+	  std::cout << result[0] << std::endl;
 
 	  if(!result.empty())
 	    _video_player.emplace(result[0]);
@@ -68,16 +72,112 @@ namespace usdg
 
   void
   UserInterface::
-  render()
+  state_render()
   {
-    render_menubar();
+    auto state = _state;
+
+    this->render_menubar();
     _linesearch.render();
-    if(_video_player)
+    if(state != UIState::idle)
     {
-      double param = _linesearch.selected_parameter();
-      std::cout << param << std::endl;
-      //_video_player->update_parameter(param);
       _video_player->render();
     }
+  }
+
+  void
+  UserInterface::
+  state_action()
+  {
+    switch(_state)
+    {
+    case UIState::idle:
+      if (_linesearch.is_select_pressed())
+      {
+	_linesearch.enable_select_button();
+      }
+      break;
+
+    case UIState::rendering:
+    {
+      double beta = _linesearch.selected_parameter();
+      if (_linesearch.is_select_pressed())
+      {
+	_opt_manager.find_next_query(beta);
+      }
+
+      auto param  = _opt_manager.query(beta);
+      _video_player->update_parameter(param);
+      break;
+    }
+
+    case UIState::optimized:
+      _linesearch.enable_select_button();
+      [[fallthrougth]];
+    case UIState::optimizing:
+    {
+      double beta = _linesearch.selected_parameter();
+      auto param  = _opt_manager.query(beta);
+      _video_player->update_parameter(param);
+      break;
+    }
+    }
+  }
+
+  void
+  UserInterface::
+  state_transition()
+  {
+    switch(_state)
+    {
+    case UIState::idle:
+      if (_video_player)
+	_state = UIState::rendering;
+      else
+	_state = UIState::idle;
+      break;
+
+    case UIState::rendering:
+      if (_linesearch.is_select_pressed())
+	_state = UIState::optimizing;
+      else
+	_state = UIState::rendering;
+      break;
+
+    case UIState::optimizing:
+      if (_opt_manager.is_optimizing())
+	_state = UIState::optimizing;
+      else
+	_state = UIState::optimized;
+      break;
+
+    case UIState::optimized:
+      _state = UIState::rendering;
+      break;
+    }
+  }
+
+  std::ostream&
+  operator<<(std::ostream& os,
+	     usdg::UserInterface const& ui)
+  {
+    switch(ui._state)
+    {
+    case UserInterface::UIState::idle:
+      os << "current state: idle";
+      break;
+
+    case UserInterface::UIState::rendering:
+      os << "current state: rendering";
+      break;
+      
+    case UserInterface::UIState::optimizing:
+      os << "current state: optimizing";
+      break;
+
+    case UserInterface::UIState::optimized:
+      os << "current state: optimizing";
+      break;
+    }
+    return os;
   }
 }

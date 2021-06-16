@@ -30,7 +30,7 @@ namespace usdg
   class LPNDSF
   {
     /* 
-     *Laplacian pyramid nonlinear anisotropic diffusion 
+     * Laplacian pyramid nonlinear anisotropic diffusion 
      * with shock filtering and homomorphic filtering
      * 
      * inspired by:

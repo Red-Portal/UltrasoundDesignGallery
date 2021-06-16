@@ -42,9 +42,10 @@ namespace usdg
       _is_optimizing(false),
       _optimizer(_n_dims, n_beta)
   {
-    _x   = usdg::rmvuniform(_prng, _n_dims, 0, 1);
-    _xi  = usdg::rmvnormal( _prng, _n_dims);
-    _xi /= blaze::max(blaze::abs(_xi)); 
+    _x     = usdg::rmvuniform(_prng, _n_dims, 0, 1);
+    _xi    = usdg::rmvnormal( _prng, _n_dims);
+    _xi   /= blaze::max(blaze::abs(_xi)); 
+    _x_opt = _x;
   }
 
   blaze::DynamicVector<double>

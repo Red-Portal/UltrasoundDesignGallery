@@ -55,7 +55,8 @@ namespace usdg
 		  cv::Mat& dst);
 
   public:
-    VideoPlayer(std::string const& fpath);
+    VideoPlayer(blaze::DynamicVector<double> const& param_init,
+		std::string const& fpath);
 
     ~VideoPlayer();
 

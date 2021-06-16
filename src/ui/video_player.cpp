@@ -29,7 +29,8 @@
 namespace usdg
 {
   VideoPlayer::
-  VideoPlayer(std::string const& fpath)
+  VideoPlayer(blaze::DynamicVector<double> const& param_init,
+	      std::string const& fpath)
     : _image_base([&fpath](){
         auto image = cv::imread(fpath);
         cv::cvtColor(image, image, cv::COLOR_RGB2GRAY);
@@ -38,7 +39,7 @@ namespace usdg
       }()),
       _back_buffer(),
       _front_buffer(),
-      _parameter(),
+      _parameter(param_init),
       _parameter_lock(),
       _imageproc_thread(),
       _terminate_thread(false),
@@ -79,8 +80,9 @@ namespace usdg
 
 	_image_processing.apply(_image_base, output_gray, parameter_local);
 	this->quantize(output_gray, output_quant);
+
 	cv::cvtColor(output_quant, output_rgba, cv::COLOR_GRAY2RGBA);
-    
+
 	_buffer_lock.lock();
 	_back_buffer.create(static_cast<unsigned int>(output_rgba.cols),
 			    static_cast<unsigned int>(output_rgba.rows),

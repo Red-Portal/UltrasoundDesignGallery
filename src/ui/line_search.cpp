@@ -113,8 +113,6 @@ namespace usdg
       input_is_active = input_is_active || ImGui::IsItemActive();
       _macro_positions[3] = std::clamp(_macro_positions[3], 0.0f, 1.0f);
 
-      std::cout << input_is_active << std::endl;
-
       if (!input_is_active)
       {
 	if(ImGui::IsKeyPressed(sf::Keyboard::Num1))

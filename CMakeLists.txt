@@ -68,11 +68,9 @@ find_package(Threads    REQUIRED)
 find_package(OpenMP     REQUIRED)
 find_package(Blaze      REQUIRED)
 find_package(NLOPT      REQUIRED)
-find_package(OpenCV     REQUIRED COMPONENTS core imgproc highgui cudafilters)
 
-add_library(opencv INTERFACE)
-target_include_directories(opencv INTERFACE "${OpenCV_INCLUDE_DIRS}")
-target_link_libraries(opencv INTERFACE "${OpenCV_LIBS}")
+#set(OpenCV_STATIC ON)
+find_package(OpenCV  REQUIRED COMPONENTS core imgproc highgui cudafilters)
 
 set(BLA_STATIC ON)
 find_package(BLAS   REQUIRED)
@@ -137,6 +135,7 @@ endif()
 
 # Image processing core
 add_library(ipcore
+    SHARED
     src/imaging/pmad.cu
     src/imaging/pmad_shock.cu
     src/imaging/lpndsf.cpp)
@@ -175,6 +174,7 @@ add_executable(usgallery
     src/ui/user_interface.cpp
     src/ui/video_player.cpp
     src/ui/line_search.cpp
+    src/ui/optimization_manager.cpp
     )
 
 target_include_directories(usgallery PUBLIC ${SFML_INCLUDE_DIRS})
@@ -182,18 +182,16 @@ target_link_libraries(usgallery
     INTERFACE
     blaze::blaze
     Threads::threads
-
-    PUBLIC
-    #OpenMP::OpenMP_CXX
-    opencv_highgui
-    ipcore
-    Python::NumPy
-    Python::Python
     project_options
     project_warnings
+
+    PUBLIC
+    NLOPT::nlopt
+    ipcore
+    opencv_highgui
     FMT
     spdlog
-    opencv
+    opencv_core
     BLAS::BLAS
     LAPACK::LAPACK
     Random123

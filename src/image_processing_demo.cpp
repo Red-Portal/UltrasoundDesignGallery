@@ -76,7 +76,10 @@ int main()
 	ceil(output.at<float>(i,j)*255.0f));
     }
   }
+  
+  auto output_rgba = cv::Mat();
+  cv::cvtColor(output_8u, output_rgba, cv::COLOR_GRAY2RGBA);
   cv::namedWindow(wname);
-  cv::imshow(wname, output_8u);
+  cv::imshow(wname, output_rgba);
   cv::waitKey(0);
 }

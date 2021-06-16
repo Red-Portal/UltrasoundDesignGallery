@@ -20,17 +20,18 @@
 #ifndef __US_GALLERY_LINESEARCH_HPP__
 #define __US_GALLERY_LINESEARCH_HPP__
 
+#include <array>
+
 #include <SFML/Graphics.hpp>	
-#include "../math/blaze.hpp"
-//#include "optimization_manager.hpp"
 
 namespace usdg
 {
   class LineSearch
   {
   private:
-    float _slider_pos;
-    float _slider_fine_step;
+    float                _slider_pos;
+    float                _slider_fine_step;
+    std::array<float, 4> _macro_positions;
 
     sf::Image   _select_icon_image;
     sf::Image   _select_icon_disabled_image;
@@ -40,17 +41,15 @@ namespace usdg
 
     bool   _select_button_pressed;
 
-    ImVec4 _select_button_disabled_color;      
-    ImVec4 _select_button_enabled_hovered_color;      
-    ImVec4 _select_button_enabled_active_color;      
-
-    //usdg::OptimizationManager _opt_manager;
-
     void color_button_disabled();
 
     void render_select_button();
 
+    void render_slider();
+
     void render_slider_fine_control();
+    
+    void render_comparison_macro();
 
   public:
     LineSearch();

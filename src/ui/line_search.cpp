@@ -16,12 +16,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <iostream>
+#include <algorithm>
+
 #include <imgui.h>
 #include <imgui-SFML.h>
-#include <iostream>
+#include <SFML/Window/Keyboard.hpp>
 
 #include "line_search.hpp"
 #include "utils.hpp"
+#include "spinner.hpp"
 
 namespace usdg
 {
@@ -29,16 +33,13 @@ namespace usdg
   LineSearch()
     : _slider_pos(0.5f),
       _slider_fine_step(0.01f),
+      _macro_positions({0.0, 0.0, 0.0, 0.0}),
       _select_icon_image(),
       _select_icon_disabled_image(),
       _select_icon(),
       _slider_next_icon(),
       _slider_prev_icon(),
-      _select_button_pressed(false),
-      _select_button_disabled_color(),
-      _select_button_enabled_color(),
-      _select_button_enabled_hovered_color(),
-      _select_button_enabled_active_color()
+      _select_button_pressed(false)
   {
     auto desktopMode = sf::VideoMode::getDesktopMode();
     float width      = std::min(static_cast<float>(desktopMode.width)*0.8f, 450.0f);
@@ -52,10 +53,8 @@ namespace usdg
     _select_icon.loadFromImage(_select_icon_image);
     _select_icon_disabled_image.loadFromFile(ICON("check_white.png"));
     auto icon_size = _select_icon_disabled_image.getSize();
-    for (unsigned int x = 0; x < icon_size.x; ++x)
-    {
-      for (unsigned int y = 0; y < icon_size.y; ++y)
-      {
+    for (unsigned int x = 0; x < icon_size.x; ++x) {
+      for (unsigned int y = 0; y < icon_size.y; ++y) {
 	auto pixel = _select_icon_disabled_image.getPixel(x, y);
 	pixel.a    = 100u;
 	_select_icon_disabled_image.setPixel(x, y, pixel);
@@ -63,41 +62,73 @@ namespace usdg
     }
     _slider_next_icon.loadFromFile(ICON("next_white.png"));
     _slider_prev_icon.loadFromFile(ICON("prev_white.png"));
-
-    auto style  = &ImGui::GetStyle();
-    auto colors = style->Colors;
-    _select_button_disabled_color        = colors[ImGuiCol_Button];
-    _select_button_enabled_hovered_color = colors[ImGuiCol_ButtonHovered];
-    _select_button_enabled_active_color  = colors[ImGuiCol_ButtonActive];
   }
 
   void
   LineSearch::
   render_select_button()
   {
-    ImGui::Text("approve setting");
-    ImGui::SameLine();
-
-    ImGui::PushID("select");
     if(_select_button_pressed)
     {
-      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, _select_button_disabled_color);
-      ImGui::PushStyleColor(ImGuiCol_ButtonActive,  _select_button_disabled_color);
-      ImGui::ImageButton(_select_icon);
-      ImGui::PopStyleColor(2);
-      ImGui::PopID();
+      auto col = ImGui::GetColorU32(ImGuiCol_ButtonHovered);
+      ImGui::Spinner("##spinner", 10, 6.0, col);
     }
     else
     {
-      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, _select_button_enabled_hovered_color);
-      ImGui::PushStyleColor(ImGuiCol_ButtonActive,  _select_button_enabled_active_color);
-      if(ImGui::ImageButton(_select_icon))
+      auto& io = ImGui::GetIO();
+      if(ImGui::ImageButton(_select_icon)
+	 || (ImGui::IsItemFocused()
+	     && ImGui::IsKeyPressed(io.KeyMap[ImGuiKey_Enter])))
       {
 	_select_icon.loadFromImage(_select_icon_disabled_image);
 	_select_button_pressed = true;
       }
-      ImGui::PopStyleColor(2);
-      ImGui::PopID();
+    }
+    ImGui::SameLine();
+    ImGui::Text("Approve Setting");
+  }
+
+
+  void
+  LineSearch::
+  render_comparison_macro()
+  {
+    bool input_is_active = false;
+    if (ImGui::TreeNode("Comparison Macro"))
+    {
+      ImGui::PushItemWidth(60);
+      ImGui::InputFloat("Setting 1", &_macro_positions[0]);
+      input_is_active = input_is_active || ImGui::IsItemActive();
+      _macro_positions[0] = std::clamp(_macro_positions[0], 0.0f, 1.0f);
+
+      ImGui::InputFloat("Setting 2", &_macro_positions[1]);
+      input_is_active = input_is_active || ImGui::IsItemActive();
+      _macro_positions[1] = std::clamp(_macro_positions[1], 0.0f, 1.0f);
+
+      ImGui::InputFloat("Setting 3", &_macro_positions[2]);
+      input_is_active = input_is_active || ImGui::IsItemActive();
+      _macro_positions[2] = std::clamp(_macro_positions[2], 0.0f, 1.0f);
+
+      ImGui::InputFloat("Setting 4", &_macro_positions[3]);
+      input_is_active = input_is_active || ImGui::IsItemActive();
+      _macro_positions[3] = std::clamp(_macro_positions[3], 0.0f, 1.0f);
+
+      std::cout << input_is_active << std::endl;
+
+      if (!input_is_active)
+      {
+	if(ImGui::IsKeyPressed(sf::Keyboard::Num1))
+	  _slider_pos = _macro_positions[0];
+	else if(ImGui::IsKeyPressed(sf::Keyboard::Num2))
+	  _slider_pos = _macro_positions[1];
+	else if(ImGui::IsKeyPressed(sf::Keyboard::Num3))
+	  _slider_pos = _macro_positions[2];
+	else if(ImGui::IsKeyPressed(sf::Keyboard::Num4))
+	  _slider_pos = _macro_positions[3];
+      }
+
+      ImGui::PopItemWidth();
+      ImGui::TreePop();
     }
   }
 
@@ -105,20 +136,47 @@ namespace usdg
   LineSearch::
   render_slider_fine_control()
   {
+    auto& io = ImGui::GetIO();
     if (ImGui::TreeNode("Slider Fine Control"))
     {
       ImGui::PushItemWidth(52);
-      ImGui::InputFloat("step size", &_slider_fine_step);
+      ImGui::InputFloat("Step Size", &_slider_fine_step);
       ImGui::PopItemWidth();
-      ImGui::SameLine();
-      if (ImGui::ImageButton(_slider_prev_icon)) {
+      if (ImGui::ImageButton(_slider_prev_icon)
+	  || (ImGui::IsItemFocused()
+	      && ImGui::GetKeyPressedAmount(io.KeyMap[ImGuiKey_Enter], 0, 0.1f)) > 0)
+      {
 	_slider_pos -= _slider_fine_step;
       }
       ImGui::SameLine();
-      if (ImGui::ImageButton(_slider_next_icon)) {
+      if(ImGui::ImageButton(_slider_next_icon)
+	 || (ImGui::IsItemFocused()
+	     && ImGui::GetKeyPressedAmount(io.KeyMap[ImGuiKey_Enter], 0, 0.1f)) > 0)
+      {
 	_slider_pos += _slider_fine_step;
       }
+      ImGui::SameLine();
+      ImGui::Text("Single Step");
       ImGui::TreePop();
+    }
+  }
+
+  void
+  LineSearch::
+  render_slider()
+  {
+    ImGui::SliderFloat("Settings", &_slider_pos, 0.0, 1.0);
+    if(ImGui::IsItemFocused())
+    {
+      auto& io = ImGui::GetIO();
+      if (ImGui::GetKeyPressedAmount(io.KeyMap[ImGuiKey_LeftArrow], 0, 0.1f) > 0)
+      {
+	_slider_pos -= _slider_fine_step;
+      }
+      else if (ImGui::GetKeyPressedAmount(io.KeyMap[ImGuiKey_RightArrow], 0, 0.1f) > 0)
+      {
+	_slider_pos += _slider_fine_step;
+      }
     }
   }
 
@@ -128,10 +186,15 @@ namespace usdg
   {
     if(ImGui::Begin("Line Search"))
     {
-      ImGui::SliderFloat("Settings", &_slider_pos, 0.0, 1.0);
+      this->render_slider();
       this->render_slider_fine_control();
+      this->render_comparison_macro();
+      ImGui::Spacing();
+      ImGui::Separator();
+      ImGui::Spacing();
       this->render_select_button();
     }
+
     ImGui::End();
   }
 

@@ -38,32 +38,31 @@ namespace usdg
       {
 	if (ImGui::MenuItem("Open File"))
 	{
-	  std::cout << __LINE__ << std::endl;
 	  if(_video_player)
 	    _video_player.reset();
 
-	  std::cout << __LINE__ << std::endl;
 	  auto result = pfd::open_file(
 	    "Select File"s, "../data",
 	    { "Image Files", "*.png *.jpg *.jpeg *.bmp *.tga *.gif *.psd *.hdr *.pic"
 	     // "Video Files"s, "*.mp4 *.wav", automate this by ffmpeg -demuxers
 	    }).result();
-	  std::cout << result[0] << std::endl;
 
 	  if(!result.empty())
-	    _video_player.emplace(result[0]);
+	  {
+	    _video_player.emplace(_opt_manager.best(), result[0]);
+	  }
 	}
-	//ShowExampleMenuFile();
 	ImGui::EndMenu();
       }
-      if (ImGui::BeginMenu("Edit"))
+      if (ImGui::BeginMenu("Action"))
       {
-	if (ImGui::MenuItem("Undo", "CTRL+Z")) {}
-	if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
-	ImGui::Separator();
-	if (ImGui::MenuItem("Cut", "CTRL+X")) {}
-	if (ImGui::MenuItem("Copy", "CTRL+C")) {}
-	if (ImGui::MenuItem("Paste", "CTRL+V")) {}
+	// if (ImGui::MenuItem("Undo", "CTRL+Z")) {}
+	// if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
+	// ImGui::Separator();
+	// if (ImGui::MenuItem("Cut", "CTRL+X")) {}
+	// if (ImGui::MenuItem("Copy", "CTRL+C")) {}
+	// if (ImGui::MenuItem("Paste", "CTRL+V")) {}
+	
 	ImGui::EndMenu();
       }
       ImGui::EndMainMenuBar();
@@ -78,7 +77,7 @@ namespace usdg
 
     this->render_menubar();
     _linesearch.render();
-    if(state != UIState::idle)
+    if(_video_player)
     {
       _video_player->render();
     }

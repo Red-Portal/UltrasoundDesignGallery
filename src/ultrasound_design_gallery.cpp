@@ -16,48 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// #include <functional>
-// #include <iostream>
-
-// //#include <spdlog/spdlog.h>
-// //#include <docopt/docopt.h>
-
-// static constexpr auto USAGE =
-//   R"(Naval Fate.
-
-//     Usage:
-//           naval_fate ship new <name>...
-//           naval_fate ship <name> move <x> <y> [--speed=<kn>]
-//           naval_fate ship shoot <x> <y>
-//           naval_fate mine (set|remove) <x> <y> [--moored | --drifting]
-//           naval_fate (-h | --help)
-//           naval_fate --version
-//  Options:
-//           -h --help     Show this screen.
-//           --version     Show version.
-//           --speed=<kn>  Speed in knots [default: 10].
-//           --moored      Moored (anchored) mine.
-//           --drifting    Drifting mine.
-// )";
-
-// int main(int argc, const char **argv)
-// {
-//   // std::map<std::string, docopt::value> args = docopt::docopt(USAGE,
-//   //   { std::next(argv), std::next(argv, argc) },
-//   //   true,// show help if requested
-//   //   "Naval Fate 2.0");// version string
-
-//   // for (auto const &arg : args) {
-//   //   std::cout << arg.first << arg.second << std::endl;
-//   // }
-
-
-//   // //Use the default logger (stdout, multi-threaded, colored)
-//   // //spdlog::info("Hello, {}!", "World");
-
-//   // fmt::print("Hello, from {}\n", "{fmt}");
-// }
-
 #include <iostream>
 #include <optional>
 
@@ -88,16 +46,20 @@ int main()
   window.setVerticalSyncEnabled(true);
   ImGui::SFML::Init(window, false);
   set_font();
+  ImGui::StyleColorsLight();
 
-  // let's use char array as buffer, see next part
-  // for instructions on using std::string with ImGui
+  auto& io = ImGui::GetIO();
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+
   char windowTitle[] = "Ultrasound Design Gallery";
-
   auto ui = std::optional<usdg::UserInterface>();
 
   window.setTitle(windowTitle);
   window.resetGLStates(); // call it if you only draw ImGui. Otherwise not needed.
   sf::Clock deltaClock;
+
+
   while (window.isOpen()) {
     sf::Event event;
     while (window.pollEvent(event)) {
@@ -112,10 +74,23 @@ int main()
     {
       ui.emplace();
     }
-    ui->state_render();
-    ui->state_action();
-    ui->state_transition();
-    std::cout << *ui << std::endl;
+    ImGui::SetNextWindowPos(ImVec2(0,0));
+    ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+    ImGui::SetNextWindowBgAlpha(0.5f);
+    ImGui::Begin("main",
+		 nullptr,
+		 ImGuiWindowFlags_NoTitleBar
+		 | ImGuiWindowFlags_NoResize
+		 | ImGuiWindowFlags_NoMove
+		 | ImGuiWindowFlags_NoScrollbar
+		 | ImGuiWindowFlags_NoScrollWithMouse
+		 | ImGuiWindowFlags_NoBringToFrontOnFocus);
+    {
+      ui->state_render();
+      ui->state_action();
+      ui->state_transition();
+    }
+    ImGui::End();
 
     window.clear();
     ImGui::SFML::Render(window);

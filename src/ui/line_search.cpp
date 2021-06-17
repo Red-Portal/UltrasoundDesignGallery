@@ -192,7 +192,6 @@ namespace usdg
       ImGui::Spacing();
       this->render_select_button();
     }
-
     ImGui::End();
   }
 

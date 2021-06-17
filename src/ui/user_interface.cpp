@@ -54,7 +54,7 @@ namespace usdg
 	}
 	ImGui::EndMenu();
       }
-      if (ImGui::BeginMenu("Action"))
+      if (ImGui::BeginMenu("View"))
       {
 	// if (ImGui::MenuItem("Undo", "CTRL+Z")) {}
 	// if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
@@ -62,6 +62,14 @@ namespace usdg
 	// if (ImGui::MenuItem("Cut", "CTRL+X")) {}
 	// if (ImGui::MenuItem("Copy", "CTRL+C")) {}
 	// if (ImGui::MenuItem("Paste", "CTRL+V")) {}
+
+	if (ImGui::MenuItem("Status"))
+	{
+	  if(_status)
+	    _status.reset();
+	  else
+	    _status.emplace(_opt_manager.best());
+	}
 	
 	ImGui::EndMenu();
       }
@@ -73,13 +81,15 @@ namespace usdg
   UserInterface::
   state_render()
   {
-    auto state = _state;
-
     this->render_menubar();
     _linesearch.render();
-    if(_video_player)
+    if (_video_player)
     {
       _video_player->render();
+    }
+    if (_status)
+    {
+      _status->render();
     }
   }
 
@@ -106,6 +116,8 @@ namespace usdg
 
       auto param  = _opt_manager.query(beta);
       _video_player->update_parameter(param);
+      if(_status)
+	_status->update_parameter(param);
       break;
     }
 
@@ -117,6 +129,8 @@ namespace usdg
       double beta = _linesearch.selected_parameter();
       auto param  = _opt_manager.query(beta);
       _video_player->update_parameter(param);
+      if(_status)
+	_status->update_parameter(param);
       break;
     }
     }

@@ -169,16 +169,19 @@ target_link_libraries(image_processing_demo
     ipcore)
 
 # Ultrasound Design Gallery
-add_executable(usgallery
+add_executable(ultrasound_design_gallery
     src/ultrasound_design_gallery.cpp
     src/ui/user_interface.cpp
     src/ui/video_player.cpp
     src/ui/line_search.cpp
+    src/ui/status.cpp
     src/ui/optimization_manager.cpp
     )
 
-target_include_directories(usgallery PUBLIC ${SFML_INCLUDE_DIRS})
-target_link_libraries(usgallery
+target_include_directories(ultrasound_design_gallery
+    PUBLIC
+    ${SFML_INCLUDE_DIRS})
+target_link_libraries(ultrasound_design_gallery
     INTERFACE
     blaze::blaze
     Threads::threads
@@ -197,6 +200,6 @@ target_link_libraries(usgallery
     Random123
     PortableFileDialogs
     ImGui-SFML::ImGui-SFML)
-target_compile_definitions(usgallery
+target_compile_definitions(ultrasound_design_gallery
     PUBLIC
     "USGALLERY_ROOT=\"${PROJECT_SOURCE_DIR}\"")

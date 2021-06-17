@@ -20,7 +20,6 @@
 #include "../bo/find_bounds.hpp"
 #include "../math/uniform.hpp"
 #include "../math/mvnormal.hpp"
-
 #include "../custom_image_processing.hpp"
 
 namespace usdg

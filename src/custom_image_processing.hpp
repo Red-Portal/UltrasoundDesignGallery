@@ -19,6 +19,9 @@
 #ifndef _CUSTOM_IMAGE_PROCESSING_HPP_
 #define _CUSTOM_IMAGE_PROCESSING_HPP_
 
+#include <vector>
+#include <string>
+
 #include <opencv4/opencv2/core/utility.hpp>
 
 #include "math/blaze.hpp"
@@ -26,6 +29,23 @@
 
 namespace usdg
 {
+  size_t const r0_idx = 0;
+  size_t const r1_idx = 1;
+  size_t const r2_idx = 2;
+
+  size_t const k0_idx = 3;
+  size_t const k1_idx = 4;
+  size_t const k2_idx = 5;
+  size_t const k3_idx = 6;
+
+  size_t const t0_idx = 7;
+  size_t const t1_idx = 8;
+  size_t const t2_idx = 9;
+  size_t const t3_idx = 10;
+
+  size_t const alpha_idx = 11;
+  size_t const beta_idx  = 12;
+
   inline size_t 
   custom_ip_dimension()
   {
@@ -46,25 +66,54 @@ namespace usdg
     return static_cast<float>((x_max - x_min)*x + x_min);
   }
 
+  inline std::vector<std::string>
+  custom_ip_parameter_names()
+  {
+    auto param_names    = std::vector<std::string>(custom_ip_dimension());
+    param_names[r0_idx] = "r0 ";
+    param_names[r1_idx] = "r1 ";
+    param_names[r2_idx] = "r2 ";
+
+    param_names[t0_idx] = "t0 ";
+    param_names[t1_idx] = "t1 ";
+    param_names[t2_idx] = "t2 ";
+    param_names[t3_idx] = "t3 ";
+
+    param_names[k0_idx] = "k0 ";
+    param_names[k1_idx] = "k1 ";
+    param_names[k2_idx] = "k2 ";
+    param_names[k3_idx] = "k3 ";
+
+    param_names[alpha_idx] = "alpha ";
+    param_names[beta_idx]  = "beta ";
+    return param_names;
+  }
+
+  inline blaze::DynamicVector<float>
+  custom_ip_transform_range(blaze::DynamicVector<double> const& param)
+  {
+    auto param_trans    = blaze::DynamicVector<float>(param.size());
+    param_trans[r0_idx] = linear_interpolate(param[r0_idx], 0.0, 0.5);
+    param_trans[r1_idx] = linear_interpolate(param[r1_idx], 0.0, 0.5);
+    param_trans[r2_idx] = linear_interpolate(param[r2_idx], 0.0, 0.5);
+
+    param_trans[k0_idx] = linear_interpolate(param[k0_idx], 0.01, 0.2);
+    param_trans[k1_idx] = linear_interpolate(param[k1_idx], 0.01, 0.2);
+    param_trans[k2_idx] = linear_interpolate(param[k2_idx], 0.01, 0.2);
+    param_trans[k3_idx] = linear_interpolate(param[k3_idx], 0.01, 0.2);
+
+    param_trans[t0_idx] = linear_interpolate(param[t0_idx], 0.1, 10);
+    param_trans[t1_idx] = linear_interpolate(param[t1_idx], 0.1, 10);
+    param_trans[t2_idx] = linear_interpolate(param[t2_idx], 0.1, 10);
+    param_trans[t3_idx] = linear_interpolate(param[t3_idx], 0.1, 10);
+
+    param_trans[alpha_idx] = linear_interpolate(param[alpha_idx], 0.5, 1.0);
+    param_trans[beta_idx]  = linear_interpolate(param[beta_idx],  1.0, 1.5);
+    return param_trans;
+  }
+
   struct CustomImageProcessing
   {
-    size_t const r0_idx = 0;
-    size_t const r1_idx = 1;
-    size_t const r2_idx = 2;
-
-    size_t const k0_idx = 3;
-    size_t const k1_idx = 4;
-    size_t const k2_idx = 5;
-    size_t const k3_idx = 6;
-
-    size_t const t0_idx = 7;
-    size_t const t1_idx = 8;
-    size_t const t2_idx = 9;
-    size_t const t3_idx = 10;
-
-    size_t const alpha_idx = 11;
-    size_t const beta_idx  = 12;
-
     usdg::LPNDSF _process;
 
     CustomImageProcessing(size_t n_rows,
@@ -72,35 +121,12 @@ namespace usdg
       : _process(n_rows, n_cols)
     { }
 
-    inline blaze::DynamicVector<float>
-    transform_range(blaze::DynamicVector<double> const& param)
-    {
-      auto param_trans    = blaze::DynamicVector<float>(param.size());
-      param_trans[r0_idx] = linear_interpolate(param[r0_idx], 0.0, 0.5);
-      param_trans[r1_idx] = linear_interpolate(param[r1_idx], 0.0, 0.5);
-      param_trans[r2_idx] = linear_interpolate(param[r2_idx], 0.0, 0.5);
-
-      param_trans[k0_idx] = linear_interpolate(param[k0_idx], 0.01, 0.2);
-      param_trans[k1_idx] = linear_interpolate(param[k1_idx], 0.01, 0.2);
-      param_trans[k2_idx] = linear_interpolate(param[k2_idx], 0.01, 0.2);
-      param_trans[k3_idx] = linear_interpolate(param[k3_idx], 0.01, 0.2);
-
-      param_trans[t0_idx] = linear_interpolate(param[t0_idx], 0.1, 10);
-      param_trans[t1_idx] = linear_interpolate(param[t1_idx], 0.1, 10);
-      param_trans[t2_idx] = linear_interpolate(param[t2_idx], 0.1, 10);
-      param_trans[t3_idx] = linear_interpolate(param[t3_idx], 0.1, 10);
-
-      param_trans[alpha_idx] = linear_interpolate(param[alpha_idx], 0.5, 1.0);
-      param_trans[beta_idx]  = linear_interpolate(param[beta_idx],  1.0, 1.5);
-      return param_trans;
-    }
-    
     inline void
     apply(cv::Mat const& input,
 	  cv::Mat& output,
 	  blaze::DynamicVector<double> const& param)
     {
-      auto param_trans = transform_range(param);
+      auto param_trans = custom_ip_transform_range(param);
 
       std::cout << param.size() << std::endl;
       std::cout << "r0: " << param_trans[r0_idx] << '\n'

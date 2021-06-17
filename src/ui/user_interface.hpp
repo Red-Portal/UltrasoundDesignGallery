@@ -21,9 +21,10 @@
 
 #include <optional>
 
-#include "video_player.hpp"
 #include "line_search.hpp"
 #include "optimization_manager.hpp"
+#include "status.hpp"
+#include "video_player.hpp"
 
 namespace usdg
 {
@@ -59,6 +60,7 @@ namespace usdg
     
   private:
     std::optional<usdg::VideoPlayer> _video_player;
+    std::optional<usdg::Status>      _status;
     usdg::LineSearch                 _linesearch;
     UIState                          _state;
     usdg::OptimizationManager        _opt_manager;

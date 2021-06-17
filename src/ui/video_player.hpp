@@ -22,7 +22,9 @@
 #include <atomic>
 #include <functional>
 #include <mutex>
+#include <string>
 #include <thread>
+#include <vector>
 
 #include <SFML/Graphics.hpp>	
 #include <opencv4/opencv2/core/utility.hpp>

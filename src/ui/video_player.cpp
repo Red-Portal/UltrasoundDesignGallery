@@ -128,18 +128,18 @@ namespace usdg
     }
     ImGui::End();
 
-    if(ImGui::Begin("Video Control"))
-    {
-      if (ImGui::ImageButton(_play_icon)) {
-      }
-      ImGui::SameLine();
-      if (ImGui::ImageButton(_pause_icon)) {
-      }
-      ImGui::SameLine();
-      if (ImGui::ImageButton(_stop_icon)) {
-      }
-    }
-    ImGui::End();
+    // if(ImGui::Begin("Video Control"))
+    // {
+    //   if (ImGui::ImageButton(_play_icon)) {
+    //   }
+    //   ImGui::SameLine();
+    //   if (ImGui::ImageButton(_pause_icon)) {
+    //   }
+    //   ImGui::SameLine();
+    //   if (ImGui::ImageButton(_stop_icon)) {
+    //   }
+    //   ImGui::End();
+    // }
   }
 
   void

@@ -49,16 +49,15 @@ int main()
   ImGui::StyleColorsLight();
 
   auto& io = ImGui::GetIO();
-  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-
+  io.ConfigFlags          |= ImGuiConfigFlags_NavEnableKeyboard;
+  io.FontAllowUserScaling  = true;
 
   char windowTitle[] = "Ultrasound Design Gallery";
   auto ui = std::optional<usdg::UserInterface>();
 
   window.setTitle(windowTitle);
-  window.resetGLStates(); // call it if you only draw ImGui. Otherwise not needed.
+  window.resetGLStates();
   sf::Clock deltaClock;
-
 
   while (window.isOpen()) {
     sf::Event event;

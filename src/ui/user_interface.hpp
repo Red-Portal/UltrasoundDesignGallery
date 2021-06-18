@@ -23,7 +23,7 @@
 
 #include "line_search.hpp"
 #include "optimization_manager.hpp"
-#include "status.hpp"
+#include "parameter_value.hpp"
 #include "video_player.hpp"
 
 namespace usdg
@@ -59,11 +59,12 @@ namespace usdg
     };
     
   private:
-    std::optional<usdg::VideoPlayer> _video_player;
-    std::optional<usdg::Status>      _status;
-    usdg::LineSearch                 _linesearch;
-    UIState                          _state;
-    usdg::OptimizationManager        _opt_manager;
+    std::optional<usdg::VideoPlayer>          _video_player;
+    std::optional<usdg::BestSetting>          _show_best_setting;
+    std::optional<usdg::ParameterValue>       _param_value_view;
+    std::optional<usdg::LineSearch>           _linesearch;
+    std::optional<usdg::OptimizationManager>  _opt_manager;
+    UIState                                   _state;
 
     void render_menubar();
 

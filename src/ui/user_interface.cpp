@@ -28,6 +28,16 @@ using namespace std::literals::string_literals;
 
 namespace usdg
 {
+  template <typename WidgetType>
+  void
+  toggle_view(std::optional<WidgetType>& widget)
+  {
+    if(widget)
+      widget.reset();
+    else
+      widget.emplace();
+  }
+
   void
   UserInterface::
   render_menubar()
@@ -49,11 +59,14 @@ namespace usdg
 
 	  if(!result.empty())
 	  {
-	    _video_player.emplace(_opt_manager.best(), result[0]);
+	    _opt_manager.emplace();
+	    _linesearch.emplace();
+	    _video_player.emplace(_opt_manager->best(), result[0]);
 	  }
 	}
 	ImGui::EndMenu();
       }
+
       if (ImGui::BeginMenu("View"))
       {
 	// if (ImGui::MenuItem("Undo", "CTRL+Z")) {}
@@ -63,16 +76,33 @@ namespace usdg
 	// if (ImGui::MenuItem("Copy", "CTRL+C")) {}
 	// if (ImGui::MenuItem("Paste", "CTRL+V")) {}
 
-	if (ImGui::MenuItem("Status"))
+	if (ImGui::MenuItem("Parameter Value"))
 	{
-	  if(_status)
-	    _status.reset();
-	  else
-	    _status.emplace(_opt_manager.best());
+	  usdg::toggle_view(_param_value_view);
 	}
-	
+
+	if (ImGui::MenuItem("Preview Best Setting"))
+	{
+	  if (_video_player)
+	    _video_player->toggle_preview();
+	}
 	ImGui::EndMenu();
       }
+
+      if (ImGui::BeginMenu("Action"))
+      {
+	if (ImGui::MenuItem("Reset"))
+	{
+	  if(_state != UIState::optimizing
+	     && _opt_manager)
+	  {
+	    _opt_manager.emplace();
+	    _linesearch.emplace();
+	  }
+	}
+	ImGui::EndMenu();
+      }
+
       ImGui::EndMainMenuBar();
     }
   }
@@ -82,14 +112,17 @@ namespace usdg
   state_render()
   {
     this->render_menubar();
-    _linesearch.render();
+    if(_linesearch)
+    {
+      _linesearch->render();
+    }
     if (_video_player)
     {
       _video_player->render();
     }
-    if (_status)
+    if (_param_value_view)
     {
-      _status->render();
+      _param_value_view->render();
     }
   }
 
@@ -100,37 +133,57 @@ namespace usdg
     switch(_state)
     {
     case UIState::idle:
-      if (_linesearch.is_select_pressed())
+      if (_linesearch && _linesearch->is_select_pressed())
       {
-	_linesearch.enable_select_button();
+	_linesearch->enable_select_button();
       }
       break;
 
     case UIState::rendering:
     {
-      double beta = _linesearch.selected_parameter();
-      if (_linesearch.is_select_pressed())
+      if (_linesearch && _opt_manager)
       {
-	_opt_manager.find_next_query(beta);
-      }
+	double beta = _linesearch->selected_parameter();
+	if (_linesearch->is_select_pressed())
+	{
+	  _opt_manager->find_next_query(beta);
+	}
 
-      auto param  = _opt_manager.query(beta);
-      _video_player->update_parameter(param);
-      if(_status)
-	_status->update_parameter(param);
+	auto param  = _opt_manager->query(beta);
+	if (_video_player)
+	  _video_player->update_parameter(param);
+	if(_param_value_view)
+	  _param_value_view->update_parameter(param);
+      }
       break;
     }
 
     case UIState::optimized:
-      _linesearch.enable_select_button();
+    {
+      if (_linesearch && _opt_manager)
+      {
+	_linesearch->enable_select_button();
+	size_t iter = _opt_manager->iteration();
+	_linesearch->update_iteration(iter);
+      }
+      
+      if (_video_player && _opt_manager)
+      {
+	_video_player->update_preview(_opt_manager->best());
+      }
       [[fallthrougth]];
+    }
     case UIState::optimizing:
     {
-      double beta = _linesearch.selected_parameter();
-      auto param  = _opt_manager.query(beta);
-      _video_player->update_parameter(param);
-      if(_status)
-	_status->update_parameter(param);
+      if (_linesearch && _opt_manager)
+      {
+	double beta = _linesearch->selected_parameter();
+	auto param  = _opt_manager->query(beta);
+	if (_video_player)
+	  _video_player->update_parameter(param);
+	if (_param_value_view)
+	  _param_value_view->update_parameter(param);
+      }
       break;
     }
     }
@@ -150,14 +203,14 @@ namespace usdg
       break;
 
     case UIState::rendering:
-      if (_linesearch.is_select_pressed())
+      if (_linesearch && _linesearch->is_select_pressed())
 	_state = UIState::optimizing;
       else
 	_state = UIState::rendering;
       break;
 
     case UIState::optimizing:
-      if (_opt_manager.is_optimizing())
+      if (_opt_manager && _opt_manager->is_optimizing())
 	_state = UIState::optimizing;
       else
 	_state = UIState::optimized;

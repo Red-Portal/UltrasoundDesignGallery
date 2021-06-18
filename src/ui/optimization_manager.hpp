@@ -63,6 +63,8 @@ namespace usdg
     blaze::DynamicVector<double> best();
 
     bool is_optimizing();
+
+    size_t iteration();
   };
 }
 

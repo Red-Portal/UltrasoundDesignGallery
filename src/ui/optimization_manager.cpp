@@ -102,7 +102,6 @@ namespace usdg
       _lock.lock();
       _x     = std::move(x);
       _xi    = std::move(xi);
-      _x_opt = std::move(x);
       _lock.unlock();
     }
     else
@@ -140,6 +139,13 @@ namespace usdg
   is_optimizing()
   {
     return _is_optimizing.load();
+  }
+
+  size_t
+  OptimizationManager::
+  iteration()
+  {
+    return _iteration;
   }
 }
 

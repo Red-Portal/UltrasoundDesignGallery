@@ -35,7 +35,7 @@
 namespace usdg
 {
   class VideoPlayer
-  {
+  { /* Danger: This class is very dirty and has a few lock-related caviats. */
   private:
     cv::Mat                      _image_base;
     sf::Image                    _back_buffer;
@@ -46,15 +46,20 @@ namespace usdg
     std::mutex                   _parameter_lock;
     std::thread                  _imageproc_thread;
     std::atomic<bool>            _terminate_thread;
+
     usdg::CustomImageProcessing  _image_processing;
+    std::mutex                   _image_processing_lock;
+
+    sf::Image                    _preview_image_buffer;
+    sf::Texture                  _preview_texture_buffer;
+    bool                         _show_preview;
 
     sf::Texture _play_icon;
     sf::Texture _pause_icon;
     sf::Texture _stop_icon;
     sf::Texture _loop_icon;
 
-    void quantize(cv::Mat const& src,
-		  cv::Mat& dst);
+    void quantize(cv::Mat const& src, cv::Mat& dst);
 
   public:
     VideoPlayer(blaze::DynamicVector<double> const& param_init,
@@ -65,6 +70,10 @@ namespace usdg
     void render();
 
     void update_parameter(blaze::DynamicVector<double> const& param);
+
+    void update_preview(blaze::DynamicVector<double> const& param);
+
+    void toggle_preview();
   };
 }
 

@@ -45,6 +45,10 @@ namespace usdg
       _terminate_thread(false),
       _image_processing(static_cast<size_t>(_image_base.rows),
 			static_cast<size_t>(_image_base.cols)),
+      _image_processing_lock(),
+      _preview_image_buffer(),
+      _preview_texture_buffer(),
+      _show_preview(false),
       _play_icon(),
       _pause_icon(),
       _stop_icon(),
@@ -78,7 +82,9 @@ namespace usdg
 	parameter_local = _parameter;
 	_parameter_lock.unlock();
 
+	_image_processing_lock.lock();
 	_image_processing.apply(_image_base, output_gray, parameter_local);
+	_image_processing_lock.unlock();
 	this->quantize(output_gray, output_quant);
 
 	cv::cvtColor(output_quant, output_rgba, cv::COLOR_GRAY2RGBA);
@@ -128,6 +134,15 @@ namespace usdg
     }
     ImGui::End();
 
+    if(_show_preview)
+    {
+      if(ImGui::Begin("Preview Best Setting"))
+      {
+	ImGui::Image(_preview_texture_buffer);
+      }
+      ImGui::End();
+    }
+
     // if(ImGui::Begin("Video Control"))
     // {
     //   if (ImGui::ImageButton(_play_icon)) {
@@ -148,5 +163,35 @@ namespace usdg
   {
     std::lock_guard<std::mutex> guard(_parameter_lock);
     _parameter = param;
+  }
+
+  void
+  VideoPlayer::
+  update_preview(blaze::DynamicVector<double> const& param)
+  {
+    if (_show_preview)
+    {
+      auto output_gray  = cv::Mat(_image_base.rows, _image_base.cols, CV_32FC1);
+      auto output_quant = cv::Mat(_image_base.rows, _image_base.cols, CV_8UC1);
+      auto output_rgba  = cv::Mat(_image_base.rows, _image_base.cols, CV_8UC4);
+      _image_processing_lock.lock();
+      _image_processing.apply(_image_base, output_gray, param);
+      _image_processing_lock.unlock();
+      this->quantize(output_gray, output_quant);
+
+      cv::cvtColor(output_quant, output_rgba, cv::COLOR_GRAY2RGBA);
+
+      _preview_image_buffer.create(static_cast<unsigned int>(output_rgba.cols),
+				   static_cast<unsigned int>(output_rgba.rows),
+				   output_rgba.ptr());
+      _preview_texture_buffer.loadFromImage(_preview_image_buffer);
+    }
+  }
+
+  void
+  VideoPlayer::
+  toggle_preview()
+  {
+    _show_preview = !_show_preview;
   }
 }

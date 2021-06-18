@@ -21,22 +21,22 @@
 #include <imgui.h>
 #include <imgui-SFML.h>
 
-#include "status.hpp"
+#include "parameter_value.hpp"
 #include "../custom_image_processing.hpp"
 
 namespace usdg
 {
-  Status::
-  Status(blaze::DynamicVector<double> const& param_init)
+  ParameterValue::
+  ParameterValue()
     : _param_names(custom_ip_parameter_names()),
-      _param_transformed(param_init)
+      _param_transformed(_param_names.size(), 0.0)
   { }
 
   void
-  Status::
+  ParameterValue::
   render()
   {
-    if(ImGui::Begin("Status"))
+    if(ImGui::Begin("ParameterValue"))
     {
       for (size_t i = 0; i < _param_names.size(); ++i)
       {
@@ -47,9 +47,9 @@ namespace usdg
   }
 
   void
-  Status::
+  ParameterValue::
   update_parameter(blaze::DynamicVector<double> const& param)
   {
-    _param_transformed = param;
+    _param_transformed =  custom_ip_transform_range(param);
   }
 }

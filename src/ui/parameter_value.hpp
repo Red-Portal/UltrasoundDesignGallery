@@ -16,8 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __US_GALLERY_STATUS_HPP__
-#define __US_GALLERY_STATUS_HPP__
+#ifndef __US_GALLERY_PARAMETERVALUE_HPP__
+#define __US_GALLERY_PARAMETERVALUE_HPP__
 
 #include <SFML/Graphics.hpp>	
 
@@ -25,14 +25,14 @@
 
 namespace usdg
 {
-  class Status
+  class ParameterValue
   {
   private:
     std::vector<std::string>     _param_names;
     blaze::DynamicVector<double> _param_transformed;
 
   public:
-    Status(blaze::DynamicVector<double> const& param_init);
+    ParameterValue();
 
     void render();
 

@@ -39,6 +39,7 @@ namespace usdg
       _select_icon(),
       _slider_next_icon(),
       _slider_prev_icon(),
+      _iteration(0),
       _select_button_pressed(false)
   {
     auto desktopMode = sf::VideoMode::getDesktopMode();
@@ -85,7 +86,7 @@ namespace usdg
       }
     }
     ImGui::SameLine();
-    ImGui::Text("Approve Setting");
+    ImGui::Text("approve setting");
   }
 
 
@@ -97,21 +98,41 @@ namespace usdg
     if (ImGui::TreeNode("Comparison Macro"))
     {
       ImGui::PushItemWidth(60);
-      ImGui::InputFloat("Setting 1", &_macro_positions[0]);
+      ImGui::InputFloat("setting 1", &_macro_positions[0]);
       input_is_active = input_is_active || ImGui::IsItemActive();
       _macro_positions[0] = std::clamp(_macro_positions[0], 0.0f, 1.0f);
+      ImGui::SameLine();
+      if (ImGui::SmallButton("write##1"))
+      {
+	_macro_positions[0] = _slider_pos;
+      }
 
-      ImGui::InputFloat("Setting 2", &_macro_positions[1]);
+      ImGui::InputFloat("setting 2", &_macro_positions[1]);
       input_is_active = input_is_active || ImGui::IsItemActive();
       _macro_positions[1] = std::clamp(_macro_positions[1], 0.0f, 1.0f);
+      ImGui::SameLine();
+      if (ImGui::SmallButton("write##2"))
+      {
+	_macro_positions[1] = _slider_pos;
+      }
 
-      ImGui::InputFloat("Setting 3", &_macro_positions[2]);
+      ImGui::InputFloat("setting 3", &_macro_positions[2]);
       input_is_active = input_is_active || ImGui::IsItemActive();
       _macro_positions[2] = std::clamp(_macro_positions[2], 0.0f, 1.0f);
+      ImGui::SameLine();
+      if (ImGui::SmallButton("write##3"))
+      {
+	_macro_positions[2] = _slider_pos;
+      }
 
-      ImGui::InputFloat("Setting 4", &_macro_positions[3]);
+      ImGui::InputFloat("setting 4", &_macro_positions[3]);
       input_is_active = input_is_active || ImGui::IsItemActive();
       _macro_positions[3] = std::clamp(_macro_positions[3], 0.0f, 1.0f);
+      ImGui::SameLine();
+      if (ImGui::SmallButton("write##4"))
+      {
+	_macro_positions[3] = _slider_pos;
+      }
 
       if (!input_is_active)
       {
@@ -138,7 +159,7 @@ namespace usdg
     if (ImGui::TreeNode("Slider Fine Control"))
     {
       ImGui::PushItemWidth(52);
-      ImGui::InputFloat("Step Size", &_slider_fine_step);
+      ImGui::InputFloat("step size", &_slider_fine_step);
       ImGui::PopItemWidth();
       if (ImGui::ImageButton(_slider_prev_icon)
 	  || (ImGui::IsItemFocused()
@@ -154,7 +175,7 @@ namespace usdg
 	_slider_pos += _slider_fine_step;
       }
       ImGui::SameLine();
-      ImGui::Text("Single Step");
+      ImGui::Text("single step");
       ImGui::TreePop();
     }
   }
@@ -163,7 +184,7 @@ namespace usdg
   LineSearch::
   render_slider()
   {
-    ImGui::SliderFloat("Settings", &_slider_pos, 0.0, 1.0);
+    ImGui::SliderFloat("setting", &_slider_pos, 0.0, 1.0);
     if(ImGui::IsItemFocused())
     {
       auto& io = ImGui::GetIO();
@@ -190,6 +211,9 @@ namespace usdg
       ImGui::Spacing();
       ImGui::Separator();
       ImGui::Spacing();
+
+      ImGui::PushItemWidth(38);
+      ImGui::LabelText("iteration##linesearch", "%zu", _iteration);
       this->render_select_button();
     }
     ImGui::End();
@@ -215,6 +239,13 @@ namespace usdg
   {
     _select_button_pressed = false;
     _select_icon.loadFromImage(_select_icon_image);
+  }
+
+  void
+  LineSearch::
+  update_iteration(size_t iteration) noexcept
+  {
+    _iteration = iteration;
   }
 }
 

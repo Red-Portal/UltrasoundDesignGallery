@@ -39,6 +39,7 @@ namespace usdg
     sf::Texture _slider_next_icon;
     sf::Texture _slider_prev_icon;
 
+    size_t _iteration;
     bool   _select_button_pressed;
 
     void color_button_disabled();
@@ -61,6 +62,8 @@ namespace usdg
     bool is_select_pressed() noexcept;
 
     void enable_select_button() noexcept;
+
+    void update_iteration(size_t iteration) noexcept;
   };
 }
 

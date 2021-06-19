@@ -165,14 +165,14 @@ namespace usdg
 	  || (ImGui::IsItemFocused()
 	      && ImGui::GetKeyPressedAmount(io.KeyMap[ImGuiKey_Enter], 0, 0.1f)) > 0)
       {
-	_slider_pos -= _slider_fine_step;
+	_slider_pos = std::clamp(_slider_pos - _slider_fine_step, 0.0f, 1.0f);
       }
       ImGui::SameLine();
       if(ImGui::ImageButton(_slider_next_icon)
 	 || (ImGui::IsItemFocused()
 	     && ImGui::GetKeyPressedAmount(io.KeyMap[ImGuiKey_Enter], 0, 0.1f)) > 0)
       {
-	_slider_pos += _slider_fine_step;
+	_slider_pos = std::clamp(_slider_pos + _slider_fine_step, 0.0f, 1.0f);
       }
       ImGui::SameLine();
       ImGui::Text("single step");
@@ -190,11 +190,11 @@ namespace usdg
       auto& io = ImGui::GetIO();
       if (ImGui::GetKeyPressedAmount(io.KeyMap[ImGuiKey_LeftArrow], 0, 0.1f) > 0)
       {
-	_slider_pos -= _slider_fine_step;
+	_slider_pos = std::clamp(_slider_pos - _slider_fine_step, 0.0f, 1.0f);
       }
       else if (ImGui::GetKeyPressedAmount(io.KeyMap[ImGuiKey_RightArrow], 0, 0.1f) > 0)
       {
-	_slider_pos += _slider_fine_step;
+	_slider_pos = std::clamp(_slider_pos + _slider_fine_step, 0.0f, 1.0f);
       }
     }
   }

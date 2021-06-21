@@ -140,7 +140,6 @@ namespace usdg
       break;
 
     case UIState::rendering:
-    {
       if (_linesearch && _opt_manager)
       {
 	double beta = _linesearch->selected_parameter();
@@ -156,25 +155,20 @@ namespace usdg
 	  _param_value_view->update_parameter(param);
       }
       break;
-    }
 
     case UIState::optimized:
-    {
       if (_linesearch && _opt_manager)
       {
 	_linesearch->enable_select_button();
 	size_t iter = _opt_manager->iteration();
 	_linesearch->update_iteration(iter);
       }
-      
       if (_video_player && _opt_manager)
       {
 	_video_player->update_preview(_opt_manager->best());
       }
-      [[fallthrougth]];
-    }
+      [[fallthrough]];
     case UIState::optimizing:
-    {
       if (_linesearch && _opt_manager)
       {
 	double beta = _linesearch->selected_parameter();
@@ -185,7 +179,6 @@ namespace usdg
 	  _param_value_view->update_parameter(param);
       }
       break;
-    }
     }
   }
 

@@ -60,7 +60,6 @@ namespace usdg
     
   private:
     std::optional<usdg::VideoPlayer>          _video_player;
-    std::optional<usdg::BestSetting>          _show_best_setting;
     std::optional<usdg::ParameterValue>       _param_value_view;
     std::optional<usdg::LineSearch>           _linesearch;
     std::optional<usdg::OptimizationManager>  _opt_manager;

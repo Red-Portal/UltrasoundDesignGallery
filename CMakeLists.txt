@@ -70,7 +70,7 @@ find_package(Blaze      REQUIRED)
 find_package(NLOPT      REQUIRED)
 
 #set(OpenCV_STATIC ON)
-find_package(OpenCV  REQUIRED COMPONENTS core imgproc highgui cudafilters)
+find_package(OpenCV  REQUIRED COMPONENTS core imgproc highgui cudafilters tracking quality)
 
 set(BLA_STATIC ON)
 find_package(BLAS   REQUIRED)
@@ -155,7 +155,6 @@ set_target_properties(ipcore
     CUDA_SEPARABLE_COMPILATION ON)
 
 # Image processing demo
-
 add_executable(image_processing_demo
         src/image_processing_demo.cpp)
 
@@ -165,8 +164,45 @@ target_link_libraries(image_processing_demo
     project_warnings
 
     PUBLIC
+    opencv_tracking
     opencv_highgui
+    opencv_quality
     ipcore)
+
+# select ROI
+add_executable(select_roi
+        src/select_roi.cpp)
+target_link_libraries(select_roi
+    PUBLIC
+    project_options
+    project_warnings
+    PortableFileDialogs
+    opencv_highgui
+    opencv_tracking
+    ipcore)
+
+# Ultrasound Design Gallery Simulation
+add_executable(usdg_simulation
+    src/usdg_simulation.cpp)
+target_link_libraries(usdg_simulation
+    INTERFACE
+    blaze::blaze
+    Threads::threads
+
+    PUBLIC
+    project_options
+    project_warnings
+    ipcore
+    opencv_highgui
+    csvparser
+    progressbar
+    BLAS::BLAS
+    LAPACK::LAPACK
+    spdlog
+    FMT
+    NLOPT::nlopt
+    opencv_core
+    Random123)
 
 # Ultrasound Design Gallery
 add_executable(ultrasound_design_gallery
@@ -174,7 +210,7 @@ add_executable(ultrasound_design_gallery
     src/ui/user_interface.cpp
     src/ui/video_player.cpp
     src/ui/line_search.cpp
-    src/ui/status.cpp
+    src/ui/parameter_value.cpp
     src/ui/optimization_manager.cpp
     )
 
@@ -185,10 +221,10 @@ target_link_libraries(ultrasound_design_gallery
     INTERFACE
     blaze::blaze
     Threads::threads
-    project_options
-    project_warnings
 
     PUBLIC
+    project_options
+    project_warnings
     NLOPT::nlopt
     ipcore
     opencv_highgui

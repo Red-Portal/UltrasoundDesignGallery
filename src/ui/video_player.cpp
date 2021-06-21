@@ -37,18 +37,23 @@ namespace usdg
 	cv::normalize(image, image, 0, 1, cv::NORM_MINMAX, CV_32F);
         return image;
       }()),
+
       _back_buffer(),
       _front_buffer(),
+      _buffer_lock(),
+
       _parameter(param_init),
       _parameter_lock(),
       _imageproc_thread(),
       _terminate_thread(false),
+
       _image_processing(static_cast<size_t>(_image_base.rows),
 			static_cast<size_t>(_image_base.cols)),
       _image_processing_lock(),
-      _preview_image_buffer(),
-      _preview_texture_buffer(),
+
+      _preview_buffer(),
       _show_preview(false),
+
       _play_icon(),
       _pause_icon(),
       _stop_icon(),
@@ -70,7 +75,12 @@ namespace usdg
     _stop_icon.loadFromFile(ICON("stop.png"));
     _loop_icon.loadFromFile(ICON("loop.png"));
 
-    _imageproc_thread = std::thread([&, this]
+    _back_buffer   = cv::Mat(_image_base.rows, _image_base.cols, CV_8UC4);
+    _front_buffer.create(static_cast<unsigned int>(_image_base.cols),
+			 static_cast<unsigned int>(_image_base.rows));
+    _preview_buffer.create(static_cast<unsigned int>(_image_base.cols),
+			   static_cast<unsigned int>(_image_base.rows));
+    _imageproc_thread = std::thread([this]
     {
       auto parameter_local = blaze::DynamicVector<double>();
       auto output_gray     = cv::Mat(_image_base.rows, _image_base.cols, CV_32FC1);
@@ -86,13 +96,10 @@ namespace usdg
 	_image_processing.apply(_image_base, output_gray, parameter_local);
 	_image_processing_lock.unlock();
 	this->quantize(output_gray, output_quant);
-
 	cv::cvtColor(output_quant, output_rgba, cv::COLOR_GRAY2RGBA);
 
 	_buffer_lock.lock();
-	_back_buffer.create(static_cast<unsigned int>(output_rgba.cols),
-			    static_cast<unsigned int>(output_rgba.rows),
-			    output_rgba.ptr());
+	std::swap(_back_buffer, output_rgba);
 	_buffer_lock.unlock();
       }
     });
@@ -126,9 +133,7 @@ namespace usdg
     if(ImGui::Begin("Video"))
     {
       _buffer_lock.lock();
-      auto size = _back_buffer.getSize();
-      if(size.x != 0 && size.y != 0)
-	_front_buffer.loadFromImage(_back_buffer);
+      _front_buffer.update(_back_buffer.data);
       _buffer_lock.unlock();
       ImGui::Image(_front_buffer);
     }
@@ -138,7 +143,7 @@ namespace usdg
     {
       if(ImGui::Begin("Preview Best Setting"))
       {
-	ImGui::Image(_preview_texture_buffer);
+	ImGui::Image(_preview_buffer);
       }
       ImGui::End();
     }
@@ -180,11 +185,7 @@ namespace usdg
       this->quantize(output_gray, output_quant);
 
       cv::cvtColor(output_quant, output_rgba, cv::COLOR_GRAY2RGBA);
-
-      _preview_image_buffer.create(static_cast<unsigned int>(output_rgba.cols),
-				   static_cast<unsigned int>(output_rgba.rows),
-				   output_rgba.ptr());
-      _preview_texture_buffer.loadFromImage(_preview_image_buffer);
+      _preview_buffer.update(output_rgba.ptr());
     }
   }
 

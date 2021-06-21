@@ -38,7 +38,8 @@ namespace usdg
   { /* Danger: This class is very dirty and has a few lock-related caviats. */
   private:
     cv::Mat                      _image_base;
-    sf::Image                    _back_buffer;
+    cv::Mat                      _render_buffer;
+    cv::Mat                      _back_buffer;
     sf::Texture                  _front_buffer;
     std::mutex                   _buffer_lock;
 
@@ -50,8 +51,7 @@ namespace usdg
     usdg::CustomImageProcessing  _image_processing;
     std::mutex                   _image_processing_lock;
 
-    sf::Image                    _preview_image_buffer;
-    sf::Texture                  _preview_texture_buffer;
+    sf::Texture                  _preview_buffer;
     bool                         _show_preview;
 
     sf::Texture _play_icon;

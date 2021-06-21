@@ -66,6 +66,16 @@ namespace usdg
     return static_cast<float>((x_max - x_min)*x + x_min);
   }
 
+  inline float
+  exp_interpolate(double x,
+		  double x_min,
+		  double x_max)
+  { /* assumes x_min, x_max > 0 */
+    double beta  = log(x_min);
+    double alpha = log(x_max/x_min);
+    return static_cast<float>(exp(alpha*x + beta));
+  }
+
   inline std::vector<std::string>
   custom_ip_parameter_names()
   {
@@ -97,17 +107,17 @@ namespace usdg
     param_trans[r1_idx] = linear_interpolate(param[r1_idx], 0.0, 0.5);
     param_trans[r2_idx] = linear_interpolate(param[r2_idx], 0.0, 0.5);
 
-    param_trans[k0_idx] = linear_interpolate(param[k0_idx], 0.01, 0.2);
-    param_trans[k1_idx] = linear_interpolate(param[k1_idx], 0.01, 0.2);
-    param_trans[k2_idx] = linear_interpolate(param[k2_idx], 0.01, 0.2);
-    param_trans[k3_idx] = linear_interpolate(param[k3_idx], 0.01, 0.2);
+    param_trans[k0_idx] = exp_interpolate(param[k0_idx], 0.001, 1.0);
+    param_trans[k1_idx] = exp_interpolate(param[k1_idx], 0.001, 1.0);
+    param_trans[k2_idx] = exp_interpolate(param[k2_idx], 0.001, 1.0);
+    param_trans[k3_idx] = exp_interpolate(param[k3_idx], 0.001, 1.0);
 
     param_trans[t0_idx] = linear_interpolate(param[t0_idx], 0.1, 10);
     param_trans[t1_idx] = linear_interpolate(param[t1_idx], 0.1, 10);
     param_trans[t2_idx] = linear_interpolate(param[t2_idx], 0.1, 10);
     param_trans[t3_idx] = linear_interpolate(param[t3_idx], 0.1, 10);
 
-    param_trans[alpha_idx] = linear_interpolate(param[alpha_idx], 0.5, 1.0);
+    param_trans[alpha_idx] = linear_interpolate(param[alpha_idx], 0.7, 1.0);
     param_trans[beta_idx]  = linear_interpolate(param[beta_idx],  1.0, 1.5);
     return param_trans;
   }
@@ -128,22 +138,21 @@ namespace usdg
     {
       auto param_trans = custom_ip_transform_range(param);
 
-      std::cout << param.size() << std::endl;
-      std::cout << "r0: " << param_trans[r0_idx] << '\n'
-		<< "k0: " << param_trans[k0_idx] << '\n'
-		<< "t0: " << param_trans[t0_idx] << '\n'
-		<< "r1: " << param_trans[r1_idx] << '\n'
-		<< "k1: " << param_trans[k1_idx] << '\n'
-		<< "t1: " << param_trans[t1_idx] << '\n'
-		<< "r2: " << param_trans[r2_idx] << '\n'
-		<< "k2: " << param_trans[k2_idx] << '\n'
-		<< "t2: " << param_trans[t2_idx] << '\n'
-		<< "k3: " << param_trans[k3_idx] << '\n'
-		<< "t3: " << param_trans[t3_idx] << '\n'
-		<< "alpha: " << param_trans[alpha_idx] << '\n'
-		<< "beta : " << param_trans[beta_idx] << '\n'
-		<< std::endl;
-
+      // std::cout << param.size() << std::endl;
+      // std::cout << "r0: " << param_trans[r0_idx] << '\n'
+      // 		<< "k0: " << param_trans[k0_idx] << '\n'
+      // 		<< "t0: " << param_trans[t0_idx] << '\n'
+      // 		<< "r1: " << param_trans[r1_idx] << '\n'
+      // 		<< "k1: " << param_trans[k1_idx] << '\n'
+      // 		<< "t1: " << param_trans[t1_idx] << '\n'
+      // 		<< "r2: " << param_trans[r2_idx] << '\n'
+      // 		<< "k2: " << param_trans[k2_idx] << '\n'
+      // 		<< "t2: " << param_trans[t2_idx] << '\n'
+      // 		<< "k3: " << param_trans[k3_idx] << '\n'
+      // 		<< "t3: " << param_trans[t3_idx] << '\n'
+      // 		<< "alpha: " << param_trans[alpha_idx] << '\n'
+      // 		<< "beta : " << param_trans[beta_idx] << '\n'
+      // 		<< std::endl;
       _process.apply(input, output,
 		     param_trans[r0_idx],
 		     param_trans[k0_idx],

@@ -61,9 +61,9 @@ namespace usdg
   {
     auto desktopMode = sf::VideoMode::getDesktopMode();
     auto width       = std::min(desktopMode.width,
-				static_cast<unsigned int>(_image_base.rows));
-    auto height      = std::min(desktopMode.height,
 				static_cast<unsigned int>(_image_base.cols));
+    auto height      = std::min(desktopMode.height,
+				static_cast<unsigned int>(_image_base.rows));
     auto window_size = ImVec2(static_cast<float>(width),
 			      static_cast<float>(height));
     ImGui::Begin("Video");
@@ -174,19 +174,16 @@ namespace usdg
   VideoPlayer::
   update_preview(blaze::DynamicVector<double> const& param)
   {
-    if (_show_preview)
-    {
-      auto output_gray  = cv::Mat(_image_base.rows, _image_base.cols, CV_32FC1);
-      auto output_quant = cv::Mat(_image_base.rows, _image_base.cols, CV_8UC1);
-      auto output_rgba  = cv::Mat(_image_base.rows, _image_base.cols, CV_8UC4);
-      _image_processing_lock.lock();
-      _image_processing.apply(_image_base, output_gray, param);
-      _image_processing_lock.unlock();
-      this->quantize(output_gray, output_quant);
+    auto output_gray  = cv::Mat(_image_base.rows, _image_base.cols, CV_32FC1);
+    auto output_quant = cv::Mat(_image_base.rows, _image_base.cols, CV_8UC1);
+    auto output_rgba  = cv::Mat(_image_base.rows, _image_base.cols, CV_8UC4);
+    _image_processing_lock.lock();
+    _image_processing.apply(_image_base, output_gray, param);
+    _image_processing_lock.unlock();
+    this->quantize(output_gray, output_quant);
 
-      cv::cvtColor(output_quant, output_rgba, cv::COLOR_GRAY2RGBA);
-      _preview_buffer.update(output_rgba.ptr());
-    }
+    cv::cvtColor(output_quant, output_rgba, cv::COLOR_GRAY2RGBA);
+    _preview_buffer.update(output_rgba.ptr());
   }
 
   void

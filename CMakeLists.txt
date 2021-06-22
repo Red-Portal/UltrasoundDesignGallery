@@ -98,7 +98,7 @@ add_library(PortableFileDialogs INTERFACE)
 target_include_directories(PortableFileDialogs SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/portable-file-dialogs")
 
 add_library(nlohmann INTERFACE)
-target_include_directories(nlohmann SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/nlohmann_json")
+target_include_directories(nlohmann SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/nlohmann_json/single_include")
 
 
 option(BUILD_SHARED_LIBS "Enable compilation of shared libraries" OFF)
@@ -188,7 +188,6 @@ add_executable(usdg_simulation
 target_link_libraries(usdg_simulation
     INTERFACE
     blaze::blaze
-    nlohmann
 
     PUBLIC
     project_options
@@ -222,6 +221,7 @@ target_include_directories(ultrasound_design_gallery
 target_link_libraries(ultrasound_design_gallery
     INTERFACE
     blaze::blaze
+    nlohmann
 
     PUBLIC
     project_options

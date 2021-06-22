@@ -16,13 +16,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <string>
+#include "user_interface.hpp"
 
 #include <imgui.h>
 #include <imgui-SFML.h>
 #include <portable-file-dialogs.h>
 
-#include "user_interface.hpp"
+#include <string>
+#include <fstream>
 
 using namespace std::literals::string_literals;
 
@@ -48,9 +49,6 @@ namespace usdg
       {
 	if (ImGui::MenuItem("Open File"))
 	{
-	  if(_video_player)
-	    _video_player.reset();
-
 	  auto result = pfd::open_file(
 	    "Select File"s, "../data",
 	    { "Image Files", "*.png *.jpg *.jpeg *.bmp *.tga *.gif *.psd *.hdr *.pic"
@@ -62,6 +60,31 @@ namespace usdg
 	    _opt_manager.emplace();
 	    _linesearch.emplace();
 	    _video_player.emplace(_opt_manager->best(), result[0]);
+	  }
+	}
+
+	if (ImGui::MenuItem("Save History"))
+	{
+	  auto serialized = _opt_manager->serialize();
+	  auto fname      = pfd::save_file("Select Save File", "history.json").result();
+	  auto stream     = std::ofstream(fname);
+	  stream << serialized;
+	  stream.close();
+	}
+
+	if (ImGui::MenuItem("Load History"))
+	{
+	  auto fname      = pfd::open_file("Select History File"s, ".").result();
+	  auto stream     = std::ifstream(fname[0]);
+	  auto serialized = std::string(std::istreambuf_iterator<char>(stream),
+					std::istreambuf_iterator<char>());
+	  stream.close();
+	  _opt_manager->deserialize(std::move(serialized));
+
+	  if (_opt_manager && _linesearch)
+	  {
+	    size_t iter = _opt_manager->iteration();
+	    _linesearch->update_iteration(iter);
 	  }
 	}
 	ImGui::EndMenu();

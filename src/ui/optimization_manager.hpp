@@ -24,6 +24,7 @@
 #include "../math/blaze.hpp"
 #include "../math/prng.hpp"
 
+#include <string>
 #include <atomic>
 #include <mutex>
 #include <optional>
@@ -53,6 +54,9 @@ namespace usdg
 			blaze::DynamicVector<double> const& xi);
 
     void find_next_query_impl(double beta);
+
+    void deserialize_impl(std::string const& json_data);
+
   public:
     OptimizationManager();
 
@@ -61,6 +65,10 @@ namespace usdg
     blaze::DynamicVector<double> query(double beta);
 
     blaze::DynamicVector<double> best();
+
+    std::string serialize();
+
+    void deserialize(std::string const& json_data);
 
     bool is_optimizing();
 

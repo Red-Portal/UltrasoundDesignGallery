@@ -74,6 +74,9 @@ namespace usdg
 
     inline size_t
     num_data() const noexcept;
+
+    inline Datapoint const&
+    operator[](size_t i) const;
   };
 
   inline 
@@ -173,6 +176,13 @@ namespace usdg
   num_data() const noexcept
   {
     return _data.size();
+  }
+
+  inline Datapoint const&
+  Dataset::
+  operator[](size_t i) const
+  {
+    return _data[i];
   }
 }
 

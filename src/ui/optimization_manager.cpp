@@ -22,6 +22,13 @@
 #include "../math/mvnormal.hpp"
 #include "../custom_image_processing.hpp"
 
+#include <nlohmann/json.hpp>
+#include <imgui.h>
+#include <imgui-SFML.h>
+
+#include <chrono>
+#include <ctime>
+
 namespace usdg
 {
   size_t n_beta   = 20;
@@ -132,6 +139,90 @@ namespace usdg
       _is_optimizing.store(false);
     });
     _thread.detach();
+  }
+
+  std::string
+  OptimizationManager::
+  serialize()
+  {
+    auto& data      = _optimizer._data;
+    size_t n_points = data.num_data();
+    auto json       = nlohmann::json();
+    auto timepoint  = std::chrono::system_clock::now();
+    auto ctimepoint = std::chrono::system_clock::to_time_t(timepoint);
+    auto datetime   = std::ctime(&ctimepoint);
+    json["date"]    = datetime;
+    for (size_t i = 0; i < n_points; ++i)
+    {
+      auto json_datapoint = nlohmann::json();
+      auto x_vec          = std::vector<double>(data.dims());
+      auto xi_vec         = std::vector<double>(data.dims());
+      auto beta_vec       = std::vector<double>(data.num_pseudo());
+
+      std::copy(data[i].x.cbegin(),     data[i].x.cend(),     x_vec.begin());
+      std::copy(data[i].xi.cbegin(),    data[i].xi.cend(),    xi_vec.begin());
+      std::copy(data[i].betas.cbegin(), data[i].betas.cend(), beta_vec.begin());
+      json_datapoint["x"]     = std::move(x_vec);
+      json_datapoint["xi"]    = std::move(xi_vec);
+      json_datapoint["alpha"] = data[i].alpha;
+      json_datapoint["beta"]  = std::move(beta_vec);
+      json["data"].push_back(std::move(json_datapoint));
+    }
+    return json.dump(2);
+  }
+
+  void
+  OptimizationManager::
+  deserialize_impl(std::string const& json_data)
+  {
+    auto& data      = _optimizer._data;
+    auto parsed     = nlohmann::json::parse(json_data)["data"];
+    size_t n_points = parsed.size();
+
+    if (n_points < 2)
+    {
+      return;
+    }
+     
+    for (size_t i = 0; i < n_points; ++i)
+    {
+      auto& datapoint = parsed[i];
+      auto& x         = datapoint["x"];
+      auto& xi        = datapoint["xi"];
+      auto& beta      = datapoint["beta"];
+      double alpha    = datapoint["alpha"];
+
+      auto x_blaze    = blaze::DynamicVector<double>(x.size());
+      auto xi_blaze   = blaze::DynamicVector<double>(xi.size());
+      auto beta_blaze = blaze::DynamicVector<double>(beta.size());
+
+      std::copy(x.begin(),    x.end(),    x_blaze.begin());
+      std::copy(xi.begin(),   xi.end(),   xi_blaze.begin());
+      std::copy(beta.begin(), beta.end(), beta_blaze.begin());
+
+      if (i == n_points-1)
+      {
+	_x  = std::move(x_blaze);
+	_xi = std::move(xi_blaze);
+	this->find_next_query(alpha);
+      }
+      else
+      {
+	data.push_back(
+	  usdg::Datapoint(alpha,
+			  std::move(beta_blaze),
+			  std::move(xi_blaze),
+			  std::move(x_blaze)));
+      }
+    }
+    _iteration = n_points;
+  }
+
+  void
+  OptimizationManager::
+  deserialize(std::string const& json_data)
+  {
+    this->deserialize_impl(json_data);
   }
 
   bool

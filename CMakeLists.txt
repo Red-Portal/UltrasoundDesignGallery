@@ -68,6 +68,7 @@ find_package(Threads    REQUIRED)
 find_package(OpenMP     REQUIRED)
 find_package(Blaze      REQUIRED)
 find_package(NLOPT      REQUIRED)
+find_package(CUDA       REQUIRED)
 
 #set(OpenCV_STATIC ON)
 find_package(OpenCV  REQUIRED COMPONENTS core imgproc highgui cudafilters tracking quality)
@@ -96,9 +97,9 @@ target_include_directories(Random123 SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/thi
 add_library(PortableFileDialogs INTERFACE)
 target_include_directories(PortableFileDialogs SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/portable-file-dialogs")
 
-find_package(Python COMPONENTS Development NumPy REQUIRED)
+add_library(nlohmann INTERFACE)
+target_include_directories(nlohmann SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/third_party/nlohmann_json")
 
-find_package(CUDA REQUIRED)
 
 option(BUILD_SHARED_LIBS "Enable compilation of shared libraries" OFF)
 option(ENABLE_TESTING "Enable Test Builds" ON)
@@ -187,11 +188,12 @@ add_executable(usdg_simulation
 target_link_libraries(usdg_simulation
     INTERFACE
     blaze::blaze
-    Threads::threads
+    nlohmann
 
     PUBLIC
     project_options
     project_warnings
+    Threads::Threads
     ipcore
     opencv_highgui
     csvparser
@@ -220,11 +222,11 @@ target_include_directories(ultrasound_design_gallery
 target_link_libraries(ultrasound_design_gallery
     INTERFACE
     blaze::blaze
-    Threads::threads
 
     PUBLIC
     project_options
     project_warnings
+    Threads::Threads
     NLOPT::nlopt
     ipcore
     opencv_highgui

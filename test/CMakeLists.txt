@@ -40,15 +40,13 @@ add_executable(usgallery_tests
 target_link_libraries(usgallery_tests
     INTERFACE
     blaze::blaze
-    Threads::threads
+    Threads::Threads
 
     PRIVATE
     #OpenMP::OpenMP_CXX
-    Python::NumPy
-    Python::Python
     progressbar
     BLAS::BLAS
-	LAPACK::LAPACK
+    LAPACK::LAPACK
     Random123
     project_warnings
     project_options catch_main)

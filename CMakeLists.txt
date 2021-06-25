@@ -137,7 +137,9 @@ endif()
 # Image processing core
 add_library(ipcore
     SHARED
+    src/imaging/dpad.cu
     src/imaging/pmad.cu
+    src/imaging/dpad_shock.cu
     src/imaging/pmad_shock.cu
     src/imaging/lpndsf.cpp)
 

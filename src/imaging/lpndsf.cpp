@@ -50,10 +50,10 @@ namespace usdg
   LPNDSF::
   apply(cv::Mat const& image,
 	cv::Mat& output,
-	float r0, float k0, float t0,
-	float r1, float k1, float t1,
-	float r2, float k2, float t2,
-	float k3,           float t3,
+	float r0, float t0, float sigma0,
+	float r1, float t1, float sigma1,
+	float r2, float t2, float sigma2,
+	          float t3, float sigma3,
 	float alpha, float beta)
   {
     int n_padded_rows = _gaussian_pyramid_input[0].rows;
@@ -69,26 +69,26 @@ namespace usdg
     usdg::analyze_pyramid(_gaussian_pyramid_input,
 			  _laplacian_pyramid_input);
 
-    float dt = 0.1f;
+    float dt = 0.3f;
     size_t i = 0;
     _diffusion0.apply(_gaussian_pyramid_input[i],
 		      _laplacian_pyramid_input[i],
 		      _laplacian_pyramid_output[i],
-		      dt, r0, k0, static_cast<size_t>(ceil(t0 / dt)));
+		      dt, r0, sigma0, static_cast<size_t>(ceil(t0 / dt)));
     ++i;
     _diffusion1.apply(_gaussian_pyramid_input[i],
 		      _laplacian_pyramid_input[i],
 		      _laplacian_pyramid_output[i],
-		      dt, r1, k1, static_cast<size_t>(ceil(t1 / dt)));
+		      dt, r1, sigma1, static_cast<size_t>(ceil(t1 / dt)));
     ++i;
     _diffusion2.apply(_gaussian_pyramid_input[i],
 		      _laplacian_pyramid_input[i],
 		      _laplacian_pyramid_output[i],
-		      dt, r2, k2, static_cast<size_t>(ceil(t2 / dt)));
+		      dt, r2, sigma2, static_cast<size_t>(ceil(t2 / dt)));
     ++i;
     _diffusion3.apply(_laplacian_pyramid_input[i],
 		      _laplacian_pyramid_output[i],
-		      dt, k3, static_cast<size_t>(ceil(t3 / dt)));
+		      dt, sigma3, static_cast<size_t>(ceil(t3 / dt)));
 
     auto& L3_lowpass_buf = _laplacian_pyramid_input[i];
     auto& L3_out         = _laplacian_pyramid_output[i];

@@ -23,6 +23,7 @@
 
 #include "pmad.hpp"
 #include "pmad_shock.hpp"
+#include "dpad_shock.hpp"
 #include "pyramid.hpp"
 
 namespace usdg
@@ -57,10 +58,10 @@ namespace usdg
 
     void apply(cv::Mat const& image,
 	       cv::Mat&       output,
-	       float r0, float k0, float t0,
-	       float r1, float k1, float t1,
-	       float r2, float k2, float t2,
-	                 float k3, float t3,
+	       float r0, float t0, float sigma0, 
+	       float r1, float t1, float sigma1, 
+	       float r2, float t2, float sigma2,
+	                 float t3, float sigma3,
 	       float alpha, float beta);
   };
 }

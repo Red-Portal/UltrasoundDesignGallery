@@ -22,16 +22,10 @@
 
 #include "pmad.hpp"
 #include "utils.hpp"
+#include "cuda_utils.hpp"
 
 namespace usdg
 {
-  __device__ __forceinline__ float
-  pmad_coefficient(float gradient_norm, float K)
-  {
-    float coef = (gradient_norm / K);
-    return 1/(1 + coef*coef);
-  }
-
   __global__ void
   pmad_kernel(cv::cuda::PtrStepSzf const src,
 	      cv::cuda::PtrStepSzf dst,
@@ -58,10 +52,10 @@ namespace usdg
     float g_w = w - c;
     float g_e = e - c;
 
-    float Cn  = pmad_coefficient(abs(g_n), K);
-    float Cs  = pmad_coefficient(abs(g_s), K);
-    float Cw  = pmad_coefficient(abs(g_w), K);
-    float Ce  = pmad_coefficient(abs(g_e), K);
+    float Cn  = tukey_biweight(abs(g_n), K);
+    float Cs  = tukey_biweight(abs(g_s), K);
+    float Cw  = tukey_biweight(abs(g_w), K);
+    float Ce  = tukey_biweight(abs(g_e), K);
 
     dst(i, j) = (c + lambda*(Cw*w + Cn*n + Ce*e + Cs*s))
       / (1 + lambda*(Cw + Cn + Ce + Cs));

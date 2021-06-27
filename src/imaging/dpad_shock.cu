@@ -23,6 +23,7 @@
 
 #include "dpad_shock.hpp"
 #include "utils.hpp"
+#include "cuda_utils.hpp"
 
 namespace usdg
 {
@@ -120,25 +121,6 @@ namespace usdg
 
     float L_icov2 = (mu_L2 - mu_L*mu_L) / max(mu_L*mu_L, 1e-7);
     L_coef2(i, j) = L_icov2;
-  }
-
-  __device__ __forceinline__ int sign(float x)
-
-  { 
-    int t = x < 0 ? -1 : 0;
-    return x > 0 ? 1 : t;
-  }
-
-  __device__ __forceinline__ float minmod(float x, float y)
-  { 
-    if(x*y > 0)
-    {
-      return sign(x)*min(abs(x), abs(y));
-    }
-    else
-    {
-      return 0.0;
-    }
   }
 
   __global__ void

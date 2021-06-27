@@ -21,9 +21,7 @@
 
 #include <opencv4/opencv2/core/utility.hpp>
 
-#include "pmad.hpp"
-#include "pmad_shock.hpp"
-#include "dpad_shock.hpp"
+#include "osrad.hpp"
 #include "pyramid.hpp"
 
 namespace usdg
@@ -45,10 +43,10 @@ namespace usdg
      * IEEE Tran. Biomed. Eng. 2015.
      */
   private: 
-    usdg::PMADShock _diffusion0;
-    usdg::PMADShock _diffusion1;
-    usdg::PMADShock _diffusion2;
-    usdg::PMAD      _diffusion3;
+    usdg::OSRAD _diffusion0;
+    usdg::OSRAD  _diffusion1;
+    usdg::OSRAD  _diffusion2;
+    usdg::OSRAD _diffusion3;
 
     std::vector<cv::Mat> _gaussian_pyramid_input;
     std::vector<cv::Mat> _laplacian_pyramid_input;
@@ -58,10 +56,10 @@ namespace usdg
 
     void apply(cv::Mat const& image,
 	       cv::Mat&       output,
-	       float r0, float t0, float sigma0, 
-	       float r1, float t1, float sigma1, 
-	       float r2, float t2, float sigma2,
-	                 float t3, float sigma3,
+	       float t0, float sigma_g0, float sigma_r0,
+	       float t1, float sigma_g1, float sigma_r1,
+	       float t2, float sigma_g2, float sigma_r2,
+	       float t3, float sigma_g3, float sigma_r3,
 	       float alpha, float beta);
   };
 }

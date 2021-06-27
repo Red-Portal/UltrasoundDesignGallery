@@ -23,35 +23,10 @@
 #include "pmad.hpp"
 #include "pmad_shock.hpp"
 #include "utils.hpp"
+#include "cuda_utils.hpp"
 
 namespace usdg
 {
-  __device__ __forceinline__ float
-  pmad_coefficient(float gradient_norm, float K)
-  {
-    float coef = (gradient_norm / K);
-    return 1/(1 + coef*coef);
-  }
-
-  __device__ __forceinline__ int sign(float x)
-
-  { 
-    int t = x < 0 ? -1 : 0;
-    return x > 0 ? 1 : t;
-  }
-
-  __device__ __forceinline__ float minmod(float x, float y)
-  { 
-    if(x*y > 0)
-    {
-      return sign(x)*min(abs(x), abs(y));
-    }
-    else
-    {
-      return 0.0;
-    }
-  }
-
   __global__ void
   pmad_eta_precompute_kernel(cv::cuda::PtrStepSzf const G,
 			     cv::cuda::PtrStepSzf G_dst,
@@ -83,10 +58,10 @@ namespace usdg
     float g_yp = I_yp - I_c;
     float g_ym = I_ym - I_c;
 
-    float C_xp = pmad_coefficient(abs(g_xp), K);
-    float C_xm = pmad_coefficient(abs(g_xm), K);
-    float C_yp = pmad_coefficient(abs(g_yp), K);
-    float C_ym = pmad_coefficient(abs(g_ym), K);
+    float C_xp = tukey_biweight(abs(g_xp), K);
+    float C_xm = tukey_biweight(abs(g_xm), K);
+    float C_yp = tukey_biweight(abs(g_yp), K);
+    float C_ym = tukey_biweight(abs(g_ym), K);
 
     float g_x  = (I_xp - I_xm)/2;
     float g_y  = (I_yp - I_ym)/2;
@@ -146,13 +121,13 @@ namespace usdg
     float L_DIj   = minmod(L_g_w, -L_g_e);
     float L_g_mag = sqrt(L_DIi*L_DIi + L_DIj*L_DIj);
 
-    float Cn  = pmad_coefficient(abs(L_g_n), K);
-    float Cs  = pmad_coefficient(abs(L_g_s), K);
-    float Cw  = pmad_coefficient(abs(L_g_w), K);
-    float Ce  = pmad_coefficient(abs(L_g_e), K);
+    float Cn  = tukey_biweight(abs(L_g_n), K);
+    float Cs  = tukey_biweight(abs(L_g_s), K);
+    float Cw  = tukey_biweight(abs(L_g_w), K);
+    float Ce  = tukey_biweight(abs(L_g_e), K);
 
     float Ieta   = laplacian(i,j);
-    float dshock = -r*(1 - pmad_coefficient(G_g_mag, K))*sign(Ieta)*L_g_mag;
+    float dshock = -r*(1 - tukey_biweight(G_g_mag, K))*sign(Ieta)*L_g_mag;
     output(i, j) = (L_c + dt*(Cw*L_w + Cn*L_n + Ce*L_e + Cs*L_s + dshock))
       / (1 + dt*(Cw + Cn + Ce + Cs));
   }
@@ -226,7 +201,7 @@ namespace usdg
 	cv::Mat&       output,
 	float dt,
 	float r,
-	float K,
+	float sigma,
 	size_t niters)
   {
     _G_buf1.upload(G);
@@ -235,7 +210,7 @@ namespace usdg
 	       _L_buf1, _L_buf2,
 	       _eta_buf1, _eta_buf2,
 	       _eta_filter,
-	       dt, r, K, niters);
+	       dt, r, sigma, niters);
     _L_buf2.download(output);
   }
 }

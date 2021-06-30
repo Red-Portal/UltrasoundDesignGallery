@@ -29,6 +29,8 @@
 #include <opencv4/opencv2/cudaarithm.hpp>
 #include <opencv4/opencv2/quality/qualityssim.hpp>
 
+#include <opencv4/opencv2/highgui.hpp>
+
 namespace usdg
 {
   namespace metrics
@@ -78,6 +80,16 @@ namespace usdg
       double mu2_roi = cv::mean(img_roi.mul(img_roi))[0];
       double std_roi = sqrt(mu2_roi  - mu_roi*mu_roi);
       return mu_roi / std_roi;
+    }
+
+    inline double
+    ssnr(cv::Mat const& img,
+	 cv::Mat const& mask)
+    {
+      auto mean   = cv::Scalar();
+      auto stddev = cv::Scalar();
+      cv::meanStdDev(img, mean, stddev, mask);
+      return mean[0] / (stddev[0] + 1e-5);
     }
 
     // inline cv::Scalar
@@ -131,6 +143,92 @@ namespace usdg
       }
       return numerator / demonimator;
     }
+
+    inline double
+    gcnr(cv::Mat const& image,
+	 cv::Mat const& mask1,
+	 cv::Mat const& mask2)
+    {
+      int channels[1]        = { 0 };
+      float gray_range[2]    = { 0.0, 1.0 };
+      float const* ranges[2] = { gray_range };
+      int n_bins[1]          = { 64 };
+
+      auto roi1_hist = cv::Mat();
+      cv::calcHist(&image,
+		   1,
+		   channels,
+		   mask1,
+		   roi1_hist,
+		   1,
+		   n_bins,
+		   ranges,
+		   true,
+		   false);		
+      auto roi1_area = cv::countNonZero(mask1);
+      roi1_hist     /= roi1_area;
+
+      auto roi2_hist = cv::Mat();
+      cv::calcHist(&image,
+		   1,
+		   channels,
+		   mask2,
+		   roi2_hist,
+		   1,
+		   n_bins,
+		   ranges,
+		   true,
+		   false);		
+      auto roi2_area = cv::countNonZero(mask2);
+      roi2_hist     /= roi2_area;
+
+      auto ovl = cv::compareHist(roi1_hist, roi2_hist, cv::HISTCMP_INTERSECT);
+      return 1 - ovl;
+    }
+
+    // inline double
+    // fom(cv::Mat const& image, cv::Mat const& gold, double sigma)
+    // {
+    //   auto imag_smooth = cv::Mat();
+    //   auto gold_smooth = cv::Mat();
+    //   cv::GaussianBlur(image, imag_smooth, cv::Size(5,5), sigma, sigma);
+    //   cv::GaussianBlur(gold,  gold_smooth, cv::Size(5,5), sigma, sigma);
+
+    //   auto imag_8u = cv::Mat(imag_smooth.rows, imag_smooth.cols, CV_8U);
+    //   auto gold_8u = cv::Mat(imag_smooth.rows, imag_smooth.cols, CV_8U);
+    //   for (int i = 0; i < imag_smooth.rows; ++i) {
+    // 	for (int j = 0; j < imag_smooth.cols; ++j) {
+    // 	  imag_8u.at<unsigned char>(i,j) = cv::saturate_cast<unsigned char>(
+    // 	    round(imag_smooth.at<float>(i,j)*255.0f));
+    // 	  gold_8u.at<unsigned char>(i,j) = cv::saturate_cast<unsigned char>(
+    // 	    round(gold_smooth.at<float>(i,j)*255.0f));
+    // 	}
+    //   }
+
+    //   auto imag_edges = cv::Mat();
+    //   auto gold_edges = cv::Mat();
+    //   cv::Canny(imag_8u, imag_edges, 32, 2);
+    //   cv::Canny(gold_8u, gold_edges, 32, 2);
+
+    //   cv::namedWindow("fuck");
+    //   cv::imshow("fuck", gold_8u);
+    //   cv::waitKey(0);
+
+    //   cv::namedWindow("fuck");
+    //   cv::imshow("fuck", imag_8u);
+    //   cv::waitKey(0);
+
+    //   cv::namedWindow("fuck");
+    //   cv::imshow("fuck", imag_edges);
+    //   cv::waitKey(0);
+
+    //   cv::namedWindow("fuck");
+    //   cv::imshow("fuck", gold_edges);
+    //   cv::waitKey(0);
+
+    // 	//auto labels = cv::Mat();
+    // 	//cv::distance_transform(image, gold, labels, DIST_L2 );
+    // }
   }
 }
 

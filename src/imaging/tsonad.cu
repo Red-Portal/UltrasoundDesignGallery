@@ -20,19 +20,19 @@
 #include <opencv4/opencv2/core/core.hpp>
 #include <opencv4/opencv2/core/cuda.hpp>
 
-#include "osrad.hpp"
+#include "tsonad.hpp"
 #include "utils.hpp"
 #include "cuda_utils.hpp"
 
 namespace usdg
 {
   __global__ void
-  osrad_diffusion_matrix(cv::cuda::PtrStepSzf const img_smoothed,
-			 cv::cuda::PtrStepSzf Dxx,
-			 cv::cuda::PtrStepSzf Dxy,
-			 cv::cuda::PtrStepSzf Dyy,
-			 float sigma_g,
-			 float ctang)
+  tsonad_diffusion_matrix(cv::cuda::PtrStepSzf const img_smoothed,
+			  cv::cuda::PtrStepSzf Dxx,
+			  cv::cuda::PtrStepSzf Dxy,
+			  cv::cuda::PtrStepSzf Dyy,
+			  float sigma_g,
+			  float ctang)
   {
     const int i = blockIdx.x*blockDim.x + threadIdx.x;
     const int j = blockIdx.y*blockDim.y + threadIdx.y;
@@ -76,15 +76,23 @@ namespace usdg
     Dyy(i,j) = lambda0*e0_y*e0_y + lambda1*e1_y*e1_y;
   }
 
+
+  __device__ __forceinline__ float
+  kumaraswamy_cdf(float x, float a, float b)
+  {
+    return pow(1 - pow(x, a), b);
+  }
+
   __global__ void
-  osrad_diffusion(cv::cuda::PtrStepSzf const img_src,
-		  cv::cuda::PtrStepSzf const img_smoothed,
-		  cv::cuda::PtrStepSzf const Dxx,
-		  cv::cuda::PtrStepSzf const Dxy,
-		  cv::cuda::PtrStepSzf const Dyy,
-		  cv::cuda::PtrStepSzf img_dst,
-		  float dt,
-		  float sigma_r)
+  tsonad_diffusion(cv::cuda::PtrStepSzf const img_src,
+		   cv::cuda::PtrStepSzf const img_smoothed,
+		   cv::cuda::PtrStepSzf const Dxx,
+		   cv::cuda::PtrStepSzf const Dxy,
+		   cv::cuda::PtrStepSzf const Dyy,
+		   cv::cuda::PtrStepSzf img_dst,
+		   float ts_a,
+		   float ts_b,
+		   float dt)
   {
     const int i = blockIdx.x*blockDim.x + threadIdx.x;
     const int j = blockIdx.y*blockDim.y + threadIdx.y;
@@ -110,14 +118,14 @@ namespace usdg
     float u8 = img_src( i, ym);
     float u9 = img_src(xp, ym);
 
-    float r1 = exp(-img_smoothed(xm, yp)/sigma_r);
-    float r2 = exp(-img_smoothed(i,  yp)/sigma_r);
-    float r3 = exp(-img_smoothed(xp, yp)/sigma_r);
-    float r4 = exp(-img_smoothed(xm, j )/sigma_r);
-    float r6 = exp(-img_smoothed(xp, j )/sigma_r);
-    float r7 = exp(-img_smoothed(xm, ym)/sigma_r);
-    float r8 = exp(-img_smoothed(i,  ym)/sigma_r);
-    float r9 = exp(-img_smoothed(xp, ym)/sigma_r);
+    float r1 = kumaraswamy_cdf(img_smoothed(xm, yp), ts_a, ts_b);
+    float r2 = kumaraswamy_cdf(img_smoothed(i,  yp), ts_a, ts_b);
+    float r3 = kumaraswamy_cdf(img_smoothed(xp, yp), ts_a, ts_b);
+    float r4 = kumaraswamy_cdf(img_smoothed(xm, j ), ts_a, ts_b);
+    float r6 = kumaraswamy_cdf(img_smoothed(xp, j ), ts_a, ts_b);
+    float r7 = kumaraswamy_cdf(img_smoothed(xm, ym), ts_a, ts_b);
+    float r8 = kumaraswamy_cdf(img_smoothed(i,  ym), ts_a, ts_b);
+    float r9 = kumaraswamy_cdf(img_smoothed(xp, ym), ts_a, ts_b);
 
     float eps = 1e-7;
     float c1 = max((1.0/4)*(Dxy(xm,  j) - Dxy(i, yp))*r1, eps);
@@ -129,65 +137,66 @@ namespace usdg
     float c8 = max((1.0/2)*(Dyy( i, ym) + Dyy(i,  j))*r8, eps);
     float c9 = max((1.0/4)*(Dxy(xp,  j) - Dxy(i, ym))*r9, eps);
 
-    img_dst(i,j) = (u5 + dt*(c1*u1 + c2*u2 + c3*u3 + c4*u4 + c6*u6 + c7*u7 + c8*u8 + c9*u9)) /
+    img_dst(i,j) = (u5 + dt*(c1*u1 + c2*u2 + c3*u3 + c4*u4
+			     + c6*u6 + c7*u7 + c8*u8 + c9*u9)) /
       (1 + dt*(c1 + c2 + c3 + c4 + c6 + c7 + c8 + c9));
   }
 
   void
-  osrad(cv::cuda::GpuMat& G_buf1,
-	cv::cuda::GpuMat& G_buf2,
-	cv::cuda::GpuMat& L_buf1,
-	cv::cuda::GpuMat& L_buf2,
-	cv::cuda::GpuMat& Dxx_buf,
-	cv::cuda::GpuMat& Dxy_buf,
-	cv::cuda::GpuMat& Dyy_buf,
-	cv::Ptr<cv::cuda::Filter>& gaussian_filter,
-	float dt,
-	float sigma_r,
-	float sigma_g,
-	float ctang,
-	size_t niters)
+  tsonad(cv::cuda::GpuMat& img_buf1,
+	 cv::cuda::GpuMat& img_buf2,
+	 cv::cuda::GpuMat& img_smooth,
+	 cv::cuda::GpuMat& Dxx_buf,
+	 cv::cuda::GpuMat& Dxy_buf,
+	 cv::cuda::GpuMat& Dyy_buf,
+	 cv::Ptr<cv::cuda::Filter>& gaussian_filter,
+	 float dt,
+	 float ts_a,
+	 float ts_b,
+	 float sigma,
+	 float ctang,
+	 size_t niters)
   /*
    * Perona, Pietro, and Jitendra Malik. 
    * "Scale-space and edge detection using anisotropic diffusion." 
    * IEEE Transactions on Pattern Analysis and Machine Intelligence (PAMI), 1990.
    */
   {
-    size_t M  = static_cast<size_t>(G_buf1.rows);
-    size_t N  = static_cast<size_t>(G_buf1.cols);
+    size_t M  = static_cast<size_t>(img_buf1.rows);
+    size_t N  = static_cast<size_t>(img_buf1.cols);
     const dim3 block(8,8);
     const dim3 grid(static_cast<unsigned int>(
 		      ceil(static_cast<float>(M)/block.x)),
 		    static_cast<unsigned int>(
 		      ceil(static_cast<float>(N)/block.y)));
-    gaussian_filter->apply(G_buf1, G_buf2);
+    gaussian_filter->apply(img_buf1, img_smooth);
+    usdg::tsonad_diffusion_matrix<<<grid,block>>>(img_smooth,
+						  Dxx_buf,
+						  Dxy_buf,
+						  Dyy_buf,
+						  sigma,
+						  ctang);
     for (size_t i = 0; i < niters; ++i)
     {
-      usdg::osrad_diffusion_matrix<<<grid,block>>>(L_buf2,
-						   Dxx_buf,
-						   Dxy_buf,
-						   Dyy_buf,
-						   sigma_g,
-						   ctang);
-      usdg::osrad_diffusion<<<grid,block>>>(L_buf1,
-					    G_buf2,
-					    Dxx_buf,
-					    Dxy_buf,
-					    Dyy_buf,
-					    L_buf2,
-					    dt,
-					    sigma_r);
-      cv::swap(L_buf1, L_buf2);
+      usdg::tsonad_diffusion<<<grid,block>>>(img_buf1,
+					     img_smooth,
+					     Dxx_buf,
+					     Dxy_buf,
+					     Dyy_buf,
+					     img_buf2,
+					     ts_a,
+					     ts_b,
+					     dt);
+      cv::swap(img_buf1, img_buf2);
     }
     cuda_check( cudaPeekAtLastError() );
   }
 
-  OSRAD::
-  OSRAD()
-    : _G_buf1(),
-    _G_buf2(),
-    _L_buf1(),
-    _L_buf2(),
+  TSONAD::
+  TSONAD()
+    : _img_buf1(),
+    _img_buf2(),
+    _img_smooth(),
     _Dxx_buf(),
     _Dxy_buf(),
     _Dyy_buf(),
@@ -195,13 +204,12 @@ namespace usdg
   {}
 
   void
-  OSRAD::
+  TSONAD::
   preallocate(size_t n_rows, size_t n_cols)
   {
-    _G_buf1.create(n_rows, n_cols, CV_32F);
-    _G_buf2.create(n_rows, n_cols, CV_32F);
-    _L_buf1.create(n_rows, n_cols, CV_32F);
-    _L_buf2.create(n_rows, n_cols, CV_32F);
+    _img_buf1.create(n_rows, n_cols, CV_32F);
+    _img_buf2.create(n_rows, n_cols, CV_32F);
+    _img_smooth.create(n_rows, n_cols, CV_32F);
     _Dxx_buf.create(n_rows, n_cols, CV_32F);
     _Dxy_buf.create(n_rows, n_cols, CV_32F);
     _Dyy_buf.create(n_rows, n_cols, CV_32F);
@@ -210,25 +218,25 @@ namespace usdg
   }
 
   void
-  OSRAD::
-  apply(cv::Mat const& G_image,
-	cv::Mat const& L_image,
+  TSONAD::
+  apply(cv::Mat const& image,
 	cv::Mat&       output,
 	float dt,
-	float sigma_r,
-	float sigma_g,
+	float ts_a,
+	float ts_b,
+	float sigma,
 	float ctang,
 	size_t niters)
   {
-    _G_buf1.upload(G_image);
-    _L_buf1.upload(L_image);
-    usdg::osrad(_G_buf1, _G_buf2,
-		_L_buf1, _L_buf2,
+    _img_buf1.upload(image);
+    usdg::tsonad(_img_buf1,
+		_img_buf2,
+		_img_smooth,
 		_Dxx_buf,
 		_Dxy_buf,
 		_Dyy_buf,
 		_gaussian_filter,
-		dt, sigma_r, sigma_g, ctang, niters);
-    _L_buf2.download(output);
+		 dt, ts_a, ts_b, sigma, ctang, niters);
+    _img_buf2.download(output);
   }
 }

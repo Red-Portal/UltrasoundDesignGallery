@@ -16,42 +16,32 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __US_GALLERY_DPADSHOCK_HPP__
-#define __US_GALLERY_DPADSHOCK_HPP__
+#ifndef __US_GALLERY_PIPELINE_HPP__
+#define __US_GALLERY_PIPELINE_HPP__
 
-#include <opencv4/opencv2/core/core.hpp>
-#include <opencv4/opencv2/core/cuda.hpp>
-#include <opencv4/opencv2/cudafilters.hpp>
+#include <opencv4/opencv2/core/utility.hpp>
+
+#include "tsonad.hpp"
 
 namespace usdg
 {
-  class DPADShock
+  class Pipeline
   {
-  private:
-    cv::cuda::GpuMat _G_buf1;
-    cv::cuda::GpuMat _G_buf2;
+  private: 
+    usdg::TSONAD _diffusion;
+    cv::Mat      _despeckle_buf;
+    cv::Mat      _logimage_buf;
+    cv::Mat      _expimage_buf;
+    cv::Mat      _lopass_buf;
+    cv::Mat      _hipass_buf;
+    
+  public: 
+    Pipeline(size_t n_rows, size_t n_cols);
 
-    cv::cuda::GpuMat _L_buf1;
-    cv::cuda::GpuMat _L_buf2;
-
-    cv::cuda::GpuMat _L_coef2_buf;
-    cv::cuda::GpuMat _G_coef2_buf;
-
-    cv::cuda::GpuMat _eta_buf;
-
-    cv::Ptr<cv::cuda::Filter> _eta_filter;
-
-  public:
-    DPADShock();
-
-    void preallocate(size_t n_rows, size_t n_cols);
-
-    void apply(cv::Mat const& G,
-	       cv::Mat const& L,
+    void apply(cv::Mat const& image,
 	       cv::Mat&       output,
-	       float dt,
-	       float r,
-	       size_t niters);
+	       float t,     float ts_a, float ts_b, float sigma_g,
+	       float ctang, float theta, float alpha, float beta);
   };
 }
 

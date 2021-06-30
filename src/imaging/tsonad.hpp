@@ -16,29 +16,42 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __US_GALLERY_DIFFUSION_HPP__
-#define __US_GALLERY_DIFFUSION_HPP__
+#ifndef __US_GALLERY_TSONAD_HPP__
+#define __US_GALLERY_TSONAD_HPP__
+
+#include <cstddef>
 
 #include <opencv4/opencv2/core/core.hpp>
 #include <opencv4/opencv2/core/cuda.hpp>
+#include <opencv4/opencv2/cudafilters.hpp>
 
 namespace usdg
 {
-  class PMAD
+  class TSONAD
   {
   private:
-    cv::cuda::GpuMat _device_buf1;
-    cv::cuda::GpuMat _device_buf2;
+    cv::cuda::GpuMat _img_buf1;
+    cv::cuda::GpuMat _img_buf2;
+    cv::cuda::GpuMat _img_smooth;
+
+    cv::cuda::GpuMat _Dxx_buf;
+    cv::cuda::GpuMat _Dxy_buf;
+    cv::cuda::GpuMat _Dyy_buf;
+
+    cv::Ptr<cv::cuda::Filter> _gaussian_filter;
 
   public:
-    PMAD();
+    TSONAD();
 
     void preallocate(size_t n_rows, size_t n_cols);
 
     void apply(cv::Mat const& image,
 	       cv::Mat&       output,
-	       float lambda,
-	       float K,
+	       float dt,
+	       float ts_a,
+	       float ts_b,
+	       float sigma,
+	       float ctang,
 	       size_t niters);
   };
 }

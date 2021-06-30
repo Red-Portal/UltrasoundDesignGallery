@@ -13,15 +13,10 @@ using Distributions
 using LinearAlgebra
 using Base.Threads
 
-macro swap!(x,y)
-   quote
-      local tmp = $(esc(x))
-      $(esc(x)) = $(esc(y))
-      $(esc(y)) = tmp
-    end
-end
+include("utils.jl")
+include("dpad.jl")
 
-function compute_basis(g_x, g_y)
+function osrad_compute_basis(g_x, g_y)
     g_mag      = sqrt(g_x*g_x + g_y*g_y)
     e0_x, e0_y = if (g_mag > 1e-5)
         g_x / g_mag, g_y / g_mag
@@ -33,19 +28,12 @@ function compute_basis(g_x, g_y)
     e0_x, e0_y, e1_x, e1_y
 end
 
-function compute_coefficient(g_x, g_y,
-                             e0_x, e0_y,
-                             e1_x, e1_y,
-                             σ_g, ctang)
-    g_norm = sqrt(g_x*g_x + g_y*g_y)
-    λ0     = if(g_norm < σ_g)
-        r = g_norm / σ_g
-        c = 1 - r*r
-        c*c
-    else
-        0
-    end
-    λ1     = ctang
+function osrad_compute_coefficient(e0_x, e0_y,
+                                   e1_x, e1_y,
+                                   coeff,
+                                   ctang)
+    λ0 =  coeff
+    λ1 = ctang
 
     Dxx = λ0*e0_x*e0_x + λ1*e1_x*e1_x
     Dxy = λ0*e0_x*e0_y + λ1*e1_x*e1_y
@@ -53,22 +41,22 @@ function compute_coefficient(g_x, g_y,
     Dxx, Dxy, Dyy
 end
 
-function diffusion(img, dt, n_iters, σ_g, σ_r, ctang)
+function osrad(img, denoised, dt, n_iters, ctang)
+
     M       = size(img, 1)
     N       = size(img, 2)
     img_src = deepcopy(img)
     img_dst = Array{Float32}(undef, M, N)
-    img_lpf = Array{Float32}(undef, M, N)
+    coeff2  = Array{Float32}(undef, M, N)
 
     D_xx = Array{Float32}(undef, M, N)
     D_xy = Array{Float32}(undef, M, N)
     D_yy = Array{Float32}(undef, M, N)
 
     ProgressMeter.@showprogress for t = 1:n_iters
-        ImageFiltering.imfilter!(img_lpf, img_src,
-                                 ImageFiltering.Kernel.gaussian((4.0, 4.0), (5,5)),
-                                 "replicate",
-                                 ImageFiltering.Algorithm.FIR())
+        compute_icov!(img_src, coeff2)
+        C2_noise = max(median(coeff2), 1e-5)
+        coeff2   = (1 .+ (1 ./ max.(coeff2, 1e-5))) ./ (1 .+ (1 / C2_noise))
 
         @inbounds for j = 1:N
             @inbounds for i = 1:M
@@ -77,14 +65,14 @@ function diffusion(img, dt, n_iters, σ_g, σ_r, ctang)
                 ym = max(j-1, 1)
                 yp = min(j+1, N)
 
-                g_x = (img_lpf[xp, j]  - img_lpf[xm, j])/2
-                g_y = (img_lpf[i,  yp] - img_lpf[i,  ym])/2
+                g_x = (denoised[xp, j]  - denoised[xm, j])/2
+                g_y = (denoised[i,  yp] - denoised[i,  ym])/2
 
                 e0_x, e0_y, e1_x, e1_y = compute_basis(g_x, g_y)
-                d_xx, d_xy, d_yy       = compute_coefficient(g_x, g_y,
-                                                             e0_x, e0_y,
+                d_xx, d_xy, d_yy       = compute_coefficient(e0_x, e0_y,
                                                              e1_x, e1_y,
-                                                             σ_g, ctang)
+                                                             coeff2[i,j],
+                                                             ctang)
                 D_xx[i,j] = d_xx
                 D_xy[i,j] = d_xy
                 D_yy[i,j] = d_yy
@@ -95,8 +83,8 @@ function diffusion(img, dt, n_iters, σ_g, σ_r, ctang)
         b = D_xy
         c = D_yy
         
-        for j = 1:N
-            for i = 1:M
+        @inbounds for j = 1:N
+            @inbounds for i = 1:M
                 nx = max(i - 1, 1)
                 px = min(i + 1, M)
                 ny = max(j - 1, 1)
@@ -112,15 +100,6 @@ function diffusion(img, dt, n_iters, σ_g, σ_r, ctang)
                 u8 = img_src[i,  ny]
                 u9 = img_src[px, ny]
 
-                r1 = exp(-img_lpf[nx, py]/σ_r)
-                r2 = exp(-img_lpf[i,  py]/σ_r)
-                r3 = exp(-img_lpf[px, py]/σ_r)
-                r4 = exp(-img_lpf[nx, j ]/σ_r)
-                r6 = exp(-img_lpf[px, j ]/σ_r)
-                r7 = exp(-img_lpf[nx, ny]/σ_r)
-                r8 = exp(-img_lpf[i,  ny]/σ_r)
-                r9 = exp(-img_lpf[px, ny]/σ_r)
-
                 A1 = (1/4)*(b[nx, j ] - b[i, py])
                 A2 = (1/2)*(c[i,  py] + c[i, j ])
                 A3 = (1/4)*(b[px, j ] + b[i, py])
@@ -130,7 +109,7 @@ function diffusion(img, dt, n_iters, σ_g, σ_r, ctang)
                 A8 = (1/2)*(c[i,  ny] + c[i, j ])
                 A9 = (1/4)*(b[px, j ] - b[i, ny])
 
-                img_dst[i,j] = (img_src[i,j] + dt*(
+                img_dst[i,j] = (u5 + dt*(
                     A1*u1 + A2*u2 + A3*u3
                     + A4*u4 + A6*u6 + A7*u7
                     + A8*u8 + A9*u9)) /
@@ -144,16 +123,18 @@ function diffusion(img, dt, n_iters, σ_g, σ_r, ctang)
     img_dst
 end
 
-function main()
+function osrad_test()
     #img      = FileIO.load("../data/phantom/field2_cyst_phantom.png")
-    img      = FileIO.load("../data/image/forearm_gray.png")
+    #img      = FileIO.load("../data/image/forearm_gray.png")
+    img      = FileIO.load("../data/image/thyroid_add.png")
     #img      = FileIO.load("2.png")
     img      = Images.Gray.(img)
-    img      = Float32.(Images.gray.(img))
-    img_base = deepcopy(img)
+    img_base = Float32.(Images.gray.(img))
+    img      = exp10.(img_base)
 
-    img_out = diffusion(img, 0.3, 50, 0.03, 0.3, 1.0)
-    img_out = clamp.(img_out, 0, 1.0)
+    denoised = dpad(img, 1.0, 50)
+    img_out  = osrad(img, denoised, 1.0, 100, 0.01)
+    img_out  = log10.(clamp.(img_out, 1.0, 10.0))
 
     view = MosaicViews.mosaicview(ImageCore.colorview(Images.Gray, img_base),
                                   ImageCore.colorview(Images.Gray, img_out);

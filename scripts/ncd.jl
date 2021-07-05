@@ -11,7 +11,7 @@ using Base.Threads
 
 include("utils.jl")
 
-function ced(img, dt, n_iters, σ, ρ, α, β)
+function ncd(img, dt, n_iters, ρ, α, β, s)
     M       = size(img, 1)
     N       = size(img, 2)
     img_src = deepcopy(img)
@@ -26,22 +26,18 @@ function ced(img, dt, n_iters, σ, ρ, α, β)
     J_xx_σ = Array{Float32}(undef, M, N)
     J_xy_σ = Array{Float32}(undef, M, N)
     J_yy_σ = Array{Float32}(undef, M, N)
-    img_σ  = Array{Float32}(undef, M, N)
+
+    #kernel_x = Images.OffsetArray([3 10  3;  0 0   0; -3 -10 -3]/32.0, -1:1, -1:1)
+    #kernel_y = Images.OffsetArray([3  0 -3; 10 0 -10;  3   0 -3]/32.0, -1:1, -1:1)
 
     k_ρ = floor(Int, ρ*6/2)*2 + 1
-    k_σ = floor(Int, σ*6/2)*2 + 1
     ProgressMeter.@showprogress for t = 1:n_iters
-        ImageFiltering.imfilter!(img_σ, img_src,
-                                 ImageFiltering.Kernel.gaussian((σ, σ), (k_σ,k_σ)),
-                                 "replicate",
-                                 ImageFiltering.Algorithm.FIR())
-
         for j = 1:N
             for i = 1:M
-                I_xp = img_σ[min(i+1, M), j]
-                I_xm = img_σ[max(i-1, 1), j]
-                I_yp = img_σ[i, min(j+1, N)]
-                I_ym = img_σ[i, max(j-1, 1)]
+                I_xp = img_src[min(i+1, M), j]
+                I_xm = img_src[max(i-1, 1), j]
+                I_yp = img_src[i,           min(j+1, N)]
+                I_ym = img_src[i,           max(j-1, 1)]
 
                 g_x = (I_xp - I_xm)/2
                 g_y = (I_yp - I_ym)/2
@@ -65,18 +61,21 @@ function ced(img, dt, n_iters, σ, ρ, α, β)
                                  "replicate",
                                  ImageFiltering.Algorithm.FIR())
 
+        fuck = Array{Float32}(undef, M, N, 2)
+
         for j = 1:N
             for i = 1:M
                 v1x, v1y, v2x, v2y, λ1, λ2 = eigenbasis_2d(J_xx_σ[i,j],
                                                            J_xy_σ[i,j],
                                                            J_yy_σ[i,j])
 
+                δ  = 1 - β*abs(img[i,j] - img_src[i,j])
                 κ  = (λ1 - λ2).^2
-                λ1 = α
-                λ2 = if abs(κ) > eps(Float32)
-                    α + (1 - α)*exp(-β ./ κ)
+                λ1 = α*δ
+                λ2 = if κ < s*s
+                    α*δ*(1 - κ/(s*s))
                 else
-                    α 
+                    0
                 end
 
                 Dxx = λ1*v1x*v1x + λ2*v2x*v2x
@@ -122,20 +121,20 @@ function ced(img, dt, n_iters, σ, ρ, α, β)
     img_dst
 end
 
-function ced_test()
+function ncd_test()
     #img      = FileIO.load("../data/phantom/field2_cyst_phantom.png")
     #img      = FileIO.load("../data/image/forearm_gray.png")
     #img      = FileIO.load("2.png")
     #img      = FileIO.load("../data/selections/liver/Test1_1.png")
     img      = FileIO.load("../data/subjects/thyroid/m_KJH_000012.jpg")
     img      = Images.Gray.(img)
-    img      = Float32.(Images.gray.(img))*255
+    img      = Float32.(Images.gray.(img))
     img_base = deepcopy(img)
 
-    img_out = ced(img, 1.0, 30, 0.5, 4.0, 0.1, 1.0)
-    img_out = clamp.(img_out, 0, 255.0)
+    img_out = ncd(img, 1.0, 30, 3.0, 1.0, 0.5, 0.0001)
+    img_out = clamp.(img_out, 0, 1.0)
 
-    #FileIO.save("ced.png", img_out/255.0)
+    FileIO.save("ncd.png", img_out)
 
     view = MosaicViews.mosaicview(ImageCore.colorview(Images.Gray, img_base),
                                   ImageCore.colorview(Images.Gray, img_out);

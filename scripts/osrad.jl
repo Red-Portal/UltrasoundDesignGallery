@@ -7,7 +7,6 @@ import MosaicViews
 import ImageCore
 import ProgressMeter
 import ImageFiltering
-import GaussianMixtures
 
 using Distributions
 using LinearAlgebra
@@ -41,8 +40,7 @@ function osrad_compute_coefficient(e0_x, e0_y,
     Dxx, Dxy, Dyy
 end
 
-function osrad(img, denoised, dt, n_iters, ctang)
-
+function osrad(img, dt, n_iters, ctang, w)
     M       = size(img, 1)
     N       = size(img, 2)
     img_src = deepcopy(img)
@@ -54,9 +52,9 @@ function osrad(img, denoised, dt, n_iters, ctang)
     D_yy = Array{Float32}(undef, M, N)
 
     ProgressMeter.@showprogress for t = 1:n_iters
-        compute_icov!(img_src, coeff2)
-        C2_noise = max(median(coeff2), 1e-5)
-        coeff2   = (1 .+ (1 ./ max.(coeff2, 1e-5))) ./ (1 .+ (1 / C2_noise))
+        compute_icov!(img_src, coeff2, w)
+        C2_noise = median(coeff2)
+        coeff2   = (1 .+ (1 ./ max.(coeff2, 1e-5))) ./ (1 .+ (1 / max.(C2_noise, 1e-5)))
 
         @inbounds for j = 1:N
             @inbounds for i = 1:M
@@ -65,14 +63,14 @@ function osrad(img, denoised, dt, n_iters, ctang)
                 ym = max(j-1, 1)
                 yp = min(j+1, N)
 
-                g_x = (denoised[xp, j]  - denoised[xm, j])/2
-                g_y = (denoised[i,  yp] - denoised[i,  ym])/2
+                g_x = (img[xp, j]  - img[xm, j])/2
+                g_y = (img[i,  yp] - img[i,  ym])/2
 
-                e0_x, e0_y, e1_x, e1_y = compute_basis(g_x, g_y)
-                d_xx, d_xy, d_yy       = compute_coefficient(e0_x, e0_y,
-                                                             e1_x, e1_y,
-                                                             coeff2[i,j],
-                                                             ctang)
+                e0_x, e0_y, e1_x, e1_y = osrad_compute_basis(g_x, g_y)
+                d_xx, d_xy, d_yy       = osrad_compute_coefficient(e0_x, e0_y,
+                                                                   e1_x, e1_y,
+                                                                   coeff2[i,j],
+                                                                   ctang)
                 D_xx[i,j] = d_xx
                 D_xy[i,j] = d_xy
                 D_yy[i,j] = d_yy
@@ -126,15 +124,18 @@ end
 function osrad_test()
     #img      = FileIO.load("../data/phantom/field2_cyst_phantom.png")
     #img      = FileIO.load("../data/image/forearm_gray.png")
-    img      = FileIO.load("../data/image/thyroid_add.png")
+    #img      = FileIO.load("../data/image/thyroid_add.png")
     #img      = FileIO.load("2.png")
+    #img      = FileIO.load("../data/selections/liver/Test3_2.png")
+    img      = FileIO.load("../data/subjects/thyroid/m_KJH_000012.jpg")
     img      = Images.Gray.(img)
     img_base = Float32.(Images.gray.(img))
     img      = exp10.(img_base)
 
-    denoised = dpad(img, 1.0, 50)
-    img_out  = osrad(img, denoised, 1.0, 100, 0.01)
+    img_out  = osrad(img, 1.0, 100, 0.1, 7)
     img_out  = log10.(clamp.(img_out, 1.0, 10.0))
+    
+    FileIO.save("osrad.png", img_out)
 
     view = MosaicViews.mosaicview(ImageCore.colorview(Images.Gray, img_base),
                                   ImageCore.colorview(Images.Gray, img_out);

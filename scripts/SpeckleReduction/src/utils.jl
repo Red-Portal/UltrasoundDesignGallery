@@ -44,8 +44,11 @@ function tukey_biweight(g_norm, σ_g)
     end
 end
 
-function logcompress(img::Array, n_quant::Int, dynamic_range::Real)
-    x_max  = maximum(img)
+function logcompress(img::Array,
+                     max_intensity::Real,
+                     n_quant::Int,
+                     dynamic_range::Real)
+    x_max  = max_intensity
     y_max  = n_quant
     x_min  = 10.0.^(-dynamic_range/20)*x_max
 

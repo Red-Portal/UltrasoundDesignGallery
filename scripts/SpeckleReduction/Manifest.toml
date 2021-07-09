@@ -845,6 +845,13 @@ git-tree-sha1 = "95a4038d1011dfdbde7cecd2ad0ac411e53ab1bc"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
 version = "0.10.1"
 
+[[PFM]]
+git-tree-sha1 = "1fbdfb70c2ae04260861d7651dba0e34db11fb1c"
+repo-rev = "master"
+repo-url = "https://github.com/pleise/PFM.jl"
+uuid = "f731acbe-f3b8-11e8-1f9b-bf615e2c834e"
+version = "0.1.1"
+
 [[PaddedViews]]
 deps = ["OffsetArrays"]
 git-tree-sha1 = "0fa5e78929aebc3f6b56e1a88cf505bb00a354c4"

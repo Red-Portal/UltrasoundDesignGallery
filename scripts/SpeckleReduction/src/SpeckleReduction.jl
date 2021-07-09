@@ -9,6 +9,7 @@ import ProgressMeter
 import ImageFiltering
 import GaussianMixtures
 import FileIO
+import PFM
 
 using Distributions
 using LinearAlgebra

@@ -1,20 +1,4 @@
 
-import Images
-import ImageView
-import Plots, StatsPlots
-import MosaicViews
-import ImageCore
-import ProgressMeter
-import ImageFiltering
-import FileIO
-
-using Distributions
-using LinearAlgebra
-using Base.Threads
-
-include("utils.jl")
-include("dpad.jl")
-
 function osrad_compute_basis(g_x, g_y)
     g_mag      = sqrt(g_x*g_x + g_y*g_y)
     e0_x, e0_y = if (g_mag > 1e-5)
@@ -119,26 +103,4 @@ function osrad(img, dt, n_iters, ctang, w)
         @swap!(img_src, img_dst)
     end
     img_dst
-end
-
-function osrad_test()
-    #img      = FileIO.load("../data/phantom/field2_cyst_phantom.png")
-    #img      = FileIO.load("../data/image/forearm_gray.png")
-    #img      = FileIO.load("../data/image/thyroid_add.png")
-    #img      = FileIO.load("2.png")
-    #img      = FileIO.load("../data/selections/liver/Test3_2.png")
-    img      = FileIO.load("../data/subjects/thyroid/m_KJH_000012.jpg")
-    img      = Images.Gray.(img)
-    img_base = Float32.(Images.gray.(img))
-    img      = exp10.(img_base)
-
-    img_out  = osrad(img, 1.0, 100, 0.1, 7)
-    img_out  = log10.(clamp.(img_out, 1.0, 10.0))
-    
-    FileIO.save("osrad.png", img_out)
-
-    view = MosaicViews.mosaicview(ImageCore.colorview(Images.Gray, img_base),
-                                  ImageCore.colorview(Images.Gray, img_out);
-                                  nrow=1, npad=10)
-    ImageView.imshow(view)
 end

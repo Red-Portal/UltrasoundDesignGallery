@@ -1,16 +1,4 @@
 
-import Images
-import ImageView
-import FileIO
-import Plots
-import MosaicViews
-import ImageCore
-import ProgressMeter
-import ImageFiltering
-using Base.Threads
-
-include("utils.jl")
-
 function ncd(img, dt, n_iters, ρ, α, β, s)
     M       = size(img, 1)
     N       = size(img, 2)
@@ -119,26 +107,4 @@ function ncd(img, dt, n_iters, ρ, α, β, s)
         @swap!(img_src, img_dst)
     end
     img_dst
-end
-
-function ncd_test()
-    #img      = FileIO.load("../data/phantom/field2_cyst_phantom.png")
-    #img      = FileIO.load("../data/image/forearm_gray.png")
-    #img      = FileIO.load("2.png")
-    #img      = FileIO.load("../data/selections/liver/Test1_1.png")
-    img      = FileIO.load("../data/subjects/thyroid/m_KJH_000012.jpg")
-    img      = Images.Gray.(img)
-    img      = Float32.(Images.gray.(img))
-    img_base = deepcopy(img)
-
-    img_out = ncd(img, 1.0, 30, 3.0, 1.0, 0.5, 0.0001)
-    img_out = clamp.(img_out, 0, 1.0)
-
-    FileIO.save("ncd.png", img_out)
-
-    view = MosaicViews.mosaicview(ImageCore.colorview(Images.Gray, img_base),
-                                  ImageCore.colorview(Images.Gray, img_out);
-                                  nrow=1,
-                                  npad=10)
-    ImageView.imshow(view)
 end

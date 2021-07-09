@@ -1,20 +1,4 @@
 
-import Images
-import ImageView
-import FileIO
-import Plots, StatsPlots
-import MosaicViews
-import ImageCore
-import ProgressMeter
-import ImageFiltering
-import PFM
-
-using Distributions
-using LinearAlgebra
-using Base.Threads
-
-include("utils.jl")
-
 function compute_icov!(img_src, coeff2_dst, w)
     M = size(img_src, 1)
     N = size(img_src, 2)
@@ -65,21 +49,3 @@ function dpad(img, dt, n_iters, w)
     img_dst
 end
 
-function dpad_test()
-    #img      = FileIO.load("../data/phantom/field2_cyst_phantom.png")
-    #img      = FileIO.load("../data/image/thyroid_add.png")
-    #img      = FileIO.load("../data/selections/liver/Test1_1.png")
-    #img      = FileIO.load("../data/subjects/thyroid/m_KJH_000012.jpg")
-
-    envelop  = PFM.pfmread("../data/envelop/v10_convex_liver.pfm")
-    img_base = logcompress(envelop, 255, 50)
-    img_out  = dpad(envelop, 0.3, 50, 11)
-    img_out  = logcompress(img_out, 255, 50)
-
-    #FileIO.save("dpad.png", img_out)
-
-    view = MosaicViews.mosaicview(ImageCore.colorview(Images.Gray, img_base),
-                                  ImageCore.colorview(Images.Gray, img_out);
-                                  nrow=1, npad=10)
-    ImageView.imshow(view)
-end

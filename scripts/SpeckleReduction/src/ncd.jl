@@ -49,8 +49,6 @@ function ncd(img, dt, n_iters, ρ, α, β, s)
                                  "replicate",
                                  ImageFiltering.Algorithm.FIR())
 
-        fuck = Array{Float32}(undef, M, N, 2)
-
         for j = 1:N
             for i = 1:M
                 v1x, v1y, v2x, v2y, λ1, λ2 = eigenbasis_2d(J_xx_σ[i,j],

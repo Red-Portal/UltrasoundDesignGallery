@@ -1,23 +1,4 @@
 
-
-import Images
-import ImageView
-import Plots, StatsPlots
-import MosaicViews
-import ImageCore
-import ProgressMeter
-import ImageFiltering
-import GaussianMixtures
-import Noise
-import FileIO
-import PNGFiles
-
-using Distributions
-using LinearAlgebra
-using Base.Threads
-
-include("utils.jl")
-
 function fetch_patch!(img, i, j, window_size, patch)
     M      = size(img, 1)
     N      = size(img, 2)
@@ -151,24 +132,4 @@ function eppr(img, hog_window, pr_window, dt, n_iters, σ)
     img_dst
 end
 
-
-function eppr_test()
-    #img      = FileIO.load("../data/phantom/field2_cyst_phantom.png")
-    #img      = FileIO.load("../data/image/thyroid_add.png")
-    #img      = FileIO.load("../data/selections/liver/Test3_2.png")
-    img      = FileIO.load("../data/subjects/thyroid/m_KJH_000012.jpg")
-    #img      = FileIO.load("2.png")
-    img      = Images.Gray.(img)
-    img_base = Float32.(Images.gray.(img))
-
-    img_out = eppr(img_base, 21, 9, 1.0, 10, 3.0)
-    img_out = clamp.(img_out, 0.0, 1.0)
-
-    PNGFiles.save("eppr.png", img_out)
-
-    view = MosaicViews.mosaicview(ImageCore.colorview(Images.Gray, img_base),
-                                  ImageCore.colorview(Images.Gray, img_out);
-                                  nrow=1, npad=10)
-    ImageView.imshow(view)
-end
 

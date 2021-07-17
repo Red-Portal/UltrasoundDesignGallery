@@ -15,7 +15,7 @@ function osrad_compute_coefficient(e0_x, e0_y,
                                    e1_x, e1_y,
                                    coeff,
                                    ctang)
-    λ0 =  coeff
+    λ0 = coeff
     λ1 = ctang
 
     Dxx = λ0*e0_x*e0_x + λ1*e1_x*e1_x
@@ -24,7 +24,7 @@ function osrad_compute_coefficient(e0_x, e0_y,
     Dxx, Dxy, Dyy
 end
 
-function osrad(img, dt, n_iters, ctang, w)
+function osrad(img, Δt, n_iters, ctang, w)
     M       = size(img, 1)
     N       = size(img, 2)
     img_src = deepcopy(img)
@@ -38,7 +38,7 @@ function osrad(img, dt, n_iters, ctang, w)
     ProgressMeter.@showprogress for t = 1:n_iters
         compute_icov!(img_src, coeff2, w)
         C2_noise = median(coeff2)
-        coeff2   = (1 .+ (1 ./ max.(coeff2, 1e-5))) ./ (1 .+ (1 / max.(C2_noise, 1e-5)))
+        coeff2   = (1 .+ (1 ./ max.(coeff2, 1e-7))) ./ (1 .+ (1 / max.(C2_noise, 1e-7)))
 
         @inbounds for j = 1:N
             @inbounds for i = 1:M
@@ -60,46 +60,7 @@ function osrad(img, dt, n_iters, ctang, w)
                 D_yy[i,j] = d_yy
             end
         end
-
-        a = D_xx
-        b = D_xy
-        c = D_yy
-        
-        @inbounds for j = 1:N
-            @inbounds for i = 1:M
-                nx = max(i - 1, 1)
-                px = min(i + 1, M)
-                ny = max(j - 1, 1)
-                py = min(j + 1, N)
-
-                u1 = img_src[nx, py]
-                u2 = img_src[i,  py]
-                u3 = img_src[px, py]
-                u4 = img_src[nx, j ]
-                u5 = img_src[i,  j ]
-                u6 = img_src[px, j ]
-                u7 = img_src[nx, ny]
-                u8 = img_src[i,  ny]
-                u9 = img_src[px, ny]
-
-                A1 = (1/4)*(b[nx, j ] - b[i, py])
-                A2 = (1/2)*(c[i,  py] + c[i, j ])
-                A3 = (1/4)*(b[px, j ] + b[i, py])
-                A4 = (1/2)*(a[nx, j ] + a[i, j ])
-                A6 = (1/2)*(a[px, j ] + a[i, j ])
-                A7 = (1/4)*(b[nx, j ] + b[i, ny])
-                A8 = (1/2)*(c[i,  ny] + c[i, j ])
-                A9 = (1/4)*(b[px, j ] - b[i, ny])
-
-                img_dst[i,j] = (u5 + dt*(
-                    A1*u1 + A2*u2 + A3*u3
-                    + A4*u4 + A6*u6 + A7*u7
-                    + A8*u8 + A9*u9)) /
-                        (1 + dt*(A1 + A2 + A3
-                                 + A4 + A6 + A7
-                                 + A8 + A9))
-            end
-        end
+        weickert_matrix_diffusion!(img_dst, img_src, Δt, D_xx, D_xy, D_yy)
         @swap!(img_src, img_dst)
     end
     img_dst

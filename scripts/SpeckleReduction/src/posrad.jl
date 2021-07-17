@@ -1,8 +1,8 @@
 
-function posrad(img, dt, n_iters;
+function posrad(img, Δt, n_iters, σ, ρ;
                 gmm=nothing,
                 n_classes=0,
-                mask=nothing,
+                mask=trues(size(img)...),
                 fit_freq=5)
     if !isnothing(gmm)
         n_classes = length(gmm.μ)
@@ -16,32 +16,32 @@ function posrad(img, dt, n_iters;
     img_src = deepcopy(img)
     img_dst = Array{Float32}(undef, M, N)
 
-    img_σ     = Array{Float32}(undef, M, N)
-    a         = Array{Float32}(undef, M, N)
-    b         = Array{Float32}(undef, M, N)
-    c         = Array{Float32}(undef, M, N)
-    G_x       = Array{Float32}(undef, M, N, C)
-    G_y       = Array{Float32}(undef, M, N, C)
-    G_x_σ     = Array{Float32}(undef, M, N, C)
-    G_y_σ     = Array{Float32}(undef, M, N, C)
-    J_xx_σ    = Array{Float32}(undef, M, N, C)
-    J_xy_σ    = Array{Float32}(undef, M, N, C)
-    J_yy_σ    = Array{Float32}(undef, M, N, C)
-    #G_v_mag   = Array{Float32}(undef, M, N)
-    #G_v_mag_σ = Array{Float32}(undef, M, N)
+    img_σ  = Array{Float32}(undef, M, N)
+    D_xx   = Array{Float32}(undef, M, N)
+    D_xy   = Array{Float32}(undef, M, N)
+    D_yy   = Array{Float32}(undef, M, N)
+    G_x    = Array{Float32}(undef, M, N, C)
+    G_y    = Array{Float32}(undef, M, N, C)
+    G_x_ρ  = Array{Float32}(undef, M, N, C)
+    G_y_ρ  = Array{Float32}(undef, M, N, C)
+    J_xx_ρ = Array{Float32}(undef, M, N, C)
+    J_xy_ρ = Array{Float32}(undef, M, N, C)
+    J_yy_ρ = Array{Float32}(undef, M, N, C)
 
-    #fuck = Array{Float32}(undef, M, N)
+    k_ρ = floor(Int, max(ρ, 1)*6/2)*2 + 1
+    k_σ = floor(Int, max(σ, 1)*6/2)*2 + 1
 
-    kernel_x = Images.OffsetArray([3 10  3;  0 0   0; -3 -10 -3]/32.0, -1:1, -1:1)
-    kernel_y = Images.OffsetArray([3  0 -3; 10 0 -10;  3   0 -3]/32.0, -1:1, -1:1)
-
-    ρ = 3.0
-    k = 5
+    gradient_kernel_x = Images.OffsetArray([3 10  3;  0 0   0; -3 -10 -3]/32.0, -1:1, -1:1)
+    gradient_kernel_y = Images.OffsetArray([3  0 -3; 10 0 -10;  3   0 -3]/32.0, -1:1, -1:1)
+    smooth_σ_kernel   = ImageFiltering.Kernel.gaussian((σ, σ),    (k_σ, k_σ   ))
+    smooth_ρ_kernel   = ImageFiltering.Kernel.gaussian((ρ, ρ, 1), (k_ρ, k_ρ, 1))
+    filter_type       = ImageFiltering.Algorithm.FIR()
+    border_type       = "replicate"
 
     ProgressMeter.@showprogress for t = 1:n_iters
         if (mod(t, fit_freq) == 1)
             pixels = reshape(Float64.(img_src[mask]), :)
-            pixels = reshape(pixels, (:,1))*100
+            pixels = reshape(pixels, (:,1))
 
             if (t == 1)
                 gmm = GaussianMixtures.GMM(n_classes, pixels, nIter=0)
@@ -52,55 +52,34 @@ function posrad(img, dt, n_iters;
             gmm.μ  = gmm.μ[idx,:]
             gmm.Σ  = gmm.Σ[idx,:]
             gmm.w  = gmm.w[idx]
+
+            # m = MixtureModel(Normal.(gmm.μ[:,1], sqrt.(gmm.Σ[:,1])), gmm.w[:,1])
+            # display(Plots.plot(x-> pdf(m, x), xlims=[-5, 1]))
+            # display(Plots.density!(pixels, normed=true))
+            #return
+            
         end
 
-        ImageFiltering.imfilter!(img_σ, img_src,
-                                 ImageFiltering.Kernel.gaussian((ρ, ρ), (k,k)),
-                                 "replicate",
-                                 ImageFiltering.Algorithm.FIR())
-
-        posterior, _ = GaussianMixtures.gmmposterior(gmm, reshape(img_σ, (:,1))*100)
+        ImageFiltering.imfilter!(img_σ, img_src, smooth_σ_kernel, border_type, filter_type)
+        posterior, _ = GaussianMixtures.gmmposterior(gmm, reshape(img_σ, (:,1)))
         posterior    = reshape(posterior, (size(img_src)..., size(posterior, 2)))
 
         for c = 1:n_classes
-            G_x[:,:,c] = ImageFiltering.imfilter(
-                posterior[:,:,c],
-                kernel_x,
-                "replicate",
-                ImageFiltering.Algorithm.FIR())
-
-            G_y[:,:,c] = ImageFiltering.imfilter(
-                posterior[:,:,c], 
-                kernel_y,
-                "replicate",
-                ImageFiltering.Algorithm.FIR())
+            ImageFiltering.imfilter!(view(G_x, :, :, c),
+                                     view(posterior, :, :, c),
+                                     gradient_kernel_x,
+                                     border_type,
+                                     filter_type)
+            ImageFiltering.imfilter!(view(G_y, :, :, c),
+                                     view(posterior, :, :, c),
+                                     gradient_kernel_y,
+                                     border_type,
+                                     filter_type)
         end
 
-        G_x_σ = ImageFiltering.imfilter(G_x, 
-                                        ImageFiltering.Kernel.gaussian((ρ, ρ, 1), (k, k, 1)),
-                                        "replicate",
-                                        ImageFiltering.Algorithm.FIR())
-        G_y_σ = ImageFiltering.imfilter(G_y, 
-                                        ImageFiltering.Kernel.gaussian((ρ, ρ, 1), (k, k, 1)),
-                                        "replicate",
-                                        ImageFiltering.Algorithm.FIR())
-
-        J_xx = G_x_σ.*G_x_σ
-        J_xy = G_x_σ.*G_y_σ
-        J_yy = G_y_σ.*G_y_σ
-
-        J_xx_σ = ImageFiltering.imfilter(J_xx, 
-                                         ImageFiltering.Kernel.gaussian((ρ, ρ, 1), (k, k, 1)),
-                                         "replicate",
-                                         ImageFiltering.Algorithm.FIR())
-        J_xy_σ = ImageFiltering.imfilter(J_xy, 
-                                         ImageFiltering.Kernel.gaussian((ρ, ρ, 1), (k, k, 1)),
-                                         "replicate",
-                                         ImageFiltering.Algorithm.FIR())
-        J_yy_σ = ImageFiltering.imfilter(J_yy, 
-                                         ImageFiltering.Kernel.gaussian((ρ, ρ, 1), (k, k, 1)),
-                                         "replicate",
-                                         ImageFiltering.Algorithm.FIR())
+        ImageFiltering.imfilter!(G_x_ρ, G_x, smooth_ρ_kernel, border_type, filter_type)
+        ImageFiltering.imfilter!(G_y_ρ, G_y, smooth_ρ_kernel, border_type, filter_type)
+        structure_tensor!(J_xx_ρ, J_xy_ρ, J_yy_ρ, G_x_ρ, G_y_ρ, smooth_ρ_kernel)
 
         for j = 1:N
             for i = 1:M
@@ -111,9 +90,9 @@ function posrad(img, dt, n_iters;
                 g_v_mag = 0
                 λ_k     = -Inf
                 for c = 1:C
-                    v1x, v1y, v2x, v2y, λ1, _ = eigenbasis_2d(J_xx_σ[i,j,c],
-                                                              J_xy_σ[i,j,c],
-                                                              J_yy_σ[i,j,c])
+                    v1x, v1y, v2x, v2y, λ1, _ = eigenbasis_2d(J_xx_ρ[i,j,c],
+                                                              J_xy_ρ[i,j,c],
+                                                              J_yy_ρ[i,j,c])
                     if (λ1 > λ_k)
                         v1x_k   = v1x
                         v1y_k   = v1y
@@ -121,114 +100,20 @@ function posrad(img, dt, n_iters;
                         v2y_k   = v2y
                         λ_k     = λ1
                         g_v_mag = abs(v1x_k*G_x[i,j,c] + v1y_k*G_y[i,j,c])
-                        #g_v_mag = sqrt(G_x[i,j,c].^2 + G_y[i,j,c].^2)
                     end
                 end
 
                 λ1  = 1.0 .- g_v_mag
                 λ2  = 1.0 
 
-                a[i,j] = λ1.*v1x_k.*v1x_k + λ2.*v2x_k.*v2x_k
-                b[i,j] = λ1.*v1x_k.*v1y_k + λ2.*v2x_k.*v2y_k
-                c[i,j] = λ1.*v1y_k.*v1y_k + λ2.*v2y_k.*v2y_k
+                D_xx[i,j] = λ1.*v1x_k.*v1x_k + λ2.*v2x_k.*v2x_k
+                D_xy[i,j] = λ1.*v1x_k.*v1y_k + λ2.*v2x_k.*v2y_k
+                D_yy[i,j] = λ1.*v1y_k.*v1y_k + λ2.*v2y_k.*v2y_k
             end
         end
 
-        for j = 1:N
-            for i = 1:M
-                nx = max(i - 1, 1)
-                px = min(i + 1, M)
-                ny = max(j - 1, 1)
-                py = min(j + 1, N)
-
-                A1 = (1/4)*(b[nx, j ] - b[i, py])
-                A2 = (1/2)*(c[i,  py] + c[i, j ])
-                A3 = (1/4)*(b[px, j ] + b[i, py])
-                A4 = (1/2)*(a[nx, j ] + a[i, j ])
-                A6 = (1/2)*(a[px, j ] + a[i, j ])
-                A7 = (1/4)*(b[nx, j ] + b[i, ny])
-                A8 = (1/2)*(c[i,  ny] + c[i, j ])
-                A9 = (1/4)*(b[px, j ] - b[i, ny])
-
-                img_dst[i,j] = (img_src[i,j] + dt*(
-                    A1*(img_src[nx, py]) + 
-                    A2*(img_src[i,  py]) + 
-                    A3*(img_src[px, py]) + 
-                    A4*(img_src[nx, j])  + 
-                    A6*(img_src[px, j])  + 
-                    A7*(img_src[nx, ny]) + 
-                    A8*(img_src[i,  ny]) + 
-                    A9*(img_src[px, ny])))  /
-                    (1 + dt*(A1 + A2 + A3 + A4 + A6 + A7 + A8 + A9))
-            end
-        end
+        weickert_matrix_diffusion!(img_dst, img_src, Δt, D_xx, D_xy, D_yy)
         @swap!(img_src, img_dst)
     end
     img_dst
 end
-
-function fit_pixel_gmm(target)
-    gmm_file = if target == :liver
-        "liver_gmm.jld2"
-    else
-        "thyroid_gmm.jld2"
-    end
-
-    if(isfile(gmm_file))
-        FileIO.load(gmm_file, "gmm")
-    else
-        mask = if target == :liver
-            FileIO.load("convex_mask.png") 
-        else
-            FileIO.load("linear_mask.png") 
-        end
-        mask = Images.Gray.(mask) 
-        mask = Float32.(mask) .> 0
-
-        n_classes = if target == :liver
-            3
-        else
-            4
-        end
-
-        fnames = if target == :liver
-            ["../data/subjects/thyroid/Test1_1.png",
-             "../data/subjects/thyroid/Test1_2.png",
-             "../data/subjects/thyroid/Test1_3.png",
-             "../data/subjects/thyroid/Test1_4.png",
-             "../data/subjects/thyroid/Test2_1.png",
-             "../data/subjects/thyroid/Test2_2.png",
-             "../data/subjects/thyroid/Test2_3.png",
-             "../data/subjects/thyroid/Test2_4.png",
-             ]
-        else
-            ["../data/subjects/thyroid/m_min__000000.jpg",
-             "../data/subjects/thyroid/m_min__000003.jpg",
-             "../data/subjects/thyroid/m_min__000005.jpg",
-             "../data/subjects/thyroid/m_min__000007.jpg",
-             "../data/subjects/thyroid/m_min__000010.jpg",
-             "../data/subjects/thyroid/m_PJH_000000.jpg",
-             "../data/subjects/thyroid/m_PJH_000003.jpg",
-             "../data/subjects/thyroid/m_PJH_000005.jpg",
-             "../data/subjects/thyroid/m_PJH_000007.jpg",
-             "../data/subjects/thyroid/m_PJH_000010.jpg",
-             ]
-        end
-
-        pixels = mapreduce(vcat, fnames) do fname
-            img = FileIO.load(fname)
-            img = Float64.(Images.Gray.(img))
-            reshape(img[mask], :)
-        end
-        gmm   = GaussianMixtures.GMM(n_classes, pixels, nIter=0)
-        idx   = sortperm(gmm.μ[:,1]; rev=true)
-        gmm.μ = gmm.μ[idx,:]
-        gmm.Σ = gmm.Σ[idx,:]
-        gmm.w = gmm.w[idx]
-
-        GaussianMixtures.em!(gmm, reshape(pixels, (:,1)); nIter=16, varfloor=1e-5)
-        FileIO.save(gmm_file, "gmm", gmm)
-        gmm 
-    end
-end
-

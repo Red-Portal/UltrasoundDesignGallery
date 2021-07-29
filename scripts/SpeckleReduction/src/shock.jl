@@ -1,20 +1,4 @@
 
-import Images
-import ImageView
-import Plots, StatsPlots
-import MosaicViews
-import ImageCore
-import ProgressMeter
-import ImageFiltering
-import GaussianMixtures
-import FileIO
-
-using Distributions
-using LinearAlgebra
-using Base.Threads
-
-include("utils.jl")
-
 function shock(img, dt, ρ, σ, n_iters)
     kernel_x = Images.OffsetArray([3 10  3;  0 0   0; -3 -10 -3]/32.0, -1:1, -1:1)
     kernel_y = Images.OffsetArray([3  0 -3; 10 0 -10;  3   0 -3]/32.0, -1:1, -1:1)
@@ -105,28 +89,4 @@ function shock(img, dt, ρ, σ, n_iters)
         end
     end
     img_dst
-end
-
-include("dpad.jl")
-
-function shock_test()
-    #img      = FileIO.load("../data/phantom/field2_cyst_phantom.png")
-    #img      = FileIO.load("../data/image/forearm_gray.png")
-    #img      = FileIO.load("2.png")
-    #img      = FileIO.load("../data/selections/liver/Test3_2.png")
-    #img      = FileIO.load("../data/subjects/thyroid/m_KJH_000012.jpg")
-    img      = FileIO.load("ncd.png")
-    img      = Images.Gray.(img)
-    img      = Float32.(img)
-    img_base = deepcopy(img)
-
-    n_iters   = 20
-    img_out   = shock(img, 4.0, 1.0, 0.1, n_iters)
-    img_out   = clamp.(img_out, 0, 1.0)
-
-    view = MosaicViews.mosaicview(ImageCore.colorview(Images.Gray, img_base),
-                                  ImageCore.colorview(Images.Gray, img_out);
-                                  nrow=1,
-                                  npad=10)
-    ImageView.imshow(view)
 end

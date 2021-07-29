@@ -44,7 +44,7 @@ function tukey_biweight(x, σ)
     end
 end
 
-function lorentzian_errornorm(x, k)
+function lorentzian_error(x, k)
     z = x / k
     exp(-z*z)
 end
@@ -97,7 +97,8 @@ end
                                             Δt::Real,
                                             D_xx::Array,
                                             D_xy::Array,
-                                            D_yy::Array)
+                                            D_yy::Array;
+                                            mask=trues(size(img_src)...))
     M = size(img_dst, 1)
     N = size(img_dst, 2)
     a = D_xx
@@ -105,95 +106,98 @@ end
     c = D_yy
     for j = 1:N
         for i = 1:M
-            nx = max(i - 1, 1)
-            px = min(i + 1, M)
-            ny = max(j - 1, 1)
-            py = min(j + 1, N)
+            if !mask[i,j]
+                continue
+            end
 
-            A1 = (1/4)*(b[nx, j ] - b[i, py])
-            A2 = (1/2)*(c[i,  py] + c[i, j ])
-            A3 = (1/4)*(b[px, j ] + b[i, py])
-            A4 = (1/2)*(a[nx, j ] + a[i, j ])
-            A6 = (1/2)*(a[px, j ] + a[i, j ])
-            A7 = (1/4)*(b[nx, j ] + b[i, ny])
-            A8 = (1/2)*(c[i,  ny] + c[i, j ])
-            A9 = (1/4)*(b[px, j ] - b[i, ny])
+            a_c  = a[i,j]
+            a_x₊ = fetch_pixel(a, i+1,   j, mask, a_c)
+            a_x₋ = fetch_pixel(a, i-1,   j, mask, a_c)
+
+            b_c  = b[i,j]
+            b_x₊ = fetch_pixel(b, i+1,   j, mask, b_c)
+            b_x₋ = fetch_pixel(b, i-1,   j, mask, b_c)
+            b_y₊ = fetch_pixel(b,   i, j+1, mask, b_c)
+            b_y₋ = fetch_pixel(b,   i, j-1, mask, b_c)
+
+            c_c  = c[i,j]
+            c_y₊ = fetch_pixel(c,   i, j+1, mask, c_c)
+            c_y₋ = fetch_pixel(c,   i, j-1, mask, c_c)
+
+            u_c  = img_src[i,j]
+            u1   = fetch_pixel(img_src, i-1, j+1, mask, u_c)
+            u2   = fetch_pixel(img_src,   i, j+1, mask, u_c)
+            u3   = fetch_pixel(img_src, i+1, j+1, mask, u_c)
+            u4   = fetch_pixel(img_src, i-1,   j, mask, u_c)
+            u6   = fetch_pixel(img_src, i+1,   j, mask, u_c)
+            u7   = fetch_pixel(img_src, i-1, j-1, mask, u_c)
+            u8   = fetch_pixel(img_src,   i, j-1, mask, u_c)
+            u9   = fetch_pixel(img_src, i+1, j-1, mask, u_c)
+
+            A1 = (1/4)*(b_x₋ - b_y₊)
+            A2 = (1/2)*(c_y₊ + c_c )
+            A3 = (1/4)*(b_x₊ + b_y₊)
+            A4 = (1/2)*(a_x₋ + a_c )
+            A6 = (1/2)*(a_x₊ + a_c )
+            A7 = (1/4)*(b_x₋ + b_y₋)
+            A8 = (1/2)*(c_y₋ + c_c )
+            A9 = (1/4)*(b_x₊ - b_y₋)
 
             img_dst[i,j] = (img_src[i,j] + Δt*(
-                A1*(img_src[nx, py]) + 
-                    A2*(img_src[i,  py]) + 
-                    A3*(img_src[px, py]) + 
-                    A4*(img_src[nx, j])  + 
-                    A6*(img_src[px, j])  + 
-                    A7*(img_src[nx, ny]) + 
-                    A8*(img_src[i,  ny]) + 
-                    A9*(img_src[px, ny])))  /
+                A1*u1 + A2*u2 + A3*u3 + A4*u4 + A6*u6 + A7*u7 + A8*u8 + A9*u9))  /
                     (1 + Δt*(A1 + A2 + A3 + A4 + A6 + A7 + A8 + A9))
         end
     end
 end
 
-# function fit_pixel_gmm(target)
-#     gmm_file = if target == :liver
-#         "liver_gmm.jld2"
-#     else
-#         "thyroid_gmm.jld2"
-#     end
+# @inline function weickert_matrix_diffusion!(img_dst::Array,
+#                                             img_src::Array,
+#                                             Δt::Real,
+#                                             D_xx::Array,
+#                                             D_xy::Array,
+#                                             D_yy::Array;
+#                                             mask=nothing)
+#     M = size(img_dst, 1)
+#     N = size(img_dst, 2)
+#     a = D_xx
+#     b = D_xy
+#     c = D_yy
+#     for j = 1:N
+#         for i = 1:M
+#             nx = max(i - 1, 1)
+#             px = min(i + 1, M)
+#             ny = max(j - 1, 1)
+#             py = min(j + 1, N)
 
-#     if(isfile(gmm_file))
-#         FileIO.load(gmm_file, "gmm")
-#     else
-#         mask = if target == :liver
-#             FileIO.load("convex_mask.png") 
-#         else
-#             FileIO.load("linear_mask.png") 
+#             A1 = (1/4)*(b[nx, j ] - b[i, py])
+#             A2 = (1/2)*(c[i,  py] + c[i, j ])
+#             A3 = (1/4)*(b[px, j ] + b[i, py])
+#             A4 = (1/2)*(a[nx, j ] + a[i, j ])
+#             A6 = (1/2)*(a[px, j ] + a[i, j ])
+#             A7 = (1/4)*(b[nx, j ] + b[i, ny])
+#             A8 = (1/2)*(c[i,  ny] + c[i, j ])
+#             A9 = (1/4)*(b[px, j ] - b[i, ny])
+
+#             img_dst[i,j] = (img_src[i,j] + Δt*(
+#                 A1*(img_src[nx, py]) + 
+#                     A2*(img_src[i,  py]) + 
+#                     A3*(img_src[px, py]) + 
+#                     A4*(img_src[nx, j])  + 
+#                     A6*(img_src[px, j])  + 
+#                     A7*(img_src[nx, ny]) + 
+#                     A8*(img_src[i,  ny]) + 
+#                     A9*(img_src[px, ny])))  /
+#                     (1 + Δt*(A1 + A2 + A3 + A4 + A6 + A7 + A8 + A9))
 #         end
-#         mask = Images.Gray.(mask) 
-#         mask = Float32.(mask) .> 0
-
-#         n_classes = if target == :liver
-#             3
-#         else
-#             4
-#         end
-
-#         fnames = if target == :liver
-#             ["../data/subjects/thyroid/Test1_1.png",
-#              "../data/subjects/thyroid/Test1_2.png",
-#              "../data/subjects/thyroid/Test1_3.png",
-#              "../data/subjects/thyroid/Test1_4.png",
-#              "../data/subjects/thyroid/Test2_1.png",
-#              "../data/subjects/thyroid/Test2_2.png",
-#              "../data/subjects/thyroid/Test2_3.png",
-#              "../data/subjects/thyroid/Test2_4.png",
-#              ]
-#         else
-#             ["../data/subjects/thyroid/m_min__000000.jpg",
-#              "../data/subjects/thyroid/m_min__000003.jpg",
-#              "../data/subjects/thyroid/m_min__000005.jpg",
-#              "../data/subjects/thyroid/m_min__000007.jpg",
-#              "../data/subjects/thyroid/m_min__000010.jpg",
-#              "../data/subjects/thyroid/m_PJH_000000.jpg",
-#              "../data/subjects/thyroid/m_PJH_000003.jpg",
-#              "../data/subjects/thyroid/m_PJH_000005.jpg",
-#              "../data/subjects/thyroid/m_PJH_000007.jpg",
-#              "../data/subjects/thyroid/m_PJH_000010.jpg",
-#              ]
-#         end
-
-#         pixels = mapreduce(vcat, fnames) do fname
-#             img = FileIO.load(fname)
-#             img = Float64.(Images.Gray.(img))
-#             reshape(img[mask], :)
-#         end
-#         gmm   = GaussianMixtures.GMM(n_classes, pixels, nIter=0)
-#         idx   = sortperm(gmm.μ[:,1]; rev=true)
-#         gmm.μ = gmm.μ[idx,:]
-#         gmm.Σ = gmm.Σ[idx,:]
-#         gmm.w = gmm.w[idx]
-
-#         GaussianMixtures.em!(gmm, reshape(pixels, (:,1)); nIter=16, varfloor=1e-5)
-#         FileIO.save(gmm_file, "gmm", gmm)
-#         gmm 
 #     end
 # end
+
+@inline function fetch_pixel(img, i, j, mask, pad_val)
+    i = clamp(i, 1, size(img,1))
+    j = clamp(j, 1, size(img,2))
+    if (mask[i, j])
+        img[i,j]
+    else
+        pad_val
+    end
+end

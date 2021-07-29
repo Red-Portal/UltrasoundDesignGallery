@@ -1,5 +1,6 @@
 
-function ced(img, Δt, n_iters, σ, ρ, α, β)
+function ced(img, Δt, n_iters, σ, ρ, α, β;
+             mask=trues(size(img)...))
     M       = size(img, 1)
     N       = size(img, 2)
     img_src = deepcopy(img)
@@ -27,6 +28,9 @@ function ced(img, Δt, n_iters, σ, ρ, α, β)
 
         @inbounds for j = 1:N
             @inbounds for i = 1:M
+                if (!mask[i,j])
+                    continue
+                end
                 I_xp = img_σ[min(i+1, M), j]
                 I_xm = img_σ[max(i-1, 1), j]
                 I_yp = img_σ[i, min(j+1, N)]
@@ -42,6 +46,9 @@ function ced(img, Δt, n_iters, σ, ρ, α, β)
 
         for j = 1:N
             for i = 1:M
+                if (!mask[i,j])
+                    continue
+                end
                 v1x, v1y, v2x, v2y, λ1, λ2 = eigenbasis_2d(J_xx_ρ[i,j],
                                                            J_xy_ρ[i,j],
                                                            J_yy_ρ[i,j])
@@ -59,7 +66,7 @@ function ced(img, Δt, n_iters, σ, ρ, α, β)
                 D_yy[i,j] = λ1*v1y*v1y + λ2*v2y*v2y
             end
         end
-        weickert_matrix_diffusion!(img_dst, img_src, Δt, D_xx, D_xy, D_yy)
+        weickert_matrix_diffusion!(img_dst, img_src, Δt, D_xx, D_xy, D_yy; mask=mask)
         @swap!(img_src, img_dst)
     end
     img_dst

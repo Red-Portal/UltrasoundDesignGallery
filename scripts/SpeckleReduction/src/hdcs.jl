@@ -3,6 +3,8 @@ function hdcs(img, Δt, n_iters,
               σ::Real, ρ::Real, λ_h::Real, λ_eed::Real, λ_ced::Real;
               mask=trues(size(img)...))
 #=
+    Hybrid Diffusion With Continuous Switch
+
     "Noise Reduction in Computed Tomography Scans Using 
      3-D Anisotropic Hybrid Diffusion With Continuous Switch"
     AdriËnne M. Mendrik et al.

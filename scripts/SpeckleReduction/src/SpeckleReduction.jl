@@ -16,6 +16,7 @@ import AbstractFFTs
 import FFTW
 import ImagePhaseCongruency
 
+using Interpolations
 using Distributions
 using LinearAlgebra
 using Base.Threads
@@ -40,3 +41,5 @@ include("rpncd.jl")
 include("apm.jl")
 #include("ddnd.jl")
 include("ncsf.jl")
+include("shock.jl")
+include("mnml.jl")

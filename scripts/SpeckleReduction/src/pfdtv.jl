@@ -1,5 +1,5 @@
 
-function reisz_transform(img)
+function reisz_transform(img, s_min, s_max)
     M, N       = size(img)
     M_padded   = (M >> 1)*2 + 1
     N_padded   = (N >> 1)*2 + 1
@@ -49,7 +49,7 @@ function reisz_transform(img)
         deviationgain=1.5,
         noisemethod=-1)
 
-    for s = 1:15
+    for s = s_min:s_max
         xishu  = sqrt.(π*(4 .^(2.58))*(s.^4.16) / SpecialFunctions.gamma(4.16))
         cauchy = xishu*(radius.^1.58).*exp.(-s*radius)
         bF     = F.*cauchy
@@ -182,7 +182,7 @@ function FTV(∇u_x, ∇u_y, α, mask)
     ftv_x, ftv_y
 end
 
-function pfdtv(img; mask=trues(size(img)...))
+function pfdtv(img, n_iters, s_min, s_max; mask=trues(size(img)...))
 #=
     Phase Asymmetry Ultrasound Despeckling with 
     Fractional Anisotropic Diffusion and Total Variation
@@ -191,17 +191,14 @@ function pfdtv(img; mask=trues(size(img)...))
     IEEE Transactions on Image Processing, 2019
 =##
     img_base = deepcopy(img)
-    n_iters  = 8
+    M, N     = size(img_base)
     k0       = 20
     k1       = k0*exp(-0.05*(n_iters - 1))
     λ        = 0.01
     Δt       = 0.15
 
     ProgressMeter.@showprogress for t = 1:n_iters
-        img_σ      = ImageFiltering.imfilter(img, ImageFiltering.Kernel.gaussian(1))
-        img_scaled = Images.imresize(img_σ, (400, 500))
-        PA_scaled  = reisz_transform(img_scaled)
-        PA         = Images.imresize(PA_scaled, size(img))
+        PA           = reisz_transform(img, s_min, s_max)
 
         α            = 1 .+ log2.(1 .+ PA.*PA)
         φ            = (PA .- 1).^2

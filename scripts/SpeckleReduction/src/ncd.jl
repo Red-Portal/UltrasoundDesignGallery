@@ -1,18 +1,18 @@
 
-function ncd(img, Δt, n_iters, ρ, α, β, s)
+function ncd(img, Δt, n_iters, ρ, α, β, s; mask=trues(size(img)...))
     M       = size(img, 1)
     N       = size(img, 2)
     img_src = deepcopy(img)
-    img_dst = Array{Float32}(undef, M, N)
+    img_dst = zeros(Float32, M, N)
 
-    D_xx   = Array{Float32}(undef, M, N)
-    D_xy   = Array{Float32}(undef, M, N)
-    D_yy   = Array{Float32}(undef, M, N)
-    G_x    = Array{Float32}(undef, M, N)
-    G_y    = Array{Float32}(undef, M, N)
-    J_xx_ρ = Array{Float32}(undef, M, N)
-    J_xy_ρ = Array{Float32}(undef, M, N)
-    J_yy_ρ = Array{Float32}(undef, M, N)
+    D_xx   = zeros(Float32, M, N)
+    D_xy   = zeros(Float32, M, N)
+    D_yy   = zeros(Float32, M, N)
+    G_x    = zeros(Float32, M, N)
+    G_y    = zeros(Float32, M, N)
+    J_xx_ρ = zeros(Float32, M, N)
+    J_xy_ρ = zeros(Float32, M, N)
+    J_yy_ρ = zeros(Float32, M, N)
 
     k_ρ = floor(Int, max(ρ, 1)*3/2)*2 + 1
     smooth_kernel = ImageFiltering.Kernel.gaussian((ρ, ρ), (k_ρ, k_ρ))
@@ -21,10 +21,14 @@ function ncd(img, Δt, n_iters, ρ, α, β, s)
     ProgressMeter.@showprogress for t = 1:n_iters
         @inbounds for j = 1:N
             @inbounds for i = 1:M
-                I_xp = img_src[min(i+1, M), j]
-                I_xm = img_src[max(i-1, 1), j]
-                I_yp = img_src[i,           min(j+1, N)]
-                I_ym = img_src[i,           max(j-1, 1)]
+                if !mask[i,j]
+                    continue
+                end
+                I_c  = img_src[i, j]
+                I_xp = fetch_pixel(img_src, i+1,   j, mask, I_c)
+                I_xm = fetch_pixel(img_src, i-1,   j, mask, I_c)
+                I_yp = fetch_pixel(img_src, i,   j+1, mask, I_c)
+                I_ym = fetch_pixel(img_src, i,   j-1, mask, I_c)
 
                 G_x[i,j] = (I_xp - I_xm)/2
                 G_y[i,j] = (I_yp - I_ym)/2
@@ -36,11 +40,15 @@ function ncd(img, Δt, n_iters, ρ, α, β, s)
 
         @inbounds for j = 1:N
            @inbounds for i = 1:M
+                if !mask[i,j]
+                    continue
+                end
                 v1x, v1y, v2x, v2y, λ1, λ2 = eigenbasis_2d(J_xx_ρ[i,j],
                                                            J_xy_ρ[i,j],
                                                            J_yy_ρ[i,j])
 
-                δ  = 1 - β*abs(img[i,j] - img_src[i,j])
+
+                δ  = 1 - β*abs(img[i,j] - img_src[i,j])/255
                 κ  = (λ1 - λ2).^2
                 λ1 = if κ < s*s
                     α*δ*(1 - κ/(s*s))
@@ -54,7 +62,7 @@ function ncd(img, Δt, n_iters, ρ, α, β, s)
                 D_yy[i,j] = λ1*v1y*v1y + λ2*v2y*v2y
             end
         end
-        weickert_matrix_diffusion!(img_dst, img_src, Δt, D_xx, D_xy, D_yy)
+        weickert_matrix_diffusion!(img_dst, img_src, Δt, D_xx, D_xy, D_yy; mask=mask)
         @swap!(img_src, img_dst)
     end
     img_dst

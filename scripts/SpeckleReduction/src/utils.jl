@@ -24,13 +24,13 @@ function eigenbasis_2d(A11, A12, A22)
     v1x = -v2y
     v1y = v2x
 
-    λ1 = 0.5*(A11 + A22 + tmp);
-    λ2 = 0.5*(A11 + A22 - tmp);
+    λ1 = 0.5*(A11 + A22 - tmp)
+    λ2 = 0.5*(A11 + A22 + tmp)
 
-    if (abs(λ1) > abs(λ2))
-        v2x, v2y, v1x, v1y, λ2, λ1
-    else
+    if (abs(λ1) >= abs(λ2))
         v1x, v1y, v2x, v2y, λ1, λ2
+    else
+        v2x, v2y, v1x, v1y, λ2, λ1
     end 
 end
 
@@ -200,4 +200,18 @@ end
     else
         pad_val
     end
+end
+
+function butterworth(M, N, n_order::Int, cutoff::Real)
+    M_offset = M / 2
+    N_offset = N / 2
+    D0       = cutoff/2
+    kernel   = zeros(M, N)
+    for idx ∈ CartesianIndices(kernel)
+        θ_x         = (idx[1] - M_offset) / M
+        θ_y         = (idx[2] - N_offset) / N
+        D           = sqrt(θ_x*θ_x + θ_y*θ_y)
+        kernel[idx] = 1 / (1 + (D/D0).^(2*n_order))
+    end
+    kernel
 end

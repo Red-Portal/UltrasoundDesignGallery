@@ -22,8 +22,8 @@ function ncsf(img, Δt, n_iters; mask=trues(size(img)...))
     D_y     = zeros(Float32, M, N)
     D_mag   = zeros(Float32, M, N)
 
-    γ = 2
-    kernel_size = 15
+    γ = 4
+    kernel_size = 7
     kernel_half = kernel_size >> 1
     kernel_x = Images.OffsetArray(zeros(kernel_size, kernel_size),
                                   -kernel_half:kernel_half,
@@ -74,7 +74,7 @@ function ncsf(img, Δt, n_iters; mask=trues(size(img)...))
     img_dst
 end
 
-function ncrsf(img, Δt, n_iters; mask=trues(size(img)...))
+function ncrsf(img, Δt, n_iters, λ; mask=trues(size(img)...))
 #=
     Nonconcervative shock filter scheme
 
@@ -122,6 +122,7 @@ function ncrsf(img, Δt, n_iters; mask=trues(size(img)...))
                 D_mag[i,j] = sqrt.(D_x[i,j].^2 + D_y[i,j].^2)
             end
         end
+
         F_x   = ImageFiltering.imfilter(D_mag.^2, kernel_x)
         F_y   = ImageFiltering.imfilter(D_mag.^2, kernel_y)
         F_mag = sqrt.(F_x.*F_x + F_y.*F_y)
@@ -133,7 +134,7 @@ function ncrsf(img, Δt, n_iters; mask=trues(size(img)...))
                 if (!mask[i,j])
                     continue
                 end
-                img_dst[i,j] = img_src[i,j] - Δt*shock[i,j]
+                img_dst[i,j] = img_src[i,j] + Δt*(-shock[i,j] + λ*(img[i,j] - img_src[i,j]))
             end
         end
         @swap!(img_src, img_dst)

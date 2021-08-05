@@ -19,8 +19,8 @@ function eed(img, Δt, n_iters, σ::Real, λ::Real; mask=trues(size(img)...))
     D_xx   = zeros(Float32, M, N)
     D_xy   = zeros(Float32, M, N)
     D_yy   = zeros(Float32, M, N)
-    G_x    = zeros(Float32, M, N)
-    G_y    = zeros(Float32, M, N)
+    G_x_σ  = zeros(Float32, M, N)
+    G_y_σ  = zeros(Float32, M, N)
 
     C   = 3.31488
     k_σ = floor(Int, max(σ, 1)*3/2)*2 + 1
@@ -29,6 +29,8 @@ function eed(img, Δt, n_iters, σ::Real, λ::Real; mask=trues(size(img)...))
     border_type     = "replicate"
 
     ProgressMeter.@showprogress for t = 1:n_iters
+        img_src_σ = ImageFiltering.imfilter(img_src, smooth_σ_kernel, border_type, filter_type)
+
         @inbounds for j = 1:N
             @inbounds for i = 1:M
                 if !mask[i,j]
@@ -36,28 +38,16 @@ function eed(img, Δt, n_iters, σ::Real, λ::Real; mask=trues(size(img)...))
                 end
 
                 I_c  = img_src[i,j]
-                I_xp = fetch_pixel(img_src, i+1,   j, mask, I_c)
-                I_xm = fetch_pixel(img_src, i-1,   j, mask, I_c)
-                I_yp = fetch_pixel(img_src,   i, j+1, mask, I_c)
-                I_ym = fetch_pixel(img_src,   i, j-1, mask, I_c)
+                I_xp = fetch_pixel(img_src_σ, i+1,   j, mask, I_c)
+                I_xm = fetch_pixel(img_src_σ, i-1,   j, mask, I_c)
+                I_yp = fetch_pixel(img_src_σ,   i, j+1, mask, I_c)
+                I_ym = fetch_pixel(img_src_σ,   i, j-1, mask, I_c)
 
-                G_x[i,j] = (I_xp - I_xm)/2
-                G_y[i,j] = (I_yp - I_ym)/2
+                G_x_σ[i,j] = (I_xp - I_xm)/2
+                G_y_σ[i,j] = (I_yp - I_ym)/2
             end
         end
 
-        G_x_σ = ImageFiltering.imfilter(G_x, smooth_σ_kernel, border_type, filter_type)
-        G_y_σ = ImageFiltering.imfilter(G_y, smooth_σ_kernel, border_type, filter_type)
-
-        k       = 10.0
-        K       = 0.0001
-        G_mag_σ = sqrt.(G_x_σ.*G_x_σ + G_y_σ.*G_y_σ)
-        α       = 2 .- (2 ./ (1 .+ k*G_mag_σ))
-        #ImageView.imshow(α)
-        #return
-        display(Plots.histogram(reshape(α[mask], :)))
-        #C       = 1 ./ (1 .+ (G_mag_σ/K).^α)
-        #display(Plots.histogram(reshape(sqrt.(G_x_σ.*G_x_σ + G_y_σ.*G_y_σ), :)))
 
         @inbounds for j = 1:N
             @inbounds for i = 1:M
@@ -77,13 +67,12 @@ function eed(img, Δt, n_iters, σ::Real, λ::Real; mask=trues(size(img)...))
                 v2x = v1y
                 v2y = -v1x
 
-                s² = abs(G_x[i,j].*v1x  + G_y[i,j].*v2x)
-                # λ1 = if s² > 1e-5
-                #     1 - exp(-C / (s² / λ^2).^4)
-                # else
-                #     1
-                # end
-                λ1 = 1 / (1 + (s²/K).^α[i,j])
+                s² = abs(G_x_σ[i,j].*v1x  + G_y_σ[i,j].*v2x)
+                λ1 = if s² > 1e-5
+                    1 - exp(-C / (s² / λ^2).^4)
+                else
+                    1
+                end
                 λ2 = 1
 
                 D_xx[i,j] = λ1*v1x*v1x + λ2*v2x*v2x

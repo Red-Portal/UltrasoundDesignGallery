@@ -137,8 +137,11 @@ endif()
 # Image processing core
 add_library(ipcore
     SHARED
-    src/imaging/tsonad.cu
-    src/imaging/pipeline.cpp)
+    src/imaging/lowpass.cpp
+    src/imaging/ieed_shock.cu
+    src/imaging/ieed_guided.cu
+    #src/imaging/pipeline.cpp
+    )
 
 target_link_libraries(ipcore
     INTERFACE
@@ -146,6 +149,7 @@ target_link_libraries(ipcore
     project_warnings
 
     PUBLIC
+    OpenMP::OpenMP_CXX
     opencv_core
     opencv_cudafilters
     )

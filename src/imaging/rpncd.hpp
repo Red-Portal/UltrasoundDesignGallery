@@ -16,49 +16,34 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#ifndef __US_GALLERY_RPNCD_HPP__
+#define __US_GALLERY_RPNCD_HPP__
+
 #include <opencv4/opencv2/core/core.hpp>
 #include <opencv4/opencv2/core/cuda.hpp>
-#include <opencv4/opencv2/cudafilters.hpp>
 
 #include <cmath>
 
 namespace usdg
 {
-  class IEEDGuided
+  class RPNCD
   {
   private:
     cv::cuda::GpuMat _mask;
-    cv::cuda::GpuMat _guide;
     cv::cuda::GpuMat _img_buf1;
     cv::cuda::GpuMat _img_buf2;
-
-    cv::cuda::GpuMat _J_xx;
-    cv::cuda::GpuMat _J_xy;
-    cv::cuda::GpuMat _J_yy;
-
-    cv::cuda::GpuMat _J_xx_rho;
-    cv::cuda::GpuMat _J_xy_rho;
-    cv::cuda::GpuMat _J_yy_rho;
-
-    cv::cuda::GpuMat _D_xx;
-    cv::cuda::GpuMat _D_xy;
-    cv::cuda::GpuMat _D_yy;
-
-    cv::Ptr<cv::cuda::Filter> _gaussian_filter;
+    cv::cuda::GpuMat _coeff;
 
   public:
-    IEEDGuided();
+    RPNCD();
 
     void preallocate(size_t n_rows, size_t n_cols);
 
     void apply(cv::Mat const& image,
-	       cv::Mat const& guide,
 	       cv::Mat const& mask,
 	       cv::Mat&       output,
-	       float m1, float m2,
-	       float k1, float k2,
-	       float Cm1, float Cm2,
-	       float dt, int n_iters);
+	       float k,  float theta, float dt, int n_iters);
   };
-
 }
+
+#endif

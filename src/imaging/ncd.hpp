@@ -16,26 +16,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __US_GALLERY_TSONAD_HPP__
-#define __US_GALLERY_TSONAD_HPP__
-
-#include <cstddef>
+#ifndef __US_GALLERY_NCD_HPP__
+#define __US_GALLERY_NCD_HPP__
 
 #include <opencv4/opencv2/core/core.hpp>
 #include <opencv4/opencv2/core/cuda.hpp>
 #include <opencv4/opencv2/cudafilters.hpp>
 
+#include <cmath>
+
 namespace usdg
 {
-  class IEEDShock
+  class NCD
   {
   private:
     cv::cuda::GpuMat _mask;
     cv::cuda::GpuMat _img_buf1;
     cv::cuda::GpuMat _img_buf2;
-
-    cv::cuda::GpuMat _G_x;
-    cv::cuda::GpuMat _G_y;
 
     cv::cuda::GpuMat _J_xx;
     cv::cuda::GpuMat _J_xy;
@@ -49,24 +46,15 @@ namespace usdg
     cv::cuda::GpuMat _D_xy;
     cv::cuda::GpuMat _D_yy;
 
-    cv::cuda::GpuMat _edge_map;
-    cv::cuda::GpuMat _shock;
-
-    cv::Ptr<cv::cuda::Filter> _gaussian_filter;
-
   public:
-    IEEDShock();
+    NCD();
 
     void preallocate(size_t n_rows, size_t n_cols);
 
     void apply(cv::Mat const& image,
 	       cv::Mat const& mask,
 	       cv::Mat&       output,
-	       float m1, float m2,
-	       float k1, float k2,
-	       float Cm1, float Cm2,
-	       float r,
-	       float dt, int n_iters);
+	       float rho,  float alpha, float s, float dt, int n_iters);
   };
 }
 

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "ieed_guided.hpp"
+#include "ncd.hpp"
 
 #include "utils.hpp"
 #include "cuda_utils.hpp"
@@ -26,21 +26,18 @@
 
 #include <cmath>
 
-
 namespace usdg
 {
   __global__ void
-  ieedguided_compute_structure_tensor(cv::cuda::PtrStepSzf       const img,
-				      cv::cuda::PtrStepSz<uchar> const mask,
-				      cv::cuda::PtrStepSzf             J_xx,
-				      cv::cuda::PtrStepSzf             J_xy,
-				      cv::cuda::PtrStepSzf             J_yy)
+  ncd_compute_structure_tensor(int M, int N,
+			       cv::cuda::PtrStepSzf       const img,
+			       cv::cuda::PtrStepSz<uchar> const mask,
+			       cv::cuda::PtrStepSzf             J_xx,
+			       cv::cuda::PtrStepSzf             J_xy,
+			       cv::cuda::PtrStepSzf             J_yy)
   {
     const int i = blockIdx.x*blockDim.x + threadIdx.x;
     const int j = blockIdx.y*blockDim.y + threadIdx.y;
-
-    int M = img.rows;
-    int N = img.cols;
 
     if (i >= M || j >= N || mask(i,j) == 0)
       return;
@@ -65,25 +62,19 @@ namespace usdg
   }
 
   __global__ void
-  ieedguided_compute_diffusion_matrix(cv::cuda::PtrStepSzf const J_xx_rho,
-				      cv::cuda::PtrStepSzf const J_xy_rho,
-				      cv::cuda::PtrStepSzf const J_yy_rho,
-				      cv::cuda::PtrStepSz<uchar> const mask,
-				      float m1,
-				      float m2,
-				      float k1,
-				      float k2,
-				      float Cm1,
-				      float Cm2,
-				      cv::cuda::PtrStepSzf D_xx,
-				      cv::cuda::PtrStepSzf D_xy,
-				      cv::cuda::PtrStepSzf D_yy)
+  ncd_compute_diffusion_matrix(int M, int N,
+			       cv::cuda::PtrStepSzf const J_xx_rho,
+			       cv::cuda::PtrStepSzf const J_xy_rho,
+			       cv::cuda::PtrStepSzf const J_yy_rho,
+			       cv::cuda::PtrStepSz<uchar> const mask,
+			       float alpha,
+			       float s,
+			       cv::cuda::PtrStepSzf D_xx,
+			       cv::cuda::PtrStepSzf D_xy,
+			       cv::cuda::PtrStepSzf D_yy)
   {
     const int i = blockIdx.x*blockDim.x + threadIdx.x;
     const int j = blockIdx.y*blockDim.y + threadIdx.y;
-
-    int M = J_xx_rho.rows;
-    int N = J_xx_rho.cols;
 
     if (i >= M || j >= N || mask(i,j) == 0)
       return;
@@ -93,8 +84,13 @@ namespace usdg
 		  J_xy_rho(i,j),
 		  J_yy_rho(i,j),
 		  v1x, v1y, v2x, v2y, mu1, mu2);
-    float lambda1 = 1 - __expf(-Cm1 / max(__powf(mu1 / k1, m1), 1e-7));
-    float lambda2 = 1 - __expf(-Cm2 / max(__powf(mu2 / k2, m2), 1e-7));
+    float delta_mu = mu1 - mu2;
+    float kappa    = delta_mu*delta_mu;
+    float lambda1  = 0.0;
+    float lambda2  = alpha;
+
+    if (kappa < s*s)
+      lambda1 = alpha*(1 - kappa/(s*s));
 
     D_xx(i,j) = lambda1*v1x*v1x + lambda2*v2x*v2x;
     D_xy(i,j) = lambda1*v1x*v1y + lambda2*v2x*v2y;
@@ -102,19 +98,17 @@ namespace usdg
   }
 
   __global__ void
-  ieedguided_diffuse(cv::cuda::PtrStepSzf       const img_src,
-		     cv::cuda::PtrStepSz<uchar> const mask,
-		     cv::cuda::PtrStepSzf       const D_xx,
-		     cv::cuda::PtrStepSzf       const D_xy,
-		     cv::cuda::PtrStepSzf       const D_yy,
-		     float dt, 
-		     cv::cuda::PtrStepSzf       img_dst)
+  ncd_diffuse(int M, int N,
+	      cv::cuda::PtrStepSzf       const img_src,
+	      cv::cuda::PtrStepSz<uchar> const mask,
+	      cv::cuda::PtrStepSzf       const D_xx,
+	      cv::cuda::PtrStepSzf       const D_xy,
+	      cv::cuda::PtrStepSzf       const D_yy,
+	      float dt, 
+	      cv::cuda::PtrStepSzf       img_dst)
   {
     const int i = blockIdx.x*blockDim.x + threadIdx.x;
     const int j = blockIdx.y*blockDim.y + threadIdx.y;
-
-    int M = img_src.rows;
-    int N = img_src.cols;
 
     if (i >= M || j >= N || mask(i,j) == 0)
       return;
@@ -132,10 +126,9 @@ namespace usdg
 			      img_dst);
   }
 
-  IEEDGuided::
-  IEEDGuided()
+  NCD::
+  NCD()
     : _mask(),
-    _guide(),
     _img_buf1(),
     _img_buf2(),
     _J_xx(),
@@ -146,16 +139,14 @@ namespace usdg
     _J_yy_rho(),
     _D_xx(),
     _D_xy(),
-    _D_yy(),
-    _gaussian_filter()
+    _D_yy()
   {}
 
   void
-  IEEDGuided::
+  NCD::
   preallocate(size_t n_rows, size_t n_cols)
   {
     _mask.create(n_rows, n_cols, CV_8U);
-    _guide.create(n_rows, n_cols, CV_8U);
     _img_buf1.create(n_rows, n_cols, CV_32F);
     _img_buf2.create(n_rows, n_cols, CV_32F);
     _J_xx.create(n_rows, n_cols, CV_32F);
@@ -167,29 +158,25 @@ namespace usdg
     _D_xx.create(n_rows, n_cols, CV_32F);
     _D_xy.create(n_rows, n_cols, CV_32F);
     _D_yy.create(n_rows, n_cols, CV_32F);
-    _gaussian_filter = cv::cuda::createGaussianFilter(
-      CV_32F, CV_32F, cv::Size(5, 5), 1.0);
   }
 
   void
-  IEEDGuided::
+  NCD::
   apply(cv::Mat const& image,
-	cv::Mat const& guide,
 	cv::Mat const& mask,
 	cv::Mat&       output,
-	float m1, float m2,
-	float k1, float k2,
-	float Cm1, float Cm2,
+	float rho, float alpha, float s,
 	float dt, int n_iters)
   {
     auto roi       = cv::Rect(0, 0, image.cols, image.rows);
     auto roi_buf1  = _img_buf1(roi);
     auto roi_buf2  = _img_buf2(roi);
     auto roi_mask  = _mask(roi);
-    auto roi_guide = _guide(roi);
     roi_buf1.upload(image);
     roi_mask.upload(mask);
-    roi_guide.upload(guide);
+
+    auto gaussian_filter = cv::cuda::createGaussianFilter(
+      CV_32F, CV_32F, cv::Size(9, 9), rho);
 
     size_t M  = static_cast<size_t>(image.rows);
     size_t N  = static_cast<size_t>(image.cols);
@@ -199,31 +186,32 @@ namespace usdg
 		    static_cast<unsigned int>(
 		      ceil(static_cast<float>(N)/block.y)));
 
-    usdg::ieedguided_compute_structure_tensor<<<grid,block>>>(
-      _guide, _mask, _J_xx, _J_xy, _J_yy);
+    usdg::ncd_compute_structure_tensor<<<grid,block>>>(
+      M, N, _img_buf1, _mask, _J_xx, _J_xy, _J_yy);
     cuda_check( cudaPeekAtLastError() );
 
-    _gaussian_filter->apply(_J_xx, _J_xx_rho);
-    _gaussian_filter->apply(_J_xy, _J_xy_rho);
-    _gaussian_filter->apply(_J_yy, _J_yy_rho);
+    gaussian_filter->apply(_J_xx, _J_xx_rho);
+    gaussian_filter->apply(_J_xy, _J_xy_rho);
+    gaussian_filter->apply(_J_yy, _J_yy_rho);
 
-    ieedguided_compute_diffusion_matrix<<<grid, block>>>(
-      _J_xx_rho, _J_xy_rho, _J_yy_rho, _mask,
-      m1, m2,
-      k1, k2,
-      Cm1, Cm2,
+    ncd_compute_diffusion_matrix<<<grid, block>>>(
+      M, N,
+      _J_xx_rho, _J_xy_rho, _J_yy_rho,
+      _mask,
+      alpha, s,
       _D_xx, _D_xy, _D_yy);
-
     cuda_check( cudaPeekAtLastError() );
+
     for (size_t i = 0; i < n_iters; ++i)
     {
-      usdg::ieedguided_diffuse<<<grid,block>>>(_img_buf1,
-					       _mask,
-					       _D_xx,
-					       _D_xy,
-					       _D_yy,
-					       dt,
-					       _img_buf2);
+      usdg::ncd_diffuse<<<grid,block>>>(M, N,
+					_img_buf1,
+					_mask,
+					_D_xx,
+					_D_xy,
+					_D_yy,
+					dt,
+					_img_buf2);
       cv::swap(_img_buf1, _img_buf2);
     }
     cuda_check( cudaPeekAtLastError() );

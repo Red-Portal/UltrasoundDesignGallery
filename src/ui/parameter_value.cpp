@@ -38,10 +38,12 @@ namespace usdg
   {
     if(ImGui::Begin("ParameterValue"))
     {
+      ImGui::PushItemWidth(70);
       for (size_t i = 0; i < _param_names.size(); ++i)
       {
-	ImGui::LabelText(_param_names[i].c_str(), "%.2f", _param_transformed[i]);
+	ImGui::LabelText(_param_names[i].c_str(), "%G", _param_transformed[i]);
       }
+      ImGui::PopItemWidth();
     }
     ImGui::End();
   }

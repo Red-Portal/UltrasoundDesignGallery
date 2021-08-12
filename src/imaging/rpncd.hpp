@@ -28,6 +28,13 @@ namespace usdg
 {
   class RPNCD
   {
+    /* 
+     * Ramp-Preserving nonlinear Complex Diffusion
+     * 
+     * "Image enhancement and denoising by complex diffusion processes"
+     * Gilboa, Guy, et al.,
+     * IEEE Transactions on Pattern Analysis and Machine Intelligence, 2004
+     */
   private:
     cv::cuda::GpuMat _mask;
     cv::cuda::GpuMat _img_buf1;

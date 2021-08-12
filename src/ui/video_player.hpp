@@ -37,10 +37,18 @@ namespace usdg
   class VideoPlayer
   { /* Danger: This class is very dirty and has a few lock-related caviats. */
   private:
-    cv::Mat                      _image_base;
+    std::atomic<int>             _dynamic_range;
+    std::vector<cv::Mat>         _envelopes;
+    cv::Mat                      _mask;
+
+    std::atomic<size_t>          _frame_rate;
+    std::atomic<size_t>          _frame_index;
+    std::atomic<bool>            _play_video;
+
     cv::Mat                      _render_buffer;
     cv::Mat                      _back_buffer;
     sf::Texture                  _front_buffer;
+    sf::Sprite                   _front_sprite;
     std::mutex                   _buffer_lock;
 
     blaze::DynamicVector<double> _parameter;
@@ -52,18 +60,24 @@ namespace usdg
     std::mutex                   _image_processing_lock;
 
     sf::Texture                  _preview_buffer;
+    sf::Sprite                   _preview_sprite;
     bool                         _show_preview;
 
     sf::Texture _play_icon;
     sf::Texture _pause_icon;
-    sf::Texture _stop_icon;
-    sf::Texture _loop_icon;
+    sf::Texture _prev_icon;
+    sf::Texture _next_icon;
+
+    std::vector<cv::Mat> load_video(std::vector<std::string> const& paths);
+
+    void logcompress(cv::Mat const& src, cv::Mat& dst, int DR);
 
     void quantize(cv::Mat const& src, cv::Mat& dst);
 
   public:
     VideoPlayer(blaze::DynamicVector<double> const& param_init,
-		std::string const& fpath);
+		std::vector<std::string>     const& envelopes_path,
+		std::string                  const& mask_path);
 
     ~VideoPlayer();
 

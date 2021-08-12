@@ -137,10 +137,11 @@ endif()
 # Image processing core
 add_library(ipcore
     SHARED
-    src/imaging/lowpass.cpp
-    src/imaging/ieed_shock.cu
-    src/imaging/ieed_guided.cu
-    #src/imaging/pipeline.cpp
+    src/imaging/ncd.cu
+    src/imaging/rpncd.cu
+    src/imaging/local_laplacian.cu
+    src/imaging/pipeline.cpp
+    src/imaging/pyramid.cpp
     )
 
 target_link_libraries(ipcore

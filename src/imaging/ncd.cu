@@ -168,7 +168,13 @@ namespace usdg
 	float rho, float alpha, float s,
 	float dt, int n_iters)
   {
-    auto roi       = cv::Rect(0, 0, image.cols, image.rows);
+    _img_buf1.setTo(cv::Scalar(0));
+    _img_buf2.setTo(cv::Scalar(0));
+
+    size_t M  = static_cast<size_t>(image.rows);
+    size_t N  = static_cast<size_t>(image.cols);
+
+    auto roi       = cv::Rect(0, 0, N, M);
     auto roi_buf1  = _img_buf1(roi);
     auto roi_buf2  = _img_buf2(roi);
     auto roi_mask  = _mask(roi);
@@ -178,8 +184,6 @@ namespace usdg
     auto gaussian_filter = cv::cuda::createGaussianFilter(
       CV_32F, CV_32F, cv::Size(9, 9), rho);
 
-    size_t M  = static_cast<size_t>(image.rows);
-    size_t N  = static_cast<size_t>(image.cols);
     const dim3 block(8,8);
     const dim3 grid(static_cast<unsigned int>(
 		      ceil(static_cast<float>(M)/block.x)),

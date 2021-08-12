@@ -19,29 +19,37 @@
 #ifndef __US_GALLERY_PIPELINE_HPP__
 #define __US_GALLERY_PIPELINE_HPP__
 
-#include <opencv4/opencv2/core/utility.hpp>
+#include "pyramid.hpp"
+#include "ncd.hpp"
+#include "rpncd.hpp"
+#include "local_laplacian.hpp"
 
-#include "tsonad.hpp"
+#include <opencv4/opencv2/core/core.hpp>
+#include <opencv4/opencv2/imgproc.hpp>
 
 namespace usdg
 {
   class Pipeline
   {
   private: 
-    usdg::TSONAD _diffusion;
-    cv::Mat      _despeckle_buf;
-    cv::Mat      _logimage_buf;
-    cv::Mat      _expimage_buf;
-    cv::Mat      _lopass_buf;
-    cv::Mat      _hipass_buf;
-    
+    usdg::LaplacianPyramid _pyramid;
+    usdg::LocalLaplacian   _laplace;
+    usdg::NCD              _ncd;
+    usdg::RPNCD            _rpncd;
+
   public: 
     Pipeline(size_t n_rows, size_t n_cols);
 
     void apply(cv::Mat const& image,
+	       cv::Mat const& mask,
 	       cv::Mat&       output,
-	       float t,     float ts_a, float ts_b, float sigma_g,
-	       float ctang, float theta, float alpha, float beta);
+	       float laplace_beta,
+	       float laplace_sigma,
+	       float ncd1_alpha,
+	       float ncd1_s,
+	       float ncd2_alpha,
+	       float ncd2_s,
+	       float rpncd_k);
   };
 }
 

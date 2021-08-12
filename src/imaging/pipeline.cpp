@@ -18,6 +18,10 @@
 
 #include "pipeline.hpp"
 
+#include "logcompression.hpp"
+
+#include <opencv4/opencv2/core/core.hpp>
+
 #include <algorithm>
 #include <iostream>
 
@@ -25,43 +29,78 @@ namespace usdg
 {
   Pipeline::
   Pipeline(size_t n_rows, size_t n_cols)
-    : _diffusion(),
-      _despeckle_buf(cv::Mat(static_cast<int>(n_rows), static_cast<int>(n_cols), CV_32F)),
-      _logimage_buf( cv::Mat(static_cast<int>(n_rows), static_cast<int>(n_cols), CV_32F)),
-      _expimage_buf( cv::Mat(static_cast<int>(n_rows), static_cast<int>(n_cols), CV_32F)),
-      _lopass_buf(   cv::Mat(static_cast<int>(n_rows), static_cast<int>(n_cols), CV_32F)),
-      _hipass_buf(   cv::Mat(static_cast<int>(n_rows), static_cast<int>(n_cols), CV_32F))
+    : _pyramid(4),
+      _laplace(),
+      _ncd(),
+      _rpncd()
   {
-    _diffusion.preallocate(n_rows, n_cols);
+    _laplace.preallocate(n_rows, n_cols);
+    _ncd.preallocate(    n_rows, n_cols);
+    _rpncd.preallocate(  n_rows, n_cols);
   }
 
   void
   Pipeline::
   apply(cv::Mat const& image,
+	cv::Mat const& mask,
 	cv::Mat&       output,
-	float t,     float ts_a, float ts_b, float sigma_g,
-	float ctang, float theta, float alpha, float beta)
+	float laplace_beta,
+	float laplace_sigmag,
+	float ncd1_alpha,
+	float ncd1_s,
+	float ncd2_alpha,
+	float ncd2_s,
+	float rpncd_k)
   {
-    float dt     = 0.3;
-    size_t niter = static_cast<size_t>(ceil(t / dt));
-    _diffusion.apply(image, _despeckle_buf, dt, ts_a, ts_b, sigma_g, ctang, niter);
+    float const rate = 2.0;
+    float const laplace_alpha = 1.0;
+    _pyramid.apply(image, mask, rate, rate/2);
 
-    _despeckle_buf += 0.01f;
-    cv::log(_despeckle_buf, _logimage_buf);
-    cv::GaussianBlur(_logimage_buf, _lopass_buf, cv::Size(5, 5), theta);
-    cv::subtract(_logimage_buf, _lopass_buf, _hipass_buf);
-    _lopass_buf *= alpha;
-    _hipass_buf *= beta;
-    _lopass_buf += _hipass_buf;
-    cv::exp(_lopass_buf, _expimage_buf);
-    _expimage_buf -= 0.01f;
+    _laplace.apply(_pyramid.G(0),
+		   _pyramid.mask(0),
+		   _pyramid.L(0),
+		   laplace_alpha,
+		   laplace_beta,
+		   laplace_sigmag);
 
-    for (int i = 0; i < _expimage_buf.rows; ++i) {
-      for (int j = 0; j < _expimage_buf.cols; ++j) {
-	 _expimage_buf.at<float>(i,j) = std::clamp(
-	  _expimage_buf.at<float>(i,j), 0.0f, 1.0f);
-      }
-    }
-    output = _expimage_buf;
+    _laplace.apply(_pyramid.G(1),
+		   _pyramid.mask(1),
+		   _pyramid.L(1),
+		   laplace_alpha,
+		   laplace_beta,
+		   laplace_sigmag);
+
+    _laplace.apply(_pyramid.G(2),
+		   _pyramid.mask(2),
+		   _pyramid.L(2),
+		   laplace_alpha,
+		   laplace_beta,
+		   laplace_sigmag);
+
+    /* Pyarmid level 3 is left unchanged */
+
+    /* Pyarmid level 2 denoising and synthesis */
+    auto& L2 = _pyramid.L(2);
+    auto G2  = cv::Mat();
+    cv::resize(_pyramid.L(3), G2, cv::Size(L2.cols, L2.rows));
+    G2 += L2;
+    _ncd.apply(G2, _pyramid.mask(2), G2, 1.0f, ncd2_alpha, ncd2_s, 2.0f, 30);
+
+    /* Pyarmid level 1 denoising and synthesis */
+    auto& L1 = _pyramid.L(1);
+    auto G1  = cv::Mat();
+    cv::resize(G2, G1, cv::Size(L1.cols, L1.rows));
+    G1 += L1;
+    _ncd.apply(G1, _pyramid.mask(1), G1, 1.0f, ncd1_alpha, ncd1_s, 2.0f, 30);
+
+    /* Pyarmid level 0 denoising and synthesis */
+    auto& L0 = _pyramid.L(0);
+    auto G0  = cv::Mat();
+    cv::resize(G1, G0, cv::Size(L0.cols, L0.rows));
+    G0 += L0;
+    float const theta = 5.f/180.f*3.141592;
+    _rpncd.apply(G0, _pyramid.mask(0), G0, rpncd_k, theta, 0.1f, 30.f);
+
+    G0.copyTo(output);
   }
 }

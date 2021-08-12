@@ -18,14 +18,19 @@
 
 #include "user_interface.hpp"
 
+#include "natural_sort.hpp"
+
 #include <imgui.h>
 #include <imgui-SFML.h>
 #include <portable-file-dialogs.h>
 
 #include <string>
 #include <fstream>
+#include <filesystem>
+#include <ranges>
 
 using namespace std::literals::string_literals;
+namespace fs = std::filesystem;
 
 namespace usdg
 {
@@ -43,23 +48,55 @@ namespace usdg
   UserInterface::
   render_menubar()
   {
+
     if (ImGui::BeginMainMenuBar())
     {
       if (ImGui::BeginMenu("File"))
       {
 	if (ImGui::MenuItem("Open File"))
 	{
-	  auto result = pfd::open_file(
-	    "Select File"s, "../data",
-	    { "Image Files", "*.png *.jpg *.jpeg *.bmp *.tga *.gif *.psd *.hdr *.pic"
-	     // "Video Files"s, "*.mp4 *.wav", automate this by ffmpeg -demuxers
-	    }).result();
+	  auto results        = pfd::select_folder("Select Data Directory"s, "../data").result();
+	  auto files_iterator = fs::directory_iterator(results) ;
+	  auto files          = std::vector<fs::directory_entry>(
+	    fs::begin(files_iterator),
+	    fs::end(files_iterator));
 
-	  if(!result.empty())
+	  auto pfm_fnames_view =  std::ranges::ref_view(files)
+	    | std::ranges::views::filter(
+	      [](auto const& fentry){
+		return fentry.path().extension() == ".pfm";
+	      })
+	    | std::ranges::views::transform([](auto const& fentry){
+	      return std::string(fentry.path());
+	    });
+	  auto pfm_fnames = std::vector<std::string>(
+	    pfm_fnames_view.begin(), pfm_fnames_view.end());
+	  SI::natural::sort(pfm_fnames.begin(), pfm_fnames.end());
+
+	  auto mask_fname_view = std::ranges::ref_view(files)
+	    | std::ranges::views::filter(
+	      [](auto const& fentry){
+		return fentry.path().extension() == ".png";
+	      })
+	    | std::ranges::views::transform([](auto const& fentry){
+	      return std::string(fentry.path());
+	    });
+	  auto mask_fnames = std::vector<std::string>(mask_fname_view.begin(),
+						      mask_fname_view.end());
+
+	  if (pfm_fnames.size() == 0 || mask_fnames.size() < 1)
+	  {
+	    pfd::message("Data Directory Error",
+			 "The selected directory does not contain envelope (*.pfm) files and a single mask (*.png) file",
+			 pfd::choice::ok);
+	  }
+	  else
 	  {
 	    _opt_manager.emplace();
 	    _linesearch.emplace();
-	    _video_player.emplace(_opt_manager->best(), result[0]);
+	    _video_player.emplace(_opt_manager->best(),
+				  pfm_fnames,
+				  *mask_fnames.begin());
 	  }
 	}
 
@@ -74,18 +111,29 @@ namespace usdg
 
 	if (ImGui::MenuItem("Load History"))
 	{
-	  auto fname      = pfd::open_file("Select History File"s, ".").result();
-	  auto stream     = std::ifstream(fname[0]);
-	  auto serialized = std::string(std::istreambuf_iterator<char>(stream),
-					std::istreambuf_iterator<char>());
-	  stream.close();
-	  _opt_manager->deserialize(std::move(serialized));
-
 	  if (_opt_manager && _linesearch)
 	  {
+	    auto fname      = pfd::open_file("Select History File"s, ".").result();
+	    auto stream     = std::ifstream(fname[0]);
+	    auto serialized = std::string(std::istreambuf_iterator<char>(stream),
+					  std::istreambuf_iterator<char>());
+	    stream.close();
+	    _opt_manager->deserialize(std::move(serialized));
+
 	    size_t iter = _opt_manager->iteration();
 	    _linesearch->update_iteration(iter);
 	  }
+	}
+
+	if (ImGui::MenuItem("Load Presets"))
+	{
+	  _opt_manager.emplace();
+	  auto fname  = pfd::open_file("Select Preset File"s, ".").result();
+	  auto stream = std::ifstream(fname[0]);
+	  auto serialized = std::string(std::istreambuf_iterator<char>(stream),
+					std::istreambuf_iterator<char>());
+	  stream.close();
+	  _opt_manager->load_preset(std::move(serialized));
 	}
 	ImGui::EndMenu();
       }

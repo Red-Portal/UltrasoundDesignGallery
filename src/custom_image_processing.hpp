@@ -29,20 +29,18 @@
 
 namespace usdg
 {
-  size_t const t_idx = 0;
-  size_t const a_idx = 1;
-  size_t const b_idx = 2;
-  size_t const g_idx = 3;
-  size_t const c_idx = 4;
-
-  size_t const theta_idx = 5;
-  size_t const alpha_idx = 6;
-  size_t const beta_idx  = 7;
+  size_t const laplace_beta_idx  = 0;
+  size_t const laplace_sigma_idx = 1;
+  size_t const ncd1_alpha_idx    = 2;
+  size_t const ncd1_s_idx        = 3;
+  size_t const ncd2_alpha_idx    = 4;
+  size_t const ncd2_s_idx        = 5;
+  size_t const rpncd_k_idx       = 6;
 
   inline size_t 
   custom_ip_dimension()
   {
-    return 8;
+    return 7;
   }
 
   inline blaze::DynamicVector<double>
@@ -73,30 +71,27 @@ namespace usdg
   custom_ip_parameter_names()
   {
     auto param_names = std::vector<std::string>(custom_ip_dimension());
-    param_names[t_idx]     = "diffusion time";
-    param_names[a_idx]     = "tissue prob a";
-    param_names[b_idx]     = "tissue prob b";
-    param_names[g_idx]     = "gradient threshold";
-    param_names[c_idx]     = "ctang";
-    param_names[theta_idx] = "theta";
-    param_names[alpha_idx] = "alpha";
-    param_names[beta_idx]  = "beta";
+    param_names[laplace_beta_idx]  = "dynamic range compression";
+    param_names[laplace_sigma_idx] = "dynamic range preservation range";
+    param_names[ncd1_alpha_idx]    = "L1 NCD alpha";
+    param_names[ncd1_s_idx]        = "L1 NCD threshold";
+    param_names[ncd2_alpha_idx]    = "L2 NCD alpha";
+    param_names[ncd2_s_idx]        = "L2 NCD threshold";
+    param_names[rpncd_k_idx]       = "L0 RPNCD threshold";
     return param_names;
   }
 
   inline blaze::DynamicVector<float>
   custom_ip_transform_range(blaze::DynamicVector<double> const& param)
   {
-    auto param_trans   = blaze::DynamicVector<float>(param.size());
-    param_trans[t_idx] = linear_interpolate(param[t_idx],      0.1,   20);
-    param_trans[a_idx] = exp_interpolate(param[a_idx],         0.1, 10.0);
-    param_trans[b_idx] = exp_interpolate(param[b_idx],         0.1, 10.0);
-    param_trans[g_idx] = exp_interpolate(   param[g_idx],     0.01,  1.0);
-    param_trans[c_idx] = exp_interpolate(   param[c_idx],    0.001,    5);
-
-    param_trans[theta_idx] = linear_interpolate(param[theta_idx], 0.1,  16);
-    param_trans[alpha_idx] = linear_interpolate(param[alpha_idx], 0.5, 1.0);
-    param_trans[beta_idx]  = linear_interpolate(param[beta_idx],  1.0, 2.0);
+    auto param_trans = blaze::DynamicVector<float>(param.size());
+    param_trans[laplace_beta_idx]  = linear_interpolate(param[laplace_beta_idx],     0.5, 1.0);
+    param_trans[laplace_sigma_idx] = linear_interpolate(param[laplace_sigma_idx],   0.01,   5);
+    param_trans[ncd1_alpha_idx]    = exp_interpolate(   param[ncd1_alpha_idx],     0.001, 0.5);
+    param_trans[ncd1_s_idx]        = linear_interpolate(param[ncd1_s_idx],           0.1,   5);
+    param_trans[ncd2_alpha_idx]    = exp_interpolate(   param[ncd2_alpha_idx],     0.001, 0.5);
+    param_trans[ncd2_s_idx]        = linear_interpolate(param[ncd2_s_idx],           0.1,   5);
+    param_trans[rpncd_k_idx]       = exp_interpolate(   param[rpncd_k_idx],          0.1,   5);
     return param_trans;
   }
 
@@ -111,19 +106,28 @@ namespace usdg
 
     inline void
     apply(cv::Mat const& input,
+	  cv::Mat const& mask,
 	  cv::Mat& output,
 	  blaze::DynamicVector<double> const& param)
     {
       auto param_trans = custom_ip_transform_range(param);
-      _process.apply(input, output,
-		     param_trans[t_idx],
-		     param_trans[a_idx],
-		     param_trans[b_idx],
-		     param_trans[g_idx],
-		     param_trans[c_idx],
-		     param_trans[theta_idx],
-		     param_trans[alpha_idx],
-		     param_trans[beta_idx]);
+
+      float laplace_beta  = param_trans[laplace_beta_idx];
+      float laplace_sigma = param_trans[laplace_sigma_idx];
+      float ncd1_alpha    = param_trans[ncd1_alpha_idx];
+      float ncd1_s        = param_trans[ncd1_s_idx];
+      float ncd2_alpha    = param_trans[ncd2_alpha_idx];
+      float ncd2_s        = param_trans[ncd2_s_idx];
+      float rpncd_k       = param_trans[rpncd_k_idx];
+
+      _process.apply(input, mask, output,
+		     laplace_beta,
+		     laplace_sigma,
+		     ncd1_alpha,
+		     ncd1_s,
+		     ncd2_alpha,
+		     ncd2_s,
+		     rpncd_k);
     }
   };
 }

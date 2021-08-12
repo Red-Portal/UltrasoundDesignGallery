@@ -33,7 +33,7 @@ namespace usdg
   LineSearch()
     : _slider_pos(0.5f),
       _slider_fine_step(0.01f),
-      _macro_positions({0.0, 0.0, 0.0, 0.0}),
+      _macro_positions({0.0, 0.33, 0.66, 1.0}),
       _select_icon_image(),
       _select_icon_disabled_image(),
       _select_icon(),

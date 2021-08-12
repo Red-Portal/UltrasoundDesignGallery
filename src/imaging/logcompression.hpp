@@ -26,34 +26,59 @@ namespace usdg
   template <typename Float>
   inline void
   logcompress(cv::Mat& img,
+	      cv::Mat& mask,
 	      Float in_max_val,
 	      Float out_max_val,
-	      Float dynamic_range)
+	      Float dynamic_range);
+
+  template <>
+  inline void
+  logcompress<float>(cv::Mat& img,
+		     cv::Mat& mask,
+		     float in_max_val,
+		     float out_max_val,
+		     float dynamic_range)
   {
-    Float in_min_val = pow(10.0, -dynamic_range / 20.0)*in_max_val;
-    Float in_range   = log10(in_max_val / in_min_val);
-    Float coeff      = out_max_val / in_range;
+    float in_min_val = powf(10.0f, -dynamic_range / 20.0f)*in_max_val;
+    float in_range   = log10f(in_max_val / in_min_val);
+    float coeff      = out_max_val / in_range;
     for (int i = 0; i < img.rows; ++i) {
       for (int j = 0; j < img.cols; ++j) {
-	Float x = img.at<Float>(i, j);
-	if (x >= in_min_val)
-	  img.at<Float>(i,j) = coeff * log10(x / in_min_val);
+	if (mask.at<uchar>(i,j) > 0)
+	{
+	  float x = img.at<float>(i, j);
+	  if (x >= in_min_val)
+	    img.at<float>(i,j) = coeff * log10f(x / in_min_val);
+	  else
+	    img.at<float>(i,j) = 0.0f;
+	}
 	else
-	  img.at<Float>(i,j) = 0.0;
+	{
+	  img.at<float>(i,j) = 0.0f;
+	}
       }
     }
   }
 
   inline void
   logcompress(cv::Mat& img,
+	      cv::Mat& mask,
 	      double in_max_val,
 	      double out_max_val,
 	      double dynamic_range)
   {
     if (img.type() == CV_32F)
-      logcompress<float>(img, in_max_val, out_max_val, dynamic_range);
-    else if (img.type() == CV_64F)
-      logcompress<double>(img, in_max_val, out_max_val, dynamic_range);
+    {
+      logcompress<float>(img,
+			 mask,
+			 static_cast<float>(in_max_val),
+			 static_cast<float>(out_max_val),
+			 static_cast<float>(dynamic_range));
+    }
+    else
+    {
+      throw std::runtime_error("Only 32-bit floating point is supported!");
+    }
   }
 }
 

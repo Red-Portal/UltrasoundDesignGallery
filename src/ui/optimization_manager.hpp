@@ -32,6 +32,9 @@
 
 namespace usdg
 {
+  using XVector  = blaze::DynamicVector<double>;
+  using XiVector = blaze::DynamicVector<double>;
+
   class OptimizationManager
   {
   private:
@@ -45,6 +48,8 @@ namespace usdg
     std::thread                  _thread;
     size_t                       _iteration;
     std::atomic<bool>            _is_optimizing;
+
+    std::vector<std::pair<XVector, XiVector>> _presets;
 
     usdg::BayesianOptimization<usdg::EI_Koyama> _optimizer;
 
@@ -69,6 +74,8 @@ namespace usdg
     std::string serialize();
 
     void deserialize(std::string const& json_data);
+
+    void load_preset(std::string const& json_data);
 
     bool is_optimizing();
 

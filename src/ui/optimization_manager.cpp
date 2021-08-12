@@ -33,11 +33,11 @@ namespace usdg
 {
   size_t n_beta   = 20;
   size_t n_init   = 4;
-  size_t n_budget = 1000;
+  size_t n_budget = 10000;
 
   OptimizationManager::
   OptimizationManager()
-    : _prng(0u),
+    : _prng(1u),
       _lock(),
       _n_dims(custom_ip_dimension()),
       _x(),
@@ -46,11 +46,12 @@ namespace usdg
       _thread(),
       _iteration(0),
       _is_optimizing(false),
+      _presets(),
       _optimizer(_n_dims, n_beta)
   {
-    _x     = usdg::rmvuniform(_prng, _n_dims, 0, 1);
-    _xi    = usdg::rmvnormal( _prng, _n_dims);
-    _xi   /= blaze::max(blaze::abs(_xi)); 
+    _x   = usdg::rmvuniform(_prng, _n_dims, 0, 1);
+    _xi  = usdg::rmvnormal( _prng, _n_dims);
+    _xi /= blaze::max(blaze::abs(_xi)); 
     _x_opt = _x;
   }
 
@@ -100,16 +101,26 @@ namespace usdg
     betas[1] = beta_ub;
     _optimizer.push_data(_x, _xi, betas, alpha);
 
-    if(_iteration < 4)
+    if(_iteration < n_init)
     {
-      auto x   = usdg::rmvuniform(_prng, _n_dims, 0, 1);
-      auto xi  = usdg::rmvnormal( _prng, _n_dims);
-      xi      /= blaze::max(blaze::abs(xi)); 
+      if (_presets.size() > _iteration)
+      {
+	_lock.lock();
+	_x  = _presets[_iteration].first;
+	_xi = _presets[_iteration].second;
+	_lock.unlock();
+      }
+      else
+      {
+	auto x   = usdg::rmvuniform(_prng, _n_dims, 0, 1);
+	auto xi  = usdg::rmvnormal( _prng, _n_dims);
+	xi      /= blaze::max(blaze::abs(xi)); 
 
-      _lock.lock();
-      _x     = std::move(x);
-      _xi    = std::move(xi);
-      _lock.unlock();
+	_lock.lock();
+	_x     = std::move(x);
+	_xi    = std::move(xi);
+	_lock.unlock();
+      }
     }
     else
     {
@@ -216,6 +227,30 @@ namespace usdg
       }
     }
     _iteration = n_points;
+  }
+
+  void
+  OptimizationManager::
+  load_preset(std::string const& json_data)
+  {
+    auto parsed      = nlohmann::json::parse(json_data);
+    size_t n_presets = parsed.size();
+
+    _lock.lock();
+    for (size_t i = 0; i < n_presets; ++i)
+    {
+      auto x  = parsed[i]["x"];
+      auto xi = parsed[i]["xi"];
+
+      auto x_blaze  = blaze::DynamicVector<double>(x.size());
+      auto xi_blaze = blaze::DynamicVector<double>(xi.size());
+      std::copy(x.begin(),  x.end(),  x_blaze.begin());
+      std::copy(xi.begin(), xi.end(), xi_blaze.begin());
+      _presets.emplace_back(std::move(x_blaze), std::move(xi_blaze));
+    }
+    _x  = _presets[0].first;
+    _xi = _presets[0].second;
+    _lock.unlock();
   }
 
   void

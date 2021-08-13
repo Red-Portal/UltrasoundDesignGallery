@@ -65,6 +65,9 @@ namespace usdg
     std::optional<usdg::OptimizationManager>  _opt_manager;
     UIState                                   _state;
 
+    using FilePaths = std::vector<std::string>;
+    std::pair<FilePaths, FilePaths> process_data_directory(std::string const& path);
+
     void render_menubar();
 
   public:

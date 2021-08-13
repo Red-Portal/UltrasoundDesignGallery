@@ -73,7 +73,7 @@ namespace usdg
       _envelopes(this->load_video(envelopes_path)),
       _mask(cv::imread(mask_path,  cv::IMREAD_GRAYSCALE)),
 
-      _frame_rate(10),
+      _frame_rate(20),
       _frame_index(0),
       _play_video(false),
 
@@ -231,7 +231,7 @@ namespace usdg
     {
       int dynamic_range_local = _dynamic_range.load();
       ImGui::PushItemWidth(150);
-      ImGui::SliderInt("dynamic range", &dynamic_range_local, 80, 40);
+      ImGui::SliderInt("dynamic range", &dynamic_range_local, 80, 30);
       ImGui::PopItemWidth();
       _dynamic_range.store(dynamic_range_local);
 

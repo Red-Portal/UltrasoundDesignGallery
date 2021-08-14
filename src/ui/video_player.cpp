@@ -35,7 +35,36 @@ namespace usdg
 {
   void 
   VideoPlayer::
-  logcompress(cv::Mat const& src, cv::Mat& dst, int DR)
+  frame_averaging(std::vector<cv::Mat> const& src, cv::Mat& dst,
+		  size_t frame_idx, int DR, size_t n_average) const
+  {
+    if (src.size() == 1)
+    {
+      this->logcompress(src[frame_idx], dst, DR);
+    }
+    else
+    {
+      auto n_avg_fwd  = static_cast<int>(
+	ceil((static_cast<double>(n_average) - 1) / 2));
+      auto n_avg_bwd  = static_cast<int>(
+	floor((static_cast<double>(n_average) - 1) / 2));
+      auto begin_idx = std::max(static_cast<int>(frame_idx) - n_avg_bwd, 0);
+      auto end_idx   = std::min(frame_idx + static_cast<size_t>(n_avg_fwd), src.size() - 1);
+      auto buffer    = cv::Mat(src[0].rows, src[0].cols, CV_32F);
+
+      dst.setTo(cv::Scalar(0));
+      auto n_average_actual = end_idx - begin_idx + 1;
+      for (auto i = begin_idx; i <= end_idx; ++i)
+      {
+	this->logcompress(src[i], buffer, DR);
+	dst += buffer / static_cast<double>(n_average_actual);
+      }
+    }
+  }
+
+  void 
+  VideoPlayer::
+  logcompress(cv::Mat const& src, cv::Mat& dst, int DR) const
   {
     float min_intensity = exp10f(static_cast<float>(-DR)/20);
     for (int i = 0; i < src.rows; ++i) {
@@ -47,7 +76,7 @@ namespace usdg
 	}
 	else
 	{
-	  float power = 20*log10(src.at<float>(i,j));
+	  float power = 20*log10f(src.at<float>(i,j));
 	  dst.at<float>(i, j) = power + static_cast<float>(DR);
 	}
       }
@@ -56,7 +85,7 @@ namespace usdg
 
   std::vector<cv::Mat>
   VideoPlayer::
-  load_video(std::vector<std::string> const& paths)
+  load_video(std::vector<std::string> const& paths) const
   {
     auto envelopes_view = std::ranges::ref_view(paths)
       | std::ranges::views::transform([](auto const& path){
@@ -73,8 +102,9 @@ namespace usdg
       _envelopes(this->load_video(envelopes_path)),
       _mask(cv::imread(mask_path,  cv::IMREAD_GRAYSCALE)),
 
-      _frame_rate(20),
+      _frame_rate(30),
       _frame_index(0),
+      _n_average(2),
       _play_video(false),
 
       _render_buffer(),
@@ -125,9 +155,9 @@ namespace usdg
     _imageproc_thread = std::thread([this, env_rows, env_cols]
     {
       auto parameter_local = blaze::DynamicVector<double>();
-      auto log_image       = cv::Mat(env_rows, env_cols, CV_32FC1);
-      auto output_gray     = cv::Mat(env_rows, env_cols, CV_32FC1);
-      auto output_quant    = cv::Mat(env_rows, env_cols, CV_8UC1);
+      auto log_image       = cv::Mat(env_rows, env_cols, CV_32F);
+      auto output_gray     = cv::Mat(env_rows, env_cols, CV_32F);
+      auto output_quant    = cv::Mat(env_rows, env_cols, CV_8U);
       auto output_rgba     = cv::Mat(env_rows, env_cols, CV_8UC4);
 
       auto frame_start_time = std::chrono::steady_clock::now();
@@ -137,16 +167,22 @@ namespace usdg
 	parameter_local = _parameter;
 	_parameter_lock.unlock();
 
-	this->logcompress(_envelopes[_frame_index], log_image, _dynamic_range.load());
+	this->frame_averaging(_envelopes, log_image, _frame_index,
+			      _dynamic_range.load(), _n_average.load());
+
 	_image_processing_lock.lock();
 	_image_processing.apply(log_image, _mask, output_gray, parameter_local);
 	_image_processing_lock.unlock();
 
 	//double min, max;
 	//cv::minMaxLoc(output_gray, &min, &max);
+	//output_gray /= max;
+	//std::cout << max << std::endl;
+
 	output_gray /= _dynamic_range.load();
 	this->quantize(output_gray, output_quant);
 	cv::cvtColor(output_quant, output_rgba, cv::COLOR_GRAY2RGBA);
+
 
 	_buffer_lock.lock();
 	std::swap(_back_buffer, output_rgba);
@@ -176,7 +212,7 @@ namespace usdg
   void 
   VideoPlayer::
   quantize(cv::Mat const& src,
-	   cv::Mat& dst)
+	   cv::Mat& dst) const
   {
     using uchar = unsigned char; 
     for (int i = 0; i < dst.rows; ++i) {
@@ -229,17 +265,21 @@ namespace usdg
 
     if(ImGui::Begin("Video Control"))
     {
+      int n_average_local = static_cast<int>(_n_average.load());
+      ImGui::SliderInt("frame averaging", &n_average_local, 2, 8);
+      _n_average.store(static_cast<size_t>(n_average_local));
+
       int dynamic_range_local = _dynamic_range.load();
-      ImGui::PushItemWidth(150);
+      //ImGui::PushItemWidth(150);
       ImGui::SliderInt("dynamic range", &dynamic_range_local, 80, 30);
-      ImGui::PopItemWidth();
+      //ImGui::PopItemWidth();
       _dynamic_range.store(dynamic_range_local);
 
-      ImGui::PushItemWidth(150);
+      //ImGui::PushItemWidth(150);
       int frame_rate_local = static_cast<int>(_frame_rate.load());
-      ImGui::SliderInt("frame rate (fps)", &frame_rate_local, 1, 30);
+      ImGui::SliderInt("frame rate (fps)", &frame_rate_local, 1, 40);
       _frame_rate.store(static_cast<size_t>(frame_rate_local));
-      ImGui::PopItemWidth();
+      //ImGui::PopItemWidth();
 
       if (ImGui::ImageButton(_play_icon)) {
 	_play_video.store(true);

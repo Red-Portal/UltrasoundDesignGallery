@@ -43,6 +43,7 @@ namespace usdg
 
     std::atomic<size_t>          _frame_rate;
     std::atomic<size_t>          _frame_index;
+    std::atomic<size_t>          _n_average;
     std::atomic<bool>            _play_video;
 
     cv::Mat                      _render_buffer;
@@ -68,11 +69,14 @@ namespace usdg
     sf::Texture _prev_icon;
     sf::Texture _next_icon;
 
-    std::vector<cv::Mat> load_video(std::vector<std::string> const& paths);
+    std::vector<cv::Mat> load_video(std::vector<std::string> const& paths) const;
 
-    void logcompress(cv::Mat const& src, cv::Mat& dst, int DR);
+    void frame_averaging(std::vector<cv::Mat> const& src, cv::Mat& dst,
+			 size_t frame_idx, int DR, size_t n_average) const;
 
-    void quantize(cv::Mat const& src, cv::Mat& dst);
+    void logcompress(cv::Mat const& src, cv::Mat& dst, int DR) const;
+
+    void quantize(cv::Mat const& src, cv::Mat& dst) const;
 
   public:
     VideoPlayer(blaze::DynamicVector<double> const& param_init,

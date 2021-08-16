@@ -1,12 +1,17 @@
 
 # Ultrasound Design Gallery
 
+## Installation
+
+```sh
+git clone --recursive https://github.com/Red-Portal/UltrasoundDesignGallery.git
+mkdir build && cd build 
+cmake -G "Unix Makefile"
+make 
+```
+
 ## Dependencies
-* stats
-* gcem
-* Blaze
-* SFML
-* Imgui
+
 
 ## License
 

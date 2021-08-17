@@ -53,7 +53,7 @@ namespace usdg
 	float rpncd_k)
   {
     float const rate = 2.0;
-    float const laplace_alpha = 1.0;
+    float const laplace_alpha = 0.5;
     _pyramid.apply(image, mask, rate, rate/2);
 
     _laplace.apply(_pyramid.G(0),
@@ -84,14 +84,14 @@ namespace usdg
     auto G2  = cv::Mat();
     cv::resize(_pyramid.L(3), G2, cv::Size(L2.cols, L2.rows));
     G2 += L2;
-    _ncd.apply(G2, _pyramid.mask(2), G2, 1.0f, ncd2_alpha, ncd2_s, 2.0f, 30);
+    _ncd.apply(G2, _pyramid.mask(2), G2, 2.0f, ncd2_alpha, ncd2_s, 2.0f, 30);
 
     /* Pyarmid level 1 denoising and synthesis */
     auto& L1 = _pyramid.L(1);
     auto G1  = cv::Mat();
     cv::resize(G2, G1, cv::Size(L1.cols, L1.rows));
     G1 += L1;
-    _ncd.apply(G1, _pyramid.mask(1), G1, 1.0f, ncd1_alpha, ncd1_s, 2.0f, 30);
+    _ncd.apply(G1, _pyramid.mask(1), G1, 2.0f, ncd1_alpha, ncd1_s, 2.0f, 30);
 
     /* Pyarmid level 0 denoising and synthesis */
     auto& L0 = _pyramid.L(0);
@@ -99,6 +99,8 @@ namespace usdg
     cv::resize(G1, G0, cv::Size(L0.cols, L0.rows));
     G0 += L0;
     float const theta = 5.f/180.f*3.141592;
+
+    //_ncd.apply(G0, _pyramid.mask(0), G0, 1.0f, ncd1_alpha, ncd1_s, 2.0f, 30);
     _rpncd.apply(G0, _pyramid.mask(0), G0, rpncd_k, theta, 0.1f, 30.f);
 
     G0.copyTo(output);

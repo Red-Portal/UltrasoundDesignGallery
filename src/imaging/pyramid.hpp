@@ -33,15 +33,38 @@ namespace usdg
   private:
     std::vector<cv::Mat> _L;
     std::vector<cv::Mat> _G;
+    std::vector<cv::Mat> _L_buffer;
+    std::vector<cv::Mat> _G_buffer;
     std::vector<cv::Mat> _masks;
+
     cv::Mat _blur_buffer;
+    cv::Mat _remap_buffer;
+
+    cv::cuda::GpuMat _img_device_buffer;
+    cv::cuda::GpuMat _mask_device_buffer;
+    cv::cuda::GpuMat _G_device_buffer;
+    cv::cuda::GpuMat _remap_device_buffer;
+
+    void compute_laplacian_pyramid(cv::Mat const& image,
+				   cv::Mat const& mask,
+				   cv::Mat& blur_buffer,
+				   std::vector<cv::Mat>& G_buffer,
+				   std::vector<cv::Mat>& L_out,
+				   size_t n_levels,
+				   float decimation_ratio,
+				   float sigma) const;
   
   public:
     LaplacianPyramid(size_t n_scales);
 
+    void preallocate(size_t M, size_t N);
+
     void apply(cv::Mat const& img,
 	       cv::Mat const& mask,
 	       float decimation_ratio,
+	       float dec_sigma,
+	       float alpha,
+	       float beta,
 	       float sigma);
 
     inline cv::Mat&

@@ -22,7 +22,6 @@
 #include "pyramid.hpp"
 #include "ncd.hpp"
 #include "rpncd.hpp"
-#include "local_laplacian.hpp"
 
 #include <opencv4/opencv2/core/core.hpp>
 #include <opencv4/opencv2/imgproc.hpp>
@@ -33,7 +32,6 @@ namespace usdg
   {
   private: 
     usdg::LaplacianPyramid _pyramid;
-    usdg::LocalLaplacian   _laplace;
     usdg::NCD              _ncd;
     usdg::RPNCD            _rpncd;
 
@@ -43,13 +41,13 @@ namespace usdg
     void apply(cv::Mat const& image,
 	       cv::Mat const& mask,
 	       cv::Mat&       output,
-	       float laplace_beta,
-	       float laplace_sigma,
-	       float ncd1_alpha,
-	       float ncd1_s,
-	       float ncd2_alpha,
-	       float ncd2_s,
-	       float rpncd_k);
+	       float ll_alpha,
+	       float ll_beta,
+	       float ll_sigma,
+	       float ncd_s,
+	       float ncd_alpha,
+	       float rpncd_k1,
+	       float rpncd_k2);
   };
 }
 

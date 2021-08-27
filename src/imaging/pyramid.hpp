@@ -61,7 +61,7 @@ namespace usdg
 
     void apply(cv::Mat const& img,
 	       cv::Mat const& mask,
-	       float decimation_ratio,
+	       float dec_ratio,
 	       float dec_sigma,
 	       float alpha,
 	       float beta,

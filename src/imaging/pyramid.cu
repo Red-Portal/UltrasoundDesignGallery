@@ -20,7 +20,6 @@
 #include "cuda_utils.hpp"
 
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv4/opencv2/highgui.hpp>
 
 #include <stdexcept>
 #include <iostream>
@@ -117,13 +116,13 @@ namespace usdg
   LaplacianPyramid::
   apply(cv::Mat const& img,
 	cv::Mat const& mask,
-	float decimation_ratio,
+	float dec_ratio,
 	float dec_sigma,
 	float alpha,
 	float beta,
 	float sigma)
   {
-    if (decimation_ratio <= 1)
+    if (dec_ratio <= 1)
       throw std::runtime_error("Decimation ratio should be larger than 1");
 
     size_t M = img.rows;
@@ -143,7 +142,7 @@ namespace usdg
 
     for (size_t i = 0; i < _G.size()-1; ++i)
     {
-      float total_dec_ratio = pow(decimation_ratio, i+1);
+      float total_dec_ratio = pow(dec_ratio, i+1);
       size_t M_dec = static_cast<size_t>(ceil(M/total_dec_ratio));
       size_t N_dec = static_cast<size_t>(ceil(N/total_dec_ratio));
       cv::GaussianBlur(_G[i],  _blur_buffer, cv::Size(7, 7), dec_sigma, dec_sigma);
@@ -166,7 +165,7 @@ namespace usdg
       this->compute_laplacian_pyramid(_remap_buffer, mask, _blur_buffer,
 				      _G_buffer, _L_buffer,
 				      i+1,
-				      decimation_ratio,
+				      dec_ratio,
 				      dec_sigma);
       _L_buffer[i].copyTo(_L[i]);
     }

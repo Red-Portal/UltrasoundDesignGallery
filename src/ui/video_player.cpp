@@ -25,7 +25,6 @@
 #include <imgui.h>
 #include <imgui-SFML.h>
 
-#include <iostream>
 #include <ranges>
 #include <string>
 
@@ -33,14 +32,47 @@
 
 namespace usdg
 {
+  void
+  VideoPlayer::
+  dynamic_range_adjustment(cv::Mat& src, cv::Mat const& mask,
+			   float dynamic_range, float reject) const
+  {
+    float max_intensity = std::min(reject + dynamic_range, 1.f);
+    dynamic_range       = max_intensity - reject;
+    for (int i = 0; i < src.rows; ++i) {
+      for (int j = 0; j < src.cols; ++j) {
+	if (mask.at<uchar>(i, j) > 0)
+	{
+	  auto pixel = src.at<float>(i, j);
+	  if (pixel < reject)
+	  {
+	    src.at<float>(i, j) = 0.0f;
+	  }
+	  else if (pixel > max_intensity)
+	  {
+	    src.at<float>(i, j) = 1.0f;
+	  }
+	  else
+	  {
+	    src.at<float>(i, j) = (pixel - reject) / dynamic_range;
+	  }
+	}
+	else
+	{
+	  src.at<float>(i, j) = 0;
+	}
+      }
+    }
+  }
+
   void 
   VideoPlayer::
   frame_averaging(std::vector<cv::Mat> const& src, cv::Mat& dst,
-		  size_t frame_idx, int DR, size_t n_average) const
+		  size_t frame_idx, size_t n_average) const
   {
     if (src.size() == 1)
     {
-      this->logcompress(src[frame_idx], dst, DR);
+      src[frame_idx].copyTo(dst);
     }
     else
     {
@@ -49,36 +81,16 @@ namespace usdg
       auto n_avg_bwd  = static_cast<int>(
 	floor((static_cast<double>(n_average) - 1) / 2));
       auto begin_idx = std::max(static_cast<int>(frame_idx) - n_avg_bwd, 0);
-      auto end_idx   = std::min(frame_idx + static_cast<size_t>(n_avg_fwd), src.size() - 1);
+      auto end_idx   = std::min(static_cast<int>(frame_idx) + n_avg_fwd,
+				static_cast<int>(src.size()) - 1);
       auto buffer    = cv::Mat(src[0].rows, src[0].cols, CV_32F);
 
       dst.setTo(cv::Scalar(0));
       auto n_average_actual = end_idx - begin_idx + 1;
       for (auto i = begin_idx; i <= end_idx; ++i)
       {
-	this->logcompress(src[i], buffer, DR);
+	src[static_cast<size_t>(i)].copyTo(buffer);
 	dst += buffer / static_cast<double>(n_average_actual);
-      }
-    }
-  }
-
-  void 
-  VideoPlayer::
-  logcompress(cv::Mat const& src, cv::Mat& dst, int DR) const
-  {
-    float min_intensity = exp10f(static_cast<float>(-DR)/20);
-    for (int i = 0; i < src.rows; ++i) {
-      for (int j = 0; j < src.cols; ++j) {
-	if ((src.at<float>(i,j) <= min_intensity) ||
-	    (_mask.at<uchar>(i,j) == 0))
-	{
-	  dst.at<float>(i,j) = 0;
-	}
-	else
-	{
-	  float power = 20*log10f(src.at<float>(i,j));
-	  dst.at<float>(i, j) = power + static_cast<float>(DR);
-	}
       }
     }
   }
@@ -98,7 +110,8 @@ namespace usdg
   VideoPlayer(blaze::DynamicVector<double> const& param_init,
 	      std::vector<std::string>     const& envelopes_path,
 	      std::string                  const& mask_path)
-    : _dynamic_range(50),
+    : _dynamic_range(0.8f),
+      _reject(0.1f),
       _envelopes(this->load_video(envelopes_path)),
       _mask(cv::imread(mask_path,  cv::IMREAD_GRAYSCALE)),
 
@@ -167,19 +180,16 @@ namespace usdg
 	parameter_local = _parameter;
 	_parameter_lock.unlock();
 
-	this->frame_averaging(_envelopes, log_image, _frame_index,
-			      _dynamic_range.load(), _n_average.load());
+	this->frame_averaging(_envelopes, log_image, _frame_index, _n_average.load());
 
 	_image_processing_lock.lock();
 	_image_processing.apply(log_image, _mask, output_gray, parameter_local);
 	_image_processing_lock.unlock();
 
-	//double min, max;
-	//cv::minMaxLoc(output_gray, &min, &max);
-	//output_gray /= max;
-	//std::cout << max << std::endl;
-
 	output_gray /= _dynamic_range.load();
+	this->dynamic_range_adjustment(output_gray, _mask,
+				       _dynamic_range.load(),
+				       _reject.load());
 	this->quantize(output_gray, output_quant);
 	cv::cvtColor(output_quant, output_rgba, cv::COLOR_GRAY2RGBA);
 
@@ -189,7 +199,8 @@ namespace usdg
 	_buffer_lock.unlock();
 
 	auto current_time   = std::chrono::steady_clock::now();
-	auto frame_interval = std::chrono::milliseconds(1000 / _frame_rate.load());
+	auto frame_interval = std::chrono::milliseconds(
+	  static_cast<int>(round(1000.0 / _frame_rate.load())));
 	if (_play_video.load() &&
 	    current_time - frame_start_time > frame_interval)
 	{
@@ -266,20 +277,20 @@ namespace usdg
     if(ImGui::Begin("Video Control"))
     {
       int n_average_local = static_cast<int>(_n_average.load());
-      ImGui::SliderInt("frame averaging", &n_average_local, 2, 8);
+      ImGui::SliderInt("frame averaging", &n_average_local, 1, 8);
       _n_average.store(static_cast<size_t>(n_average_local));
 
-      int dynamic_range_local = _dynamic_range.load();
-      //ImGui::PushItemWidth(150);
-      ImGui::SliderInt("dynamic range", &dynamic_range_local, 80, 30);
-      //ImGui::PopItemWidth();
+      float dynamic_range_local = _dynamic_range.load();
+      ImGui::SliderFloat("dynamic range", &dynamic_range_local, 0.5f, 1.0f);
       _dynamic_range.store(dynamic_range_local);
 
-      //ImGui::PushItemWidth(150);
+      float reject_local = _reject.load();
+      ImGui::SliderFloat("reject level", &reject_local, 0.01f, 0.5f);
+      _reject.store(reject_local);
+
       int frame_rate_local = static_cast<int>(_frame_rate.load());
       ImGui::SliderInt("frame rate (fps)", &frame_rate_local, 1, 40);
       _frame_rate.store(static_cast<size_t>(frame_rate_local));
-      //ImGui::PopItemWidth();
 
       if (ImGui::ImageButton(_play_icon)) {
 	_play_video.store(true);
@@ -327,18 +338,37 @@ namespace usdg
     auto output_rgba  = cv::Mat(env_rows, env_cols, CV_8UC4);
     auto log_image    = cv::Mat(env_rows, env_cols, CV_32FC1);
 
-    this->logcompress(_envelopes[_frame_index.load()], log_image, _dynamic_range.load());
     _image_processing_lock.lock();
     _image_processing.apply(log_image, _mask, output_gray, param);
     _image_processing_lock.unlock();
 
-    double min, max;
-    cv::minMaxLoc(output_gray, &min, &max);
-    output_gray /= max;
+    this->dynamic_range_adjustment(output_gray, _mask,
+				   _dynamic_range.load(),
+				   _reject.load());
     this->quantize(output_gray, output_quant);
 
     cv::cvtColor(output_quant, output_rgba, cv::COLOR_GRAY2RGBA);
     _preview_buffer.update(output_rgba.ptr());
+  }
+
+  void
+  VideoPlayer::
+  export_files(std::string const& export_path,
+	       blaze::DynamicVector<double> const& best_param)
+  {
+    auto parameter_local = blaze::DynamicVector<double>();
+    size_t env_rows      = _envelopes[0].rows;
+    size_t env_cols      = _envelopes[0].cols;
+    auto output_image    = cv::Mat(env_rows, env_cols, CV_32F);
+
+    auto output_sequence = std::vector<cv::Mat>(_envelopes.size());
+    for (size_t i = 0; i < _envelopes.size(); ++i)
+    {
+      _image_processing_lock.lock();
+      _image_processing.apply(_envelopes[i], _mask, output_image, best_param);
+      _image_processing_lock.unlock();
+      cv::imwrite(export_path + "/processed_" + std::to_string(i) + ".pfm", output_image);
+    }
   }
 
   void

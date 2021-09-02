@@ -37,7 +37,8 @@ namespace usdg
   class VideoPlayer
   { /* Danger: This class is very dirty and has a few lock-related caviats. */
   private:
-    std::atomic<int>             _dynamic_range;
+    std::atomic<float>           _dynamic_range;
+    std::atomic<float>           _reject;
     std::vector<cv::Mat>         _envelopes;
     cv::Mat                      _mask;
 
@@ -72,9 +73,10 @@ namespace usdg
     std::vector<cv::Mat> load_video(std::vector<std::string> const& paths) const;
 
     void frame_averaging(std::vector<cv::Mat> const& src, cv::Mat& dst,
-			 size_t frame_idx, int DR, size_t n_average) const;
+			 size_t frame_idx, size_t n_average) const;
 
-    void logcompress(cv::Mat const& src, cv::Mat& dst, int DR) const;
+    void dynamic_range_adjustment(cv::Mat& src, cv::Mat const& mask,
+				  float dynamic_range, float reject) const;
 
     void quantize(cv::Mat const& src, cv::Mat& dst) const;
 
@@ -90,6 +92,9 @@ namespace usdg
     void update_parameter(blaze::DynamicVector<double> const& param);
 
     void update_preview(blaze::DynamicVector<double> const& param);
+
+    void export_files(std::string const& export_path,
+		      blaze::DynamicVector<double> const& best_param);
 
     void toggle_preview();
   };

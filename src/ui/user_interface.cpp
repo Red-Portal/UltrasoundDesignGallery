@@ -109,7 +109,6 @@ namespace usdg
 				    *mask_fnames.begin());
 	    }
 	  }
-
 	}
 
 	if (ImGui::MenuItem("Save History"))
@@ -154,6 +153,15 @@ namespace usdg
 					  std::istreambuf_iterator<char>());
 	    stream.close();
 	    _opt_manager->load_preset(std::move(serialized));
+	  }
+	}
+
+	if (ImGui::MenuItem("Export"))
+	{
+	  auto selection = pfd::select_folder("Select Export Path"s, "../data").result();
+	  if (!selection.empty() && _video_player)
+	  { 
+	    _video_player->export_files(selection, _opt_manager->best());
 	  }
 	}
 	ImGui::EndMenu();

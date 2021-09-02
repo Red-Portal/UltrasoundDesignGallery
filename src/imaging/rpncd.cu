@@ -140,7 +140,6 @@ namespace usdg
     for (size_t i = 0; i < n_iters; ++i)
     {
       usdg::rpncd_compute_diffusivity<<<grid, block>>>(M, N, _img_buf1, _mask, _coeff, k, theta);
-
       usdg::rpncd_diffuse<<<grid, block>>>(M, N, _img_buf1, _coeff, _mask, dt, _img_buf2);
       cv::swap(_img_buf1, _img_buf2);
     }

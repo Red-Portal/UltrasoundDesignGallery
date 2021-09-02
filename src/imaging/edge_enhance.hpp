@@ -1,4 +1,5 @@
 
+
 /*
  * Copyright (C) 2021  Ray Kim
  *
@@ -16,42 +17,39 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __US_GALLERY_PIPELINE_HPP__
-#define __US_GALLERY_PIPELINE_HPP__
-
-#include "pyramid.hpp"
-#include "ncd.hpp"
-#include "rpncd.hpp"
-#include "edge_enhance.hpp"
+#ifndef __US_GALLERY_EDGEENHANCE_HPP__
+#define __US_GALLERY_EDGEENHANCE_HPP__
 
 #include <opencv4/opencv2/core/core.hpp>
-#include <opencv4/opencv2/imgproc.hpp>
+#include <opencv4/opencv2/core/cuda.hpp>
+#include <opencv4/opencv2/cudafilters.hpp>
+
+#include <cmath>
 
 namespace usdg
 {
-  class Pipeline
+  class EdgeEnhance
   {
-  private: 
-    usdg::LaplacianPyramid _pyramid;
-    usdg::NCD              _ncd;
-    usdg::RPNCD            _rpncd;
-    usdg::EdgeEnhance      _edge_enhance;
+    /* 
+     * Non-linear Coherent Diffusion
+     * 
+     * "Real-time speckle reduction and coherence enhancement 
+     *  in ultrasound imaging via nonlinear anisotropic diffusion"
+     *  Abd-Elmoniem, Khaled Z. et al.
+     *  IEEE Transactions on Biomedical Engineering, 2002
+     */
+  private:
+    cv::cuda::GpuMat _mask;
+    cv::cuda::GpuMat _image;
 
-  public: 
-    Pipeline(size_t n_rows, size_t n_cols);
+  public:
+    EdgeEnhance();
 
-    void apply(cv::Mat const& image,
+    void preallocate(size_t n_rows, size_t n_cols);
+
+    void apply(cv::Mat& image,
 	       cv::Mat const& mask,
-	       cv::Mat&       output,
-	       float ee1_beta,
-	       float ee1_sigma,
-	       float ee2_beta,
-	       float ee2_sigma,
-	       float ncd1_s,
-	       float ncd1_alpha,
-	       float ncd2_s,
-	       float ncd2_alpha,
-	       float rpncd_k);
+	       float alpha, float beta, float sigma);
   };
 }
 

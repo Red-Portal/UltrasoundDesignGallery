@@ -29,18 +29,20 @@
 
 namespace usdg
 {
-  size_t const laplace_beta_idx  = 0;
-  size_t const laplace_sigma_idx = 1;
-  size_t const ncd1_alpha_idx    = 2;
-  size_t const ncd1_s_idx        = 3;
-  size_t const ncd2_alpha_idx    = 4;
-  size_t const ncd2_s_idx        = 5;
-  size_t const rpncd_k_idx       = 6;
+  size_t const ee1_beta_idx   = 0;
+  size_t const ee1_sigma_idx  = 1;
+  size_t const ee2_beta_idx   = 2;
+  size_t const ee2_sigma_idx  = 3;
+  size_t const ncd1_s_idx     = 4;
+  size_t const ncd1_alpha_idx = 5;
+  size_t const ncd2_s_idx     = 6;
+  size_t const ncd2_alpha_idx = 7;
+  size_t const rpncd_k_idx    = 8;
 
   inline size_t 
   custom_ip_dimension()
   {
-    return 7;
+    return 9;
   }
 
   inline blaze::DynamicVector<double>
@@ -71,13 +73,15 @@ namespace usdg
   custom_ip_parameter_names()
   {
     auto param_names = std::vector<std::string>(custom_ip_dimension());
-    param_names[laplace_beta_idx]  = "dynamic range compression";
-    param_names[laplace_sigma_idx] = "dynamic range preservation range";
-    param_names[ncd1_alpha_idx]    = "L1 NCD alpha";
-    param_names[ncd1_s_idx]        = "L1 NCD threshold";
-    param_names[ncd2_alpha_idx]    = "L2 NCD alpha";
-    param_names[ncd2_s_idx]        = "L2 NCD threshold";
-    param_names[rpncd_k_idx]       = "L0 RPNCD threshold";
+    param_names[ee1_beta_idx]   = "L1 enhance edge gain";
+    param_names[ee1_sigma_idx]  = "L1 edge/detail threshold";
+    param_names[ee2_beta_idx]   = "L0 enhance edge gain";
+    param_names[ee2_sigma_idx]  = "L0 edge/detail threshold";
+    param_names[ncd1_s_idx]     = "L2 NCD threshold";
+    param_names[ncd1_alpha_idx] = "L2 NCD alpha";
+    param_names[ncd2_s_idx]     = "L1 NCD threshold";
+    param_names[ncd2_alpha_idx] = "L1 NCD alpha";
+    param_names[rpncd_k_idx]    = "L0 RPNCD edge threshold";
     return param_names;
   }
 
@@ -85,13 +89,15 @@ namespace usdg
   custom_ip_transform_range(blaze::DynamicVector<double> const& param)
   {
     auto param_trans = blaze::DynamicVector<float>(param.size());
-    param_trans[laplace_beta_idx]  = linear_interpolate(param[laplace_beta_idx],     0.5, 1.0);
-    param_trans[laplace_sigma_idx] = linear_interpolate(param[laplace_sigma_idx],   0.01,   5);
-    param_trans[ncd1_alpha_idx]    = exp_interpolate(   param[ncd1_alpha_idx],     0.001, 0.5);
-    param_trans[ncd1_s_idx]        = linear_interpolate(param[ncd1_s_idx],           0.1,   5);
-    param_trans[ncd2_alpha_idx]    = exp_interpolate(   param[ncd2_alpha_idx],     0.001, 0.5);
-    param_trans[ncd2_s_idx]        = linear_interpolate(param[ncd2_s_idx],           0.1,   5);
-    param_trans[rpncd_k_idx]       = exp_interpolate(   param[rpncd_k_idx],          0.1,   5);
+    param_trans[ee1_beta_idx]   = linear_interpolate(param[ee1_beta_idx],     1.0,  5.0);
+    param_trans[ee1_sigma_idx]  = exp_interpolate(   param[ee1_sigma_idx],   1e-4, 1e-2);
+    param_trans[ee2_beta_idx]   = linear_interpolate(param[ee2_beta_idx],     1.0,  5.0);
+    param_trans[ee2_sigma_idx]  = exp_interpolate(   param[ee2_sigma_idx],   1e-4, 1e-2);
+    param_trans[ncd1_s_idx]     = linear_interpolate(param[ncd1_s_idx],         1,  100);
+    param_trans[ncd1_alpha_idx] = linear_interpolate(param[ncd1_alpha_idx],  3e-2,  0.1);
+    param_trans[ncd2_s_idx]     = linear_interpolate(param[ncd2_s_idx],         1,  100);
+    param_trans[ncd2_alpha_idx] = linear_interpolate(param[ncd2_alpha_idx],  3e-2,  0.1);
+    param_trans[rpncd_k_idx]    = exp_interpolate(   param[rpncd_k_idx],     1e-4, 1e-2);
     return param_trans;
   }
 
@@ -112,21 +118,25 @@ namespace usdg
     {
       auto param_trans = custom_ip_transform_range(param);
 
-      float laplace_beta  = param_trans[laplace_beta_idx];
-      float laplace_sigma = param_trans[laplace_sigma_idx];
-      float ncd1_alpha    = param_trans[ncd1_alpha_idx];
-      float ncd1_s        = param_trans[ncd1_s_idx];
-      float ncd2_alpha    = param_trans[ncd2_alpha_idx];
-      float ncd2_s        = param_trans[ncd2_s_idx];
-      float rpncd_k       = param_trans[rpncd_k_idx];
+      float ee_beta1   = param_trans[ee1_beta_idx];
+      float ee_beta2   = param_trans[ee2_beta_idx];
+      float ee_sigma1  = param_trans[ee1_sigma_idx];
+      float ee_sigma2  = param_trans[ee2_sigma_idx];
+      float ncd1_alpha = param_trans[ncd1_alpha_idx];
+      float ncd1_s     = param_trans[ncd1_s_idx];
+      float ncd2_alpha = param_trans[ncd2_alpha_idx];
+      float ncd2_s     = param_trans[ncd2_s_idx];
+      float rpncd_k    = param_trans[rpncd_k_idx];
 
       _process.apply(input, mask, output,
-		     laplace_beta,
-		     laplace_sigma,
-		     ncd1_alpha,
+		     ee_beta1,
+		     ee_sigma1,
+		     ee_beta2,
+		     ee_sigma2,
 		     ncd1_s,
-		     ncd2_alpha,
+		     ncd1_alpha,
 		     ncd2_s,
+		     ncd2_alpha,
 		     rpncd_k);
     }
   };

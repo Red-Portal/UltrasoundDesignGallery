@@ -63,6 +63,8 @@ namespace usdg
 
     void enable_select_button() noexcept;
 
+    void disable_select_button() noexcept;
+
     void update_iteration(size_t iteration) noexcept;
   };
 }

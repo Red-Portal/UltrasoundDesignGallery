@@ -33,7 +33,7 @@ namespace usdg
   LineSearch()
     : _slider_pos(0.5f),
       _slider_fine_step(0.01f),
-      _macro_positions({0.0, 0.33, 0.66, 1.0}),
+      _macro_positions({0.0f, 0.33f, 0.66f, 1.0f}),
       _select_icon_image(),
       _select_icon_disabled_image(),
       _select_icon(),
@@ -243,9 +243,17 @@ namespace usdg
 
   void
   LineSearch::
+  disable_select_button() noexcept
+  {
+    _select_button_pressed = true;
+  }
+
+  void
+  LineSearch::
   update_iteration(size_t iteration) noexcept
   {
     _iteration = iteration;
+    _slider_pos = 0.5;
   }
 }
 

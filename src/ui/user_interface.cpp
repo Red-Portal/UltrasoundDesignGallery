@@ -135,6 +135,8 @@ namespace usdg
 					    std::istreambuf_iterator<char>());
 	      stream.close();
 	      _opt_manager->deserialize(std::move(serialized));
+	      _linesearch->disable_select_button();
+	      _state = UIState::optimizing;
 
 	      size_t iter = _opt_manager->iteration();
 	      _linesearch->update_iteration(iter);

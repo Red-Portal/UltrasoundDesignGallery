@@ -362,13 +362,13 @@ namespace usdg
     auto output_image    = cv::Mat(env_rows, env_cols, CV_32F);
 
     auto output_sequence = std::vector<cv::Mat>(_envelopes.size());
+    _image_processing_lock.lock();
     for (size_t i = 0; i < _envelopes.size(); ++i)
     {
-      _image_processing_lock.lock();
       _image_processing.apply(_envelopes[i], _mask, output_image, best_param);
-      _image_processing_lock.unlock();
       cv::imwrite(export_path + "/processed_" + std::to_string(i) + ".pfm", output_image);
     }
+    _image_processing_lock.unlock();
   }
 
   void

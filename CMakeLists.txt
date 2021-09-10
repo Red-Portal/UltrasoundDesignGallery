@@ -139,9 +139,10 @@ add_library(ipcore
     SHARED
     src/imaging/ncd.cu
     src/imaging/rpncd.cu
-    src/imaging/local_laplacian.cu
     src/imaging/pipeline.cpp
     src/imaging/pyramid.cpp
+    src/imaging/edge_enhance.cu
+    src/image_processing_api.cpp
     )
 
 target_link_libraries(ipcore
@@ -152,6 +153,7 @@ target_link_libraries(ipcore
     PUBLIC
     OpenMP::OpenMP_CXX
     opencv_core
+    opencv_quality
     opencv_cudafilters
     )
 

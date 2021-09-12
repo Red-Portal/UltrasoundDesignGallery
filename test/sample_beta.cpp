@@ -1,5 +1,5 @@
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #define BLAZE_USE_DEBUG_MODE 1
 
 #include "../src/gp/sample_beta.hpp"

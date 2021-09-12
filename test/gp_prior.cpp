@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #define BLAZE_USE_DEBUG_MODE 1
 
 #include "../src/bo/find_bounds.hpp"
@@ -58,7 +58,7 @@ TEST_CASE("gaussian process mean gradient", "[gp]")
   auto [mean_truth, _] = gp.predict(data_mat, dx);
 
   REQUIRE( blaze::norm(grad_truth - grad) < 1e-4 );
-  REQUIRE( mean == Approx(mean_truth) );
+  REQUIRE( mean == Catch::Approx(mean_truth) );
 }
 
 TEST_CASE("gaussian process prediction mean and variance gradient", "[gp]")
@@ -97,8 +97,8 @@ TEST_CASE("gaussian process prediction mean and variance gradient", "[gp]")
   auto [mean_truth, var_truth]          = gp.predict(data_mat, dx);
   auto [mean, var, mean_grad, var_grad] = usdg::gradient_mean_var(gp, data_mat, dx);
 
-  REQUIRE( mean == Approx(mean_truth) );
-  REQUIRE( var  == Approx(var_truth) );
+  REQUIRE( mean == Catch::Approx(mean_truth) );
+  REQUIRE( var  == Catch::Approx(var_truth) );
   REQUIRE( blaze::norm(mean_grad_truth - mean_grad) < 1e-4 );
   REQUIRE( blaze::norm(var_grad_truth  - var_grad)  < 1e-4 );
 }
@@ -135,8 +135,8 @@ TEST_CASE("gaussian process batch prediction", "[gp]")
   auto [means, vars] = gp.predict(data_mat, X);
   for (size_t i = 0; i < X.columns(); ++i)
   {
-    REQUIRE( means[i] == Approx(means_truth[i]) );
-    REQUIRE( vars[i]  == Approx(vars_truth[i]) );
+    REQUIRE( means[i] == Catch::Approx(means_truth[i]) );
+    REQUIRE( vars[i]  == Catch::Approx(vars_truth[i]) );
   }
 }
 
@@ -184,6 +184,6 @@ TEST_CASE("gaussian process prediction gradient regression1", "[gp]")
   auto [mean_truth, _] = gp.predict(data_mat, dx);
 
   REQUIRE( blaze::norm(grad_truth - grad) < 1e-4 );
-  REQUIRE( mean == Approx(mean_truth) );
+  REQUIRE( mean == Catch::Approx(mean_truth) );
 }
 

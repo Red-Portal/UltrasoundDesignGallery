@@ -16,8 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#define CATCH_CONFIG_MAIN // This tells the catch header to generate a main
+#define CATCH_CONFIG_RUNNER
+#include <catch2/catch_all.hpp>
 
-#include <catch2/catch.hpp>
+int main( int argc, char* argv[] ) {
+  int result = Catch::Session().run( argc, argv );
+  return result;
+}
 
 

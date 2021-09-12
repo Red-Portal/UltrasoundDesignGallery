@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #define BLAZE_USE_DEBUG_MODE 1
 
 #include "../src/gp/likelihood.hpp"
@@ -42,7 +42,7 @@ TEST_CASE("preferential gaussian process likelihood", "[likelihood]")
   auto delta = blaze::DynamicMatrix<double>(
     {{ 1.03636,  0.192338, -0.498405,  -1.36314},
      {-0.816198, 0.348206,  0.0917257, -0.260458}});
-  REQUIRE(usdg::pgp_loglike(delta) == Approx(-1.8420149682339513));
+  REQUIRE(usdg::pgp_loglike(delta) == Catch::Approx(-1.8420149682339513));
 }
 
 TEST_CASE("preferential gaussian process likelihood derivatives", "[likelihood]")

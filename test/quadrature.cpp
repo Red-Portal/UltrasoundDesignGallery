@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #define BLAZE_USE_DEBUG_MODE 1
 
 #include "../src/math/quadrature.hpp"
@@ -31,7 +31,7 @@ TEST_CASE("integrating over Gaussian pdf with Gauss-Hermite rule", "[quadrature]
   auto f = [=](double x){
     return sqrt(2)*sigma*x + mu;
   };
-  REQUIRE( usdg::gauss_hermite(f) / sqrt(std::numbers::pi) == Approx(mu) );
+  REQUIRE( usdg::gauss_hermite(f) / sqrt(std::numbers::pi) == Catch::Approx(mu) );
 }
 
 TEST_CASE("integrating over Gaussian pdf with Gauss-Legendre rule", "[quadrature]")
@@ -41,5 +41,5 @@ TEST_CASE("integrating over Gaussian pdf with Gauss-Legendre rule", "[quadrature
   auto f = [=](double x){
     return sqrt(2)*sigma*x + mu;
   };
-  REQUIRE( usdg::gauss_legendre(f) / sqrt(std::numbers::pi) == Approx(mu) );
+  REQUIRE( usdg::gauss_legendre(f) / sqrt(std::numbers::pi) == Catch::Approx(mu) );
 }

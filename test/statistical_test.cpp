@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #define BLAZE_USE_DEBUG_MODE 1
 
 #include "../src/math/prng.hpp"

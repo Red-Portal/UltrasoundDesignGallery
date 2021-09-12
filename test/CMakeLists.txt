@@ -31,10 +31,8 @@ add_executable(usgallery_tests
     quadrature.cpp
     finitediff.cpp
     likelihood.cpp
-    #sample_beta.cpp
     gp_prior.cpp
     bayesian_optimization.cpp
-    spsa.cpp
     root.cpp
     )
 target_link_libraries(usgallery_tests

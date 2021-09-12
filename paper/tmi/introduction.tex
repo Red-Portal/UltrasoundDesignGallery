@@ -1,0 +1,94 @@
+
+\section{Introduction}\label{section:introduction}
+\IEEEPARstart{M}{edical} ultrasound B-mode (brightness mode) images require various stages of image processing in order to be clinically efficient.
+compared to other medical image modalities such as magnetic resonance imaging (MRI), without post-processing treatments, medical ultrasound images suffer from low signal-to-noise response and low contrast.
+For this reason, various image enhancement methods including both purely image processing-based and system-wise optimization methods have been developed~\cite{contrerasortiz_ultrasound_2012}.
+
+Purely image processing based methods such as \textit{speckle reduction}~\cite{finn_echocardiographic_2011, duarte-salazar_speckle_2020} has shown to be able to drastically improve the quality of medical ultrasound images without increasing the hardware complexity of medical ultrasound devices. 
+Despite their advantages, image processing methods introduce many system parameters that strongly affect the finally formed image~\cite{duarte-salazar_speckle_2020}.
+Appropriate tuning of these parameters is crucial for extracting their best clinical performance and proper performance assessment.
+
+When no theoretically supported values for system parameters are available, a typical approach is to set a target quality metric and optimize it either manually or using numerical optimization methods. For instance, Ramos-Llord\'en et al.~\cite{ramos-llorden_anisotropic_2015} maximized the~\(\widehat{Q}\) index~\cite{tay_ultrasound_2006} while Mishra et al.~\cite{mishra_edge_2018} minimized the signal-to-speckle-noise ratio (SSRN).
+Unfortunately, for medical ultrasound B-mode images, this approach is limited by several critical reasons.
+\begin{enumerate}
+  \item Commonly used objective quality metrics are not entirely aligned with human perception.
+  \item Subjective quality assessments differ greatly across radiologists and sonographers.
+  \item Furthermore, such quality assessments might change depending on the clinical objective.
+\end{enumerate}
+For example, Outtas et al.~found that ``\ldots the contrast perceived by the radiologists is far from the one assessed by the three objective metrics used'' in their experiments~\cite{outtas_subjective_2018}.
+A perhaps extreme example of this discrepancy between objective quality metrics and actual clinical performance is in the task of speckle reduction.
+In~\cite{loizou_comparative_2005}, Loizou et al.~note that speckle ``\ldots is not truly noise in the typical engineering sense because its texture often carries useful information about the image being viewed.''.
+However, most objective quality metrics used in speckle reduction simply focus in \textit{reducing} speckle.
+
+Such mismatch between objective quality metrics and actual clinical performance has resulted some works in ultrasound image enhancement to utilize subjective quality assessments~\cite{loizou_quality_2006, hemmsen_ultrasound_2010, wong_monte_2012, kang_new_2016, mishra_edge_2018}.
+(For a review on subjective quality metrics in medical imaging not restricted to ultrasound, see~\cite{chow_review_2016}.)
+While this practice of using subjective metrics enable clinically-calibrated comparison of individual image enhancement methods, they are still inappropriate to use for \textit{tuning} system parameters.
+
+Another important issue is that even if we have access to reliable quality assessments, the large number of parameters in image enhancements methods complicates tuning.
+(See Table 5 in~\cite{finn_echocardiographic_2011} for an incomplete list of such parameters.)
+This number grows as we start combining multiple image enhancement methods.
+It is therefore crucial to automate the navigation of these high-dimensional parameter spaces. 
+
+To solve the problem of tuning the parameters of image enhancement methods, we propose the~\usdg, a graphical tool for tuning medical ultrasound image enhancement methods using subjective quality assessment.
+The Ultrasound Design Gallery is based on the \textit{design gallery} interface~\cite{brochu_bayesian_2010, 10.1145/3072959.3073598, koyama_sequential_2020, phan_color_2018, pmlr-v119-mikkola20a} and Bayesian optimization (BO,~\cite{shahriari_taking_2016}), a gradient-free global optimization algorithm.
+
+\cite{deng_speckle_2011, wong_monte_2012, hu_cluster_2016, singh_hybrid_2017, nagare_multi_2017} tend to generate blurry images regardless of the speckle reduction performance.
+Especially, despite the superior performance of the hybrid filter~\cite{singh_hybrid_2017}.
+
+reporting the exact image dimensions and view depths is important since they affect the sampling rate the denoising algorithms operate.
+For example, the window size of the DPAD coefficient.
+They tend to severly affect the performance of despeckling filters and make proper comparison difficult.
+
+Methods such as~\cite{hutchison_probabilisticdriven_2010, bini_despeckling_2014} exploit local homogeneity.
+However, these methods are difficult to implement in a real-time fashion on highly parallel computing hardware such as GPUs.
+
+Speckle reduction algorithms result in improved contrast and higher lesion detectibility~\cite{bottenus_resolution_2021}.
+The recently introduced generalized contrast-to-noise ratio metric~\cite{rodriguez-molares_generalized_2020}.
+
+Laplace regularized PMAD
+
+%and have been integrated into  types of human-computer interfaces~\cite{brochu_bayesian_2010, 10.1145/3072959.3073598, koyama_sequential_2020, phan_color_2018, pmlr-v119-mikkola20a}.
+
+%% For example, in~\cite{ramos-llorden_anisotropic_2015}, Ramos-Llorden et al.~minimized the \(\widehat{Q}\) index for tuning the parameters of various speckle reduction algorithms.
+
+%% While in general optimizing image quality metrics
+%% tuning these parameters 
+%% However, 
+%% While optimization methods are to the rescue 
+%% For this reason, 
+
+%% ``\ldots the contrast perceived by the radiologists is far from the one assessed by the three objective metrics used''~\cite{outtas_subjective_2018}.
+
+%% Tools for aiding visual designs have been employed in other fields such as computer graphics~\cite{10.1145/258734.258887}.
+
+%% Despite showing strong speckle reuduction properties, these methods require excessive and tedious tuning~\cite{duarte-salazar_speckle_2020}.
+%% For example,~\cite{ramos-llorden_anisotropic_2015} optimized the \(\widehat{Q}\) criterion (originally proposed in~\cite{tay_ultrasound_2006}) for tuning parameters.
+%% However, ``OSRAD and POSRAD filters are not able to improve the DPAD filter result mainly due to the higher preservation of structures in the background class'' and ``\ldots in the following experiments with real images, \ldots over-filtering in background images does not necessarily lead to favorable visual results.''.
+
+%% In this paper, we present 
+
+%% \cite{hemmsen_ultrasound_2010} pairwise and continuous comparison however does not perform automatic tuning based on the user feedback.
+
+%% Human-computer interaction for visual design~\cite{tory_human_2004}
+
+%% For high-dimensional spaces,~\cite{10.1145/3386569.3392409} use random linear embeddings~\cite{10.5555/2540128.2540383, NEURIPS2020_10fb6cfa}.
+
+
+The advantages of \usdg~are summarized as follows:
+\begin{itemize}
+  \item It uses a slider based graphical interface that enables efficient communication between the \user~and our system (\textbf{\cref{section:ui}}).
+  \item It learns the \user's image quality preferences using Gaussian processes (\textbf{\cref{section:gp}}).
+  \item It uses preferential Bayesian optimization for efficiently navigating high-dimensional, non-linear parameter spaces of medical ultrasound image pipelines (\textbf{\cref{section:bo}}).
+  \item It enables effecient task, \user~specific tuning of medical ultrasound image processing pipelines.
+\end{itemize}
+
+In addition, this paper has the following contributions:
+\begin{itemize}
+  \item We discuss efficient implementation techiques of projective preferential Bayesian optimization.
+  \item We apply the \usdg for tuning an ultrasound image enhancement algorithm based on multiscale nonlinear anisotropic diffusion.
+
+\end{itemize}
+
+%%% Local Variables:
+%%% TeX-master: "master"
+%%% End:

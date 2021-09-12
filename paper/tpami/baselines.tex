@@ -1,0 +1,30 @@
+
+\begin{table*}
+  \centering
+\begin{threeparttable}
+  \caption{Implementations and Parameter Settings of the Considered Baselines}\label{table:baselines}
+\begin{tabular}{llclc}\toprule
+  \multicolumn{1}{c}{\textbf{Algorithm}}          &
+  \multicolumn{1}{c}{\textbf{Classification}}     &
+  \multicolumn{1}{c}{\textbf{Implementation}}     &
+  \multicolumn{1}{c}{\textbf{Parameter Settings}} &
+  \multicolumn{1}{c}{\textbf{Reference}} \\\midrule
+  OSRAD  & Diffusion       & Custom            & \(W_{\text{kuan}}= 5 \times 5\), \(c_{\text{tang}} = 0.1\), \(N_{\text{iteration}}=30\), \(\Delta t = 1\) & \cite{krissian_oriented_2007}  \\
+  ADMSS  & Diffusion       & Official\tnote{1} & \(N_{\text{class}} = 4\), \(N_{\text{memory}}=5\), \(N_{\text{iteration}} = 20\), \(\sigma = 0.1\), \(\rho = 0.1\)  & \cite{ramos-llorden_anisotropic_2015} \\
+  LPNDSF & Diffusion       & Custom            & \(r = [0.1, 1.0, 0.1]\), \(k = [0.3, 0.1, 0.1]\) & \cite{zhang_multiscale_2006} \\
+  MNLM   & Non-local mean  & Custom            & \(M = 19 \times 19\), \(K = 3 \times 3\), \(I = 5\), \(h=0.1\) & \cite{breivik_realtime_2017} \\
+  NLLR   & Non-local mean \& Low-rank recon.   & Official\tnote{2} & \(H = 10\), \(\beta = 10\) & \cite{zhu_nonlocal_2017} \\
+  PFDTV  & Diffusion \& TV regularization    & Custom\tnote{3}   & \(N_{\text{iteration}} = 10\), \(s=15\) & \cite{mei_phase_2020} \\
+  \bottomrule
+\end{tabular}
+\begin{tablenotes}
+  \item[1] \url{https://www.mathworks.com/matlabcentral/fileexchange/52988-anisotropic-diffusion-with-memory-based-on-speckle-statistics-for-ultrasound-images}
+  \item[2] \url{https://appsrv.cse.cuhk.edu.hk/~lzhu/webpage_despeckling_cvpr2017/index.html}
+  \item[3] Based on the official implementation available at \url{https://github.com/Binjie-Qin/PFDTV}.
+\end{tablenotes}
+\end{threeparttable}
+\end{table*}
+
+%%% Local Variables:
+%%% TeX-master: "master"
+%%% End:

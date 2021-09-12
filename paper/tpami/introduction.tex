@@ -1,0 +1,125 @@
+
+\section{Introduction}\label{section:introduction}
+\IEEEPARstart{M}{edical} ultrasound B-mode (brightness mode) images require various stages of image processing in order to be clinically effective.
+When compared against other medical image modalities such as magnetic resonance imaging (MRI), without proper post-processing treatments, medical ultrasound images suffer from low signal-to-noise response and low contrast.
+For this reason, various image processing-based and system-wise image enhancement methods have been pioneered~\cite{contrerasortiz_ultrasound_2012}.
+
+Purely image processing-based methods such as \textit{speckle reduction}~\cite{finn_echocardiographic_2011, duarte-salazar_speckle_2020} has shown to drastically improve the quality of medical ultrasound images without increasing the hardware complexity of medical ultrasound devices. 
+However, despite their advantages, image processing methods introduce many system parameters that strongly affect the finally formed image~\cite{duarte-salazar_speckle_2020}.
+Appropriate tuning of these parameters is crucial for extracting their best clinical performance.% and proper performance assessment.
+
+When no analytical guideline for setting a certain parameter is available, a typical procedure is to set a target quality metric and optimize it either manually or automatically using numerical optimization.
+For instance, Ramos-Llord\'en et al.~\cite{ramos-llorden_anisotropic_2015} maximized the~\(\widehat{Q}\) index~\cite{tay_ultrasound_2006} while Mishra et al.~\cite{mishra_edge_2018} minimized the signal-to-speckle-noise ratio (SSRN).
+Unfortunately, for medical ultrasound B-mode images, this approach is limited by several critical reasons.
+\vspace{0.05in}
+\begin{enumerate}
+  \item[\ding{228}] Commonly used objective quality metrics are not aligned with human perception.
+    \vspace{0.05in}
+  \item[\ding{228}] Subjective quality assessments differ greatly across doctors and sonographers.
+    \vspace{0.05in}
+  \item[\ding{228}] Furthermore, such subjective quality metric are likely to be task-dependent and change depending on the clinical objective.
+\end{enumerate}
+For example, Outtas et al.~found that ``\ldots the contrast perceived by the radiologists is far from the one assessed by the three objective metrics used'' in their experiments~\cite{outtas_subjective_2018}.
+A perhaps extreme example of this discrepancy between objective quality metrics and actual clinical performance is in the task of speckle reduction.
+In~\cite{loizou_comparative_2005}, Loizou et al.~note that speckle ``\ldots is not truly noise in the typical engineering sense because its texture often carries useful information about the image being viewed.''.
+However, most objective quality metrics used in speckle reduction simply focus on entirely \textit{removing} speckle.
+
+Such mismatch between objective quality metrics and actual clinical performance has resulted some works in ultrasound image enhancement to utilize subjective quality assessments~\cite{loizou_quality_2006, hemmsen_ultrasound_2010, wong_monte_2012, kang_new_2016, mishra_edge_2018}.
+(For a review on subjective quality metrics in medical imaging not restricted to ultrasound, see~\cite{chow_review_2016}.)
+While this practice of using subjective metrics enable clinically-calibrated comparison of individual image enhancement methods, they are still inappropriate to use for \textit{tuning} system parameters.
+Also, even if we have access to reliable quality assessments, the large number of parameters in image enhancements methods complicates tuning.
+(See Table 5 in~\cite{finn_echocardiographic_2011} for an incomplete list of such parameters.)
+This number grows as we start combining multiple image enhancement methods.
+%Therefore, a crucial problem in medical ultrasound image enhancement is to automate the navigation of these high-dimensional parameter spaces. 
+
+In this paper, we propose the~\textsc{Ultrasound Design Gallery}, a machine learning based tool for medical image parameter tuning.
+%The Ultrasound Design Gallery learns and optimizes the subjective quality metrics of clinical practitioners only using a simple graphical user interface.
+%(in the context of ultrasound, sonographers).
+\begin{itemize}
+    \item[\ding{228}] First, the~\usdg~receives preference feedback from a sonographer through a \textit{design gallery}~\cite{brochu_bayesian_2010, 10.1145/3072959.3073598, koyama_sequential_2020, phan_color_2018, pmlr-v119-mikkola20a} user interface (\textbf{\cref{section:ui}}).
+    \vspace{0.02in}
+  \item[\ding{228}] Next, it learns the subjective quality metric of the sonographer from the preference feedback using a latent Gaussian process (GP,~\cite{rasmussen_gaussian_2006, pmlr-v119-mikkola20a}) probabilistic machine learning model (\textbf{\cref{section:gp}}).
+    \vspace{0.02in}
+  \item[\ding{228}] The subjective quality metric is optimized using Bayesian optimization (BO,~\cite{shahriari_taking_2016}), a black-box global optimization algorithm (\textbf{\cref{section:bo}}).
+\end{itemize}
+The~\usdg~enables automatic tuning of image enhancement algorithms personalized to the individual sonographers.
+The sonographer does not need to have \textit{any knowledge about the image enhancement algorithm and its parameters}.
+
+%% Overall, the advantages of the \usdg~are summarized as follows:
+%% \begin{itemize}
+%%   \item[\ding{228}] It provides and intuitive interface for communicating a sonographer's preference to the internal algorithm.
+%%     \vspace{0.02in}
+%%   \item[\ding{228}] It enables automatic navigation of the high-dimensional, non-linear parameter spaces of image enhancement algorithms.
+%%     \vspace{0.02in}
+%%   \item[\ding{228}] It enables effecient task, sonographer specific tuning of medical ultrasound image enhancement algorithms.
+%% \end{itemize}
+
+To evaluate the practicality of the \usdg, we use it for tuning the parameters of a novel ultrasound image enhancement algorithm, \textsc{cascaded Laplacian pyramid diffusion}.
+Our proposed method is based on Laplacian pyramids~\cite{burt_laplacian_1983} and anisotropic diffusion~\cite{perona_scalespace_1990, weickert_anisotropic_1998}.
+Previous methods~\cite{zhang_multiscale_2006, zhang_nonlinear_2007, kang_new_2016} that combine the two directly applied diffusion filters to the Laplacian band-pass images in \textit{parallel form}.
+However, diffusion filters were not designed to be applied to band-pass images and this fact has left a fundamental ackwardness.
+In contrast, we propose to apply the diffusion filters in \textit{cascaded form}.
+Our novel scheme enables the diffusion filters to be applied to the band-limited images instead of band-pass images.
+The cascaded Laplacian pyramid diffusion enables both structural enhancements and noise reduction without over-smoothing~\cite{ramos-llorden_anisotropic_2015, mishra_edge_2018} the ultrasound images.
+
+We study the preference of practicing sonographers by tuning the cascaded Laplacian pyramid diffusion on abdominal and echocardiographic images.
+
+Overall, we provide the following technical contributions:
+\begin{itemize}
+  \item[\ding{228}] \textsc{\textbf{Ultrasound Design Gallery}}: We present a graphical tool that can automatically and personally tune medical ultrasound image enhancement algorithms using the direct feedback of sonographers (\textbf{\cref{section:usdg}}).
+    \vspace{0.02in}
+  \item[\ding{228}] \textsc{\textbf{Cascaded Laplacian Pyramid Diffusion}}:  We propose a novel ultrasound image enhancement algorithm that incorporates anisotropic diffusion algorithms into Laplacian pyramid in cascaded form (\textbf{\cref{section:filter}}).
+\end{itemize}
+All the code used in our work including the Ultrasound Design Gallery and the cascaded Laplacian pyramid diffusion (CUDA and Julia implementations) are openly available online\footnote{open source github repository: \url{https://github.com/Red-Portal/UltrasoundDesignGallery}}.
+
+%% The interface of the \usdg~is primarily inspired by 
+%% Among many different types of design galleries, \usdg~utilizes the \textit{sequential line search} interface designed by~\cite{10.1145/3072959.3073598}.
+
+%% Design galleries were first developed in the computer graphics community of efficient visual design.
+
+%% While visual tools for understanding the preference of sonographers have been introduced before~\cite{hemmsen_ultrasound_2010}, the \usdg~differs in that it provides 
+%% focuses on optimizing and desiging image enhancement algorithms.
+%% and  (BO,), a gradient-free global optimization algorithm.
+
+%% reporting the exact image dimensions and view depths is important since they affect the sampling rate the denoising algorithms operate.
+%% For example, the window size of the DPAD coefficient.
+%% They tend to severly affect the performance of despeckling filters and make proper comparison difficult.
+
+%% Methods such as~\cite{hutchison_probabilisticdriven_2010, bini_despeckling_2014} exploit local homogeneity.
+%% However, these methods are difficult to implement in a real-time fashion on highly parallel computing hardware such as GPUs.
+
+%% Speckle reduction algorithms result in improved contrast and higher lesion detectibility~\cite{bottenus_resolution_2021}.
+%% The recently introduced generalized contrast-to-noise ratio metric~\cite{rodriguez-molares_generalized_2020}.
+
+%% Laplace regularized PMAD
+
+%and have been integrated into  types of human-computer interfaces~\cite{brochu_bayesian_2010, 10.1145/3072959.3073598, koyama_sequential_2020, phan_color_2018, pmlr-v119-mikkola20a}.
+
+%% For example, in~\cite{ramos-llorden_anisotropic_2015}, Ramos-Llorden et al.~minimized the \(\widehat{Q}\) index for tuning the parameters of various speckle reduction algorithms.
+
+%% While in general optimizing image quality metrics
+%% tuning these parameters 
+%% However, 
+%% While optimization methods are to the rescue 
+%% For this reason, 
+
+%% ``\ldots the contrast perceived by the radiologists is far from the one assessed by the three objective metrics used''~\cite{outtas_subjective_2018}.
+
+%% Tools for aiding visual designs have been employed in other fields such as computer graphics~\cite{10.1145/258734.258887}.
+
+%% Despite showing strong speckle reuduction properties, these methods require excessive and tedious tuning~\cite{duarte-salazar_speckle_2020}.
+%% For example,~\cite{ramos-llorden_anisotropic_2015} optimized the \(\widehat{Q}\) criterion (originally proposed in~\cite{tay_ultrasound_2006}) for tuning parameters.
+%% However, ``OSRAD and POSRAD filters are not able to improve the DPAD filter result mainly due to the higher preservation of structures in the background class'' and ``\ldots in the following experiments with real images, \ldots over-filtering in background images does not necessarily lead to favorable visual results.''.
+
+%% In this paper, we present 
+
+%% \cite{hemmsen_ultrasound_2010} pairwise and continuous comparison however does not perform automatic tuning based on the user feedback.
+
+%% Human-computer interaction for visual design~\cite{tory_human_2004}
+
+%% For high-dimensional spaces,~\cite{10.1145/3386569.3392409} use random linear embeddings~\cite{10.5555/2540128.2540383, NEURIPS2020_10fb6cfa}.
+
+
+%%% Local Variables:
+%%% TeX-master: "master"
+%%% End:

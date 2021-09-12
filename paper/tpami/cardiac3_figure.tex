@@ -1,0 +1,149 @@
+
+\begin{figure*}
+  \centering
+  \begin{subfigure}[b]{0.15\textwidth}
+    \begin{tikzpicture}[
+        spy using outlines={%
+          rectangle,magnification=3,size=\textwidth,
+          every spy on node/.append style={transparentwindow}
+        }
+      ]
+      \node (figA) at (0.0,0.0) {\includegraphics[width=\textwidth]{figures/cardiac3_osrad.png}};
+      \spy on (0.1, 0.2) in node [redwindow, anchor=north] at ($(figA.south)$);
+    \end{tikzpicture}
+    \caption{OSRAD}
+  \end{subfigure}%
+  \begin{subfigure}[b]{0.15\textwidth}
+    \begin{tikzpicture}[
+        spy using outlines={%
+          rectangle, magnification=3,size=\textwidth,
+          every spy on node/.append style={transparentwindow}
+        }
+      ]
+      \node (figA) at (0.0,0.0) {\includegraphics[width=\textwidth]{figures/cardiac3_admss.png}};
+      \spy on (0.1, 0.2) in node [redwindow, anchor=north] at ($(figA.south)$);
+    \end{tikzpicture}
+    \caption{ADMSS}
+  \end{subfigure}%
+  \begin{subfigure}[b]{0.15\textwidth}
+    \begin{tikzpicture}[
+        spy using outlines={%
+          rectangle, magnification=3,size=\textwidth,
+          every spy on node/.append style={transparentwindow}
+        }
+      ]
+      \node (figA) at (0.0,0.0) {\includegraphics[width=\textwidth]{figures/cardiac3_lpndsf.png}};
+      \spy on (0.1, 0.2) in node [redwindow, anchor=north] at ($(figA.south)$);
+    \end{tikzpicture}
+    \caption{LPNDSF}
+  \end{subfigure}%
+  \begin{subfigure}[b]{0.15\textwidth}
+    \begin{tikzpicture}[
+        spy using outlines={%
+          rectangle,magnification=3,size=\textwidth,
+          every spy on node/.append style={transparentwindow}
+        }
+      ]
+      \node (figA) at (0.0,0.0) {\includegraphics[width=\textwidth]{figures/cardiac3_mnlm.png}};
+      \spy on (0.1, 0.2) in node [redwindow, anchor=north] at ($(figA.south)$);
+    \end{tikzpicture}
+    \caption{MNLM}
+  \end{subfigure}%
+  \begin{subfigure}[b]{0.15\textwidth}
+    \begin{tikzpicture}[
+        spy using outlines={%
+          rectangle,magnification=3,size=\textwidth,
+          every spy on node/.append style={transparentwindow}
+        }
+      ]
+      \node (figA) at (0.0,0.0) {\includegraphics[width=\textwidth]{figures/cardiac3_nllr.png}};
+      \spy on (0.1, 0.2) in node [redwindow, anchor=north] at ($(figA.south)$);
+    \end{tikzpicture}
+    \caption{NLLR}
+  \end{subfigure}%
+  \begin{subfigure}[b]{0.15\textwidth}
+    \begin{tikzpicture}[
+        spy using outlines={%
+          rectangle,magnification=3,size=\textwidth,
+          every spy on node/.append style={transparentwindow}
+        }
+      ]
+      \node (figA) at (0.0,0.0) {\includegraphics[width=\textwidth]{figures/cardiac3_pfdtv.png}};
+      \spy on (0.1, 0.2) in node [redwindow, anchor=north] at ($(figA.south)$);
+    \end{tikzpicture}
+    \caption{PFDTV}
+  \end{subfigure}\\
+  %% \begin{subfigure}[b]{0.15\textwidth}
+  %%   \begin{tikzpicture}[
+  %%       spy using outlines={%
+  %%         rectangle,magnification=3,size=\textwidth,
+  %%         every spy on node/.append style={transparentwindow}
+  %%       }
+  %%     ]
+  %%     \node (figA) at (0.0,0.0) {\includegraphics[width=\textwidth, trim={4cm 4cm 4cm 0cm}, clip]{figures/cardiac3_clpdQ.png}};
+  %%     \spy on (0.1, 0.2) in node [redwindow, anchor=north] at ($(figA.south)$);
+  %%   \end{tikzpicture}
+  %%   \caption{CLPD-SSNR}
+  %% \end{subfigure}%
+  \begin{subfigure}[b]{0.15\textwidth}
+    \begin{tikzpicture}[
+        spy using outlines={%
+          rectangle,magnification=3,size=\textwidth,
+          every spy on node/.append style={transparentwindow}
+        }
+      ]
+      \node (figA) at (0.0,0.0) {\includegraphics[width=\textwidth]{figures/cardiac3_clpda.png}};
+      \spy on (0.1, 0.2) in node [redwindow, anchor=north] at ($(figA.south)$);
+    \end{tikzpicture}
+    \caption{CLPD-A}
+  \end{subfigure}%
+  \begin{subfigure}[b]{0.15\textwidth}
+    \begin{tikzpicture}[
+        spy using outlines={%
+          rectangle,magnification=3,size=\textwidth,
+          every spy on node/.append style={transparentwindow}
+        }
+      ]
+      \node (figA) at (0.0,0.0) {\includegraphics[width=\textwidth]{figures/cardiac3_clpdb.png}};
+      \spy on (0.1, 0.2) in node [redwindow, anchor=north] at ($(figA.south)$);
+    \end{tikzpicture}
+    \caption{CLPD-B}
+  \end{subfigure}%
+  \begin{subfigure}[b]{0.15\textwidth}
+    \begin{tikzpicture}[
+        spy using outlines={%
+          rectangle,magnification=3,size=\textwidth,
+          every spy on node/.append style={transparentwindow}
+        }
+      ]
+      \node (figA) at (0.0,0.0) {\includegraphics[width=\textwidth]{figures/cardiac3_clpdc.png}};
+      \spy on (0.1, 0.2) in node [redwindow, anchor=north] at ($(figA.south)$);
+    \end{tikzpicture}
+    \caption{CLPD-E}
+  \end{subfigure}%
+  \begin{subfigure}[b]{0.15\textwidth}
+    \begin{tikzpicture}[
+        spy using outlines={%
+          rectangle,magnification=3,size=\textwidth,
+          every spy on node/.append style={transparentwindow}
+        }
+      ]
+      \node (figA) at (0.0,0.0) {\includegraphics[width=\textwidth]{figures/cardiac3_clpdd.png}};
+      \spy on (0.1, 0.2) in node [redwindow, anchor=north] at ($(figA.south)$);
+    \end{tikzpicture}
+    \caption{CLPD-F}
+  \end{subfigure}%
+  \begin{subfigure}[b]{0.15\textwidth}
+    \begin{tikzpicture}[
+        spy using outlines={%
+          rectangle,magnification=3,size=\textwidth,
+          every spy on node/.append style={redwindow}
+        }
+      ]
+      \node (figA) at (0.0,0.0) {\includegraphics[width=\textwidth]{figures/cardiac3.png}};
+      \spy on (0.1, 0.2) in node [redwindow, anchor=north] at ($(figA.south)$);
+    \end{tikzpicture}
+    \caption{Original}
+  \end{subfigure}
+  \caption{}
+\end{figure*}

@@ -1,0 +1,173 @@
+
+\begin{tikzpicture}
+  % Place nodes using a matrix
+  \matrix (m1) [row sep=2.0mm, column sep=3.0mm]
+{
+    \node[dspnodeopen] (input)  {\textit{input}}; &
+    \node[coordinate] ()       {};       &
+    \node[coordinate] ()        {};      &
+    \node[coordinate] ()        {};      &
+    \node[coordinate] ()       {};       &
+    \node[coordinate] ()        {};      &
+    \node[dspnodeopen] (output)  {\textit{output}};   \\
+%
+    \node[coordinate] (G0in) {};          &
+    \node[dspnodefull,dsp/label=below] (G0)  {\(G_0\)};   &
+    \node[dspadder,label=278:\(-\)]    (L0j)   {};          &
+    \node[dspnodefull] (L0)    {\(L_0\)};   & 
+    \node[dspfilter, text width=1.3cm]  (diff0) {denoise}; &
+    \node[dspfilter, text width=2.2cm]  (edge0) {edge enhance}; &
+    \node[dspadder]    (out0j)   {};  \\
+%
+    \node[dspsquare]  (dcm1)  {\downsamplertext{2}}; &
+    \node[coordinate] ()      {};          &
+    \node[dspsquare]  (itp1)  {\upsamplertext{2}}; &
+    \node[coordinate] ()       {};          &
+    \node[coordinate] ()        {};          &
+    \node[coordinate] ()        {};          &
+    \node[dspsquare]  (outitp1) {\upsamplertext{2}}; \\
+%
+    \node[coordinate] (dcm1out)  {}; &
+    \node[coordinate] ()      {};          &
+    \node[coordinate] (dcm1out2) {}; \\
+%%
+    \node[coordinate]  (dcm1out3)    {};   &
+    \node[dspnodefull,dsp/label=below] (G1)    {\(G_1\)};   &
+    \node[dspadder,label=278:\(-\)]    (L1j)   {};          &
+    \node[dspnodefull] (L1)    {\(L_1\)};   & 
+    \node[dspfilter, text width=1.3cm]  (diff1) {denoise}; &
+    \node[dspfilter, text width=2.2cm]  (edge1) {edge enhance}; &
+    \node[dspadder]    (out1j)   {};  \\
+%
+    \node[dspsquare]  (dcm2)  {\downsamplertext{2}}; &
+    \node[coordinate] ()      {};          &
+    \node[dspsquare]  (itp2)  {\upsamplertext{2}}; &
+    \node[coordinate] ()       {};          &
+    \node[coordinate] ()        {};          &
+    \node[coordinate] ()        {};          &
+    \node[dspsquare]  (outitp2) {\upsamplertext{2}}; \\
+%
+    \node[coordinate] (dcm2out)  {}; &
+    \node[coordinate] ()      {};          &
+    \node[coordinate] (dcm2out2) {}; \\
+%%
+    \node[coordinate]  (dcm2out3)    {};   &
+    \node[dspnodefull,dsp/label=below] (G2)    {\(G_2\)};   &
+    \node[dspadder,label=278:\(-\)]    (L2j)   {};          &
+    \node[dspnodefull] (L2)    {\(L_2\)};   & 
+    \node[dspfilter, text width=1.3cm]  (diff2) {denoise}; &
+    \node[dspfilter, text width=2.2cm]  (edge2) {edge enhance}; &
+    \node[dspadder]    (out2j)   {};  \\
+%
+    \node[dspsquare]  (dcm3)   {\downsamplertext{2}}; &
+    \node[coordinate] ()       {};          &
+    \node[dspsquare]  (itp3)   {\upsamplertext{2}}; &
+    \node[coordinate] ()       {};          &
+    \node[coordinate] ()       {};          &
+    \node[coordinate] ()        {};          &
+    \node[dspsquare]  (outitp3) {\upsamplertext{2}}; \\
+%
+    \node[coordinate] (dcm3out)  {}; &
+    \node[coordinate] ()      {};    &
+    \node[coordinate] (dcm3out2) {}; \\
+%%
+    \node[coordinate]  (dcm3out3)    {};   &
+    \node[dspnodefull,dsp/label=below] (G3)    {\(G_3\)};   &
+    \node[coordinate] (L3j)   {};          &
+    \node[coordinate] (L3)    {};   & 
+    \node[dspfilter, text width=1.3cm]  (diff3) {denoise}; &
+    \node[dspfilter, text width=2.7cm]  (edge3) {contrast enhance}; &
+    \node[coordinate]  (out3) {e}; \\
+  };
+
+  \begin{scope}[start chain]
+    \chainin (G0in);
+    \chainin (G0)    [join=by dspline];
+    \chainin (L0j)   [join=by dspconn];
+    \chainin (L0)    [join=by dspline];
+    \chainin (diff0) [join=by dspconn];
+    \chainin (edge0) [join=by dspconn];
+    \chainin (out0j) [join=by dspconn];
+  \end{scope}
+
+  \begin{scope}[start chain]
+    \chainin (dcm1out3);
+    \chainin (G1)    [join=by dspline];
+    \chainin (L1j)   [join=by dspconn];
+    \chainin (L1)    [join=by dspline];
+    \chainin (diff1) [join=by dspconn];
+    \chainin (edge1) [join=by dspconn];
+    \chainin (out1j) [join=by dspconn];
+  \end{scope}
+
+  \begin{scope}[start chain]
+    \chainin (dcm2out3);
+    \chainin (G2)      [join=by dspline];
+    \chainin (L2j)     [join=by dspconn];
+    \chainin (L2)      [join=by dspline];
+    \chainin (diff2)   [join=by dspconn];
+    \chainin (edge2)   [join=by dspconn];
+    \chainin (out2j)   [join=by dspconn];
+  \end{scope}
+
+  \begin{scope}[start chain]
+    \chainin (dcm3out3);
+    \chainin (G3)    [join=by dspline];
+    \chainin (L3j)   [join=by dspline];
+    \chainin (L3)    [join=by dspline];
+    \chainin (diff3) [join=by dspconn];
+    \chainin (edge3) [join=by dspconn];
+    \chainin (out3)  [join=by dspline];
+  \end{scope}
+  %%
+
+  \begin{scope}[start chain]
+    \chainin (dcm1out);
+    \chainin (dcm1out2) [join=by dspline];
+    \chainin (itp1)     [join=by dspconn];
+    \chainin (L0j)      [join=by dspconn];
+  \end{scope}
+
+  \begin{scope}[start chain]
+    \chainin (dcm2out);
+    \chainin (dcm2out2) [join=by dspline];
+    \chainin (itp2)     [join=by dspconn];
+    \chainin (L1j)      [join=by dspconn];
+  \end{scope}
+
+  \begin{scope}[start chain]
+    \chainin (dcm3out);
+    \chainin (dcm3out2) [join=by dspline];
+    \chainin (itp3)     [join=by dspconn];
+    \chainin (L2j)      [join=by dspconn];
+  \end{scope}
+
+  %%
+
+  \begin{scope}[start chain]
+    \chainin (input);
+    \chainin (G0in)     [join=by dspline];
+    \chainin (dcm1)     [join=by dspconn];
+    \chainin (dcm1out3) [join=by dspline];
+    \chainin (dcm2)     [join=by dspconn];
+    \chainin (dcm2out3) [join=by dspline];
+    \chainin (dcm3)     [join=by dspconn];
+    \chainin (dcm3out3) [join=by dspline];
+  \end{scope}
+
+  \begin{scope}[start chain]
+    \chainin (out3);
+    \chainin (outitp3) [join=by dspconn];
+    \chainin (out2j)   [join=by dspconn];
+    \chainin (outitp2) [join=by dspconn];
+    \chainin (out1j)   [join=by dspconn];
+    \chainin (outitp1) [join=by dspconn];
+    \chainin (out0j)   [join=by dspconn];
+    \chainin (output)  [join=by dspconn];
+  \end{scope}
+\end{tikzpicture}
+
+
+%%% Local Variables:
+%%% TeX-master: "master"
+%%% End:

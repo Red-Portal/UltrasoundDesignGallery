@@ -1,0 +1,229 @@
+# Veusz saved document (version 3.3.1)
+# Saved at 2021-09-05T14:50:31.731023
+
+AddImportPath(u'/home/msca8h/Projects/us_gallery_cpp/paper/tip/figures')
+ImportString(u'bo_x(numeric)','''
+1.560009e+01
+1.574039e+01
+1.577976e+01
+1.591163e+01
+1.606264e+01
+1.610097e+01
+1.613617e+01
+1.620171e+01
+1.620171e+01
+1.620171e+01
+1.620171e+01
+1.620171e+01
+1.620171e+01
+1.620171e+01
+1.620171e+01
+1.620171e+01
+1.620171e+01
+1.620171e+01
+1.620171e+01
+1.620171e+01
+''')
+ImportString(u'bo_x_m(numeric)','''
+5.086167e-01
+5.195589e-01
+1.236350e-01
+1.698101e-01
+3.015630e-01
+3.398958e-01
+1.298726e-01
+1.954185e-01
+1.954185e-01
+1.954185e-01
+1.954185e-01
+1.954185e-01
+1.360813e-01
+1.360813e-01
+1.360813e-01
+1.360813e-01
+1.360813e-01
+1.360813e-01
+7.352777e-02
+7.352777e-02
+''')
+ImportString(u'bo_x_p(numeric)','''
+2.027130e-01
+2.927619e-01
+3.199965e-01
+3.183823e-01
+1.673724e-01
+1.290396e-01
+1.141729e-01
+4.862690e-02
+4.862690e-02
+4.862690e-02
+4.862690e-02
+4.862690e-02
+4.862690e-02
+4.862690e-02
+4.862690e-02
+4.862690e-02
+4.862690e-02
+4.862690e-02
+4.862690e-02
+4.862690e-02
+''')
+ImportString(u'usdg_x(numeric)','''
+1.583993e+01
+1.595456e+01
+1.612596e+01
+1.612710e+01
+1.613304e+01
+1.619228e+01
+1.619228e+01
+1.619632e+01
+1.619632e+01
+1.619632e+01
+1.619632e+01
+1.619632e+01
+1.619742e+01
+1.619742e+01
+1.619742e+01
+1.619742e+01
+1.622982e+01
+1.622982e+01
+1.622982e+01
+''')
+ImportString(u'usdg_x_m(numeric)','''
+2.960767e-01
+3.679317e-01
+5.019778e-01
+3.670472e-01
+3.845509e-01
+4.437913e-01
+2.396379e-01
+1.230458e-01
+1.230458e-01
+1.011478e-01
+1.011478e-01
+9.999806e-02
+1.011005e-01
+1.011005e-01
+9.500032e-02
+9.500032e-02
+8.854786e-02
+8.854786e-02
+8.854786e-02
+''')
+ImportString(u'usdg_x_p(numeric)','''
+2.566954e-01
+2.081467e-01
+4.802418e-02
+5.284847e-02
+7.889798e-02
+3.054225e-02
+3.930398e-02
+7.521764e-02
+7.521764e-02
+7.521764e-02
+7.521764e-02
+7.627427e-02
+7.517187e-02
+7.517187e-02
+7.517187e-02
+7.517187e-02
+7.108564e-02
+7.108564e-02
+7.108564e-02
+''')
+Set('colorTheme', u'default-latest')
+Set('StyleSheet/axis-function/autoRange', u'next-tick')
+Add('page', name=u'page1', autoadd=False)
+To(u'page1')
+Set('width', u'7cm')
+Set('height', u'6cm')
+Add('graph', name=u'graph1', autoadd=False)
+To(u'graph1')
+Set('leftMargin', u'2cm')
+Set('topMargin', u'1.7cm')
+Add('axis', name=u'x', autoadd=False)
+To(u'x')
+Set('hide', False)
+Set('label', u'iteration')
+Set('min', 1.0)
+Set('autoMirror', False)
+Set('outerticks', True)
+Set('Line/width', u'1pt')
+Set('MajorTicks/width', u'1pt')
+Set('MajorTicks/length', u'3pt')
+Set('MajorTicks/number', 4)
+Set('MinorTicks/hide', True)
+To('..')
+Add('axis', name=u'y', autoadd=False)
+To(u'y')
+Set('label', u'Objective Value')
+Set('min', 14.7)
+Set('max', 16.4)
+Set('log', False)
+Set('autoMirror', False)
+Set('outerticks', True)
+Set('direction', u'vertical')
+Set('Line/width', u'1pt')
+Set('MajorTicks/width', u'1pt')
+Set('MajorTicks/length', u'3pt')
+Set('MajorTicks/number', 4)
+Set('MinorTicks/hide', True)
+To('..')
+Add('key', name=u'key1', autoadd=False)
+To(u'key1')
+Set('Text/size', u'9pt')
+Set('horzPosn', u'centre')
+Set('vertPosn', u'manual')
+Set('keyLength', u'0.5cm')
+Set('horzManual', 0.010498696373682302)
+Set('vertManual', 1.0721705507355355)
+Set('marginSize', 0.5)
+To('..')
+Add('xy', name=u'xy1', autoadd=False)
+To(u'xy1')
+Set('xData', [])
+Set('yData', u'usdg_x,usdg_x_p,usdg_x_m')
+Set('hide', False)
+Set('key', u'Ultrasound Design Gallery')
+Set('errorStyle', u'fillvert')
+Set('PlotLine/width', u'2pt')
+Set('MarkerLine/hide', True)
+Set('ErrorBarLine/hide', True)
+Set('FillBelow/color', u'red')
+Set('FillBelow/hide', True)
+Set('FillBelow/transparency', 90)
+Set('FillAbove/color', u'red')
+Set('FillAbove/transparency', 90)
+To('..')
+Add('xy', name=u'xy2', autoadd=False)
+To(u'xy2')
+Set('xData', [])
+Set('yData', u'bo_x,bo_x_p,bo_x_m')
+Set('key', u'Bayesian Optimization')
+Set('errorStyle', u'fillvert')
+Set('PlotLine/width', u'2pt')
+Set('MarkerLine/hide', True)
+Set('ErrorBarLine/hide', True)
+Set('FillBelow/color', u'blue')
+Set('FillBelow/hide', True)
+Set('FillBelow/transparency', 90)
+Set('FillAbove/color', u'blue')
+Set('FillAbove/transparency', 90)
+To('..')
+Add('xy', name=u'xy3', autoadd=False)
+To(u'xy3')
+Set('xData', [0.0, 20.0])
+Set('yData', u'[15.750963857003, 15.750963857003],[ 0.2098653579893, 0.2098653579893], [0.97690569212856, 0.97690569212856]')
+Set('key', u'Nelder-Mead')
+Set('errorStyle', u'fillvert')
+Set('PlotLine/width', u'2pt')
+Set('MarkerLine/hide', True)
+Set('MarkerFill/hide', True)
+Set('ErrorBarLine/hide', True)
+Set('FillBelow/color', u'green')
+Set('FillBelow/transparency', 80)
+Set('FillAbove/color', u'green')
+Set('FillAbove/transparency', 80)
+To('..')
+To('..')
+To('..')

@@ -1,0 +1,157 @@
+
+\usepackage{amsmath,amssymb}%,amsthm}
+\usepackage{mathtools}%,amsthm}
+%\usepackage{unicode-math}
+%\setmathfont{STIX2Math.otf}
+%\setmathfont{TeX Gyre Schola Math}
+\usepackage[notext] {stix2}
+\usepackage{dsfont}
+\usepackage{algorithm2e}
+\usepackage{bm}
+
+\let\oldnorm\norm
+\let\norm\undefined
+
+%\usepackage{proof-at-the-end}
+\newtheorem{remark}{\textbf{Remark}}
+\newtheorem{lemma}{\textbf{Lemma}}
+\newtheorem{assumption}{\textbf{A}}
+\newtheorem{theorem}{\textbf{Theorem}}
+\newtheorem{proposition}{\textbf{Proposition}}
+\newtheorem{definition}{\textbf{Definition}}
+
+\usepackage{mdframed}
+\newmdtheoremenv{framedtheorem}{\textbf{Theorem}}
+\newmdtheoremenv{framedproposition}{\textbf{Proposition}}
+\newmdtheoremenv{framedlemma}{\textbf{Lemma}}
+
+\usepackage{hyperref}
+\usepackage[capitalise, nameinlink]{cleveref}
+
+\crefname{framedtheorem}{Theorem}{Theorems}
+\crefname{framedproposition}{Proposition}{Propositions}
+\crefname{framedlemma}{Lemma}{Lemmas}
+
+%% \newcommand*{\figref}[2][]{%
+%%   \hyperref[{#2}]{%
+%%     Figure~\ref*{#2}%
+%%     \ifx\\#1\\%
+%%     \else
+%%       \,#1%
+%%     \fi
+%%   }%
+%% }
+
+\pgfkeys{/prAtEnd/global custom defaults/.style={
+    %proof at the end,
+    end,
+    %normal,
+    restate,
+    text link={\textit{Proof.} The proof is in the \textit{supplementary material}.
+    }
+  }
+% Fix link later for camera ready version.
+}
+
+\def\code#1{\texttt{#1}}
+\DeclareMathOperator*{\minimize}{minimize}
+\DeclareMathOperator*{\maximize}{maximize}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min} 
+
+\newcommand*\xbar[1]{%
+  \hbox{%
+    \vbox{%
+      \hrule height 0.6pt % The actual bar
+      \kern0.33ex%         % Distance between bar and symbol
+      \hbox{%
+        \kern-0.1em%      % Shortening on the left side
+        \ensuremath{#1}%
+        \kern-0.1em%      % Shortening on the right side
+      }%
+    }%
+  }%
+} 
+
+\newcommand{\norm}[1]{\left\lVert\, #1 \,\right\rVert}
+\newcommand{\Esub}[2]{\mathbb{E}_{#1}\left[\,#2\,\right]}
+\newcommand{\V}[1]{\mathbb{V}\left[\,#1\,\right]}
+\newcommand{\Vsub}[2]{\mathbb{V}_{#1}\left[\,#2\,\right]}
+\newcommand{\Cov}[1]{\mathrm{Cov}\left(\,#1\,\right)}
+\newcommand{\Covsub}[2]{\mathrm{Cov}_{#1}\left(\,#2\,\right)}
+\newcommand{\Corr}[1]{\mathrm{Corr}\left(\,#1\,\right)}
+
+\newcommand{\Df}[2]{D_{f}(#1\parallel#2)}
+\newcommand{\DKL}[2]{D_{\mathrm{KL}}(#1\parallel#2)}
+\newcommand{\DChi}[2]{D_{\chi^2}(#1\paallel#2)}
+\newcommand{\DTV}[2]{{\parallel#1 - #2\parallel}_{\mathrm{TV}}}
+
+\newcommand{\symbfup}[1]{\mathbf{#1}}
+%\newcommand{\bm}[1]{\mathbf{#1}}
+
+\newcommand{\vX}{\symbfup{X}}
+\newcommand{\vY}{\symbfup{Y}}
+\newcommand{\vZ}{\symbfup{Z}}
+
+\newcommand{\va}{\symbfup{a}}
+\newcommand{\vb}{\symbfup{b}}
+\newcommand{\vc}{\symbfup{c}}
+\newcommand{\vd}{\symbfup{d}}
+\newcommand{\ve}{\symbfup{e}}
+\newcommand{\vf}{\symbfup{f}}
+\newcommand{\vg}{\symbfup{g}}
+\newcommand{\vh}{\symbfup{h}}
+\newcommand{\vi}{\symbfup{i}}
+\newcommand{\vj}{\symbfup{j}}
+\newcommand{\vk}{\symbfup{k}}
+\newcommand{\vl}{\symbfup{l}}
+\newcommand{\vm}{\symbfup{m}}
+\newcommand{\vn}{\symbfup{n}}
+\newcommand{\vo}{\symbfup{o}}
+\newcommand{\vp}{\symbfup{p}}
+\newcommand{\vq}{\symbfup{q}}
+\newcommand{\vr}{\symbfup{r}}
+\newcommand{\vs}{\symbfup{s}}
+\newcommand{\vt}{\symbfup{t}}
+\newcommand{\vu}{\symbfup{u}}
+\newcommand{\vv}{\symbfup{v}}
+\newcommand{\vw}{\symbfup{w}}
+\newcommand{\vx}{\symbfup{x}}
+\newcommand{\vy}{\symbfup{y}}
+\newcommand{\vz}{\symbfup{z}}
+\newcommand{\valpha}{\bm{\alpha}}
+\newcommand{\vbeta}{\bm{\beta}}
+\newcommand{\vmu}{\bm{\mu}}
+\newcommand{\vxi}{\bm{\xi}}
+\newcommand{\vtheta}{\bm{\theta}}
+\newcommand{\vlambda}{\bm{\lambda}}
+
+\newcommand{\mA}{\symbfup{A}}
+\newcommand{\mB}{\symbfup{B}}
+\newcommand{\mC}{\symbfup{C}}
+\newcommand{\mD}{\symbfup{D}}
+\newcommand{\mE}{\symbfup{E}}
+\newcommand{\mF}{\symbfup{F}}
+\newcommand{\mG}{\symbfup{G}}
+\newcommand{\mH}{\symbfup{H}}
+\newcommand{\mI}{\symbfup{I}}
+\newcommand{\mJ}{\symbfup{J}}
+\newcommand{\mK}{\symbfup{K}}
+\newcommand{\mL}{\symbfup{L}}
+\newcommand{\mM}{\symbfup{M}}
+\newcommand{\mN}{\symbfup{N}}
+\newcommand{\mO}{\symbfup{O}}
+\newcommand{\mP}{\symbfup{P}}
+\newcommand{\mQ}{\symbfup{Q}}
+\newcommand{\mR}{\symbfup{R}}
+\newcommand{\mS}{\symbfup{S}}
+\newcommand{\mT}{\symbfup{T}}
+\newcommand{\mU}{\symbfup{U}}
+\newcommand{\mV}{\symbfup{V}}
+\newcommand{\mW}{\symbfup{W}}
+\newcommand{\mX}{\symbfup{X}}
+\newcommand{\mY}{\symbfup{Y}}
+\newcommand{\mZ}{\symbfup{Z}}
+
+\newcommand{\iprod}[2]{\langle #1, #2 \rangle}
+\newcommand{\ind}[1]{\mathds{1}_{#1}}

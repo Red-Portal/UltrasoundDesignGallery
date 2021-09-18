@@ -5,8 +5,14 @@ When compared against other medical image modalities such as magnetic resonance 
 For this reason, various image processing-based and system-wise image enhancement methods have been pioneered~\cite{contrerasortiz_ultrasound_2012}.
 
 Purely image processing-based methods such as \textit{speckle reduction}~\cite{finn_echocardiographic_2011, duarte-salazar_speckle_2020} has shown to drastically improve the quality of medical ultrasound images without increasing the hardware complexity of medical ultrasound devices. 
-However, despite their advantages, image processing methods introduce many system parameters that strongly affect the finally formed image~\cite{duarte-salazar_speckle_2020}.
+However, despite their advantages, image processing methods introduce many system parameters that strongly affect the resulting image~\cite{duarte-salazar_speckle_2020}.
 Appropriate tuning of these parameters is crucial for extracting their best clinical performance.% and proper performance assessment.
+
+Futhermore, in practice, ultrasound image tuning is a significant task both in the industry and clinics.
+In clinics, newly commissioned ultrasound devices have to go through a significant amount of tuning before actually being deployed.
+Despite such effort, since different sonographers and radiologists perceive images differently, any fixed parameter setting is poised to be suboptimal.
+In the industry, proper tuning of image enhancement pipelines is crucial for the final performance of the overall system.
+Therefore, companies invest a significant effort for parameter tuning both in terms of time and human resource.
 
 When no analytical guideline for setting a certain parameter is available, a typical procedure is to set a target quality metric and optimize it either manually or automatically using numerical optimization.
 For instance, Ramos-Llord\'en et al.~\cite{ramos-llorden_anisotropic_2015} maximized the~\(\widehat{Q}\) index~\cite{tay_ultrasound_2006} while Mishra et al.~\cite{mishra_edge_2018} minimized the signal-to-speckle-noise ratio (SSRN).
@@ -26,13 +32,13 @@ However, most objective quality metrics used in speckle reduction simply focus o
 
 Such mismatch between objective quality metrics and actual clinical performance has resulted some works in ultrasound image enhancement to utilize subjective quality assessments~\cite{loizou_quality_2006, hemmsen_ultrasound_2010, wong_monte_2012, kang_new_2016, mishra_edge_2018}.
 (For a review on subjective quality metrics in medical imaging not restricted to ultrasound, see~\cite{chow_review_2016}.)
-While this practice of using subjective metrics enable clinically-calibrated comparison of individual image enhancement methods, they are still inappropriate to use for \textit{tuning} system parameters.
+While the practice of using subjective metrics enable clinically-calibrated comparison of individual image enhancement methods, they are still inappropriate to use for \textit{tuning} system parameters.
 Also, even if we have access to reliable quality assessments, the large number of parameters in image enhancements methods complicates tuning.
 (See Table 5 in~\cite{finn_echocardiographic_2011} for an incomplete list of such parameters.)
 This number grows as we start combining multiple image enhancement methods.
 %Therefore, a crucial problem in medical ultrasound image enhancement is to automate the navigation of these high-dimensional parameter spaces. 
 
-In this paper, we propose the~\textsc{Ultrasound Design Gallery}, a machine learning based tool for medical image parameter tuning.
+In this paper, we propose the~\textsc{Ultrasound Design Gallery}, a machine learning based tool for automating medical image parameter tuning.
 %The Ultrasound Design Gallery learns and optimizes the subjective quality metrics of clinical practitioners only using a simple graphical user interface.
 %(in the context of ultrasound, sonographers).
 \begin{itemize}
@@ -62,13 +68,17 @@ In contrast, we propose to apply the diffusion filters in \textit{cascaded form}
 Our novel scheme enables the diffusion filters to be applied to the band-limited images instead of band-pass images.
 The cascaded Laplacian pyramid diffusion enables both structural enhancements and noise reduction without over-smoothing~\cite{ramos-llorden_anisotropic_2015, mishra_edge_2018} the ultrasound images.
 
-We study the preference of practicing sonographers by tuning the cascaded Laplacian pyramid diffusion on abdominal and echocardiographic images.
+We recruited five practicing sonographers and a cardiologist (whom will be also refered as a sonographer for conciseness) for tuning the cascaded Laplacian pyramid diffusion using the~\usdg~on abdominal and echocardiographic ultrsaound images.
+We analyze the resulting parameters and study the visual preference of sonographers, where results suggest that commonly used objective performance metrics for ultrasound images (such as the SSNR) are not aligned with the preference of sonographers.
+In the same time, according to \(S_3\)~\cite{vu_bf_2012}, a metric for assessing the blurriness of natural images, all of the involved sonographers strongly preferred less blurry, sharp looking images.
+This suggests that image blurriness metrics should be included for evaluating ultrasound image enhancement algorithms.
 
-Overall, we provide the following technical contributions:
+\noindent Overall, we provide the following technical contributions:
 \begin{itemize}
   \item[\ding{228}] \textsc{\textbf{Ultrasound Design Gallery}}: We present a graphical tool that can automatically and personally tune medical ultrasound image enhancement algorithms using the direct feedback of sonographers (\textbf{\cref{section:usdg}}).
     \vspace{0.02in}
   \item[\ding{228}] \textsc{\textbf{Cascaded Laplacian Pyramid Diffusion}}:  We propose a novel ultrasound image enhancement algorithm that incorporates anisotropic diffusion algorithms into Laplacian pyramid in cascaded form (\textbf{\cref{section:filter}}).
+  \item[\ding{228}] We analyze the visual preference of sonographers by letting them tune the cascaded Laplacian pyramid diffusion using the Ultrasound Design Gallery (\textbf{\cref{section:eval}}).
 \end{itemize}
 All the code used in our work including the Ultrasound Design Gallery and the cascaded Laplacian pyramid diffusion (CUDA and Julia implementations) are openly available online\footnote{open source github repository: \url{https://github.com/Red-Portal/UltrasoundDesignGallery}}.
 

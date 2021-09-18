@@ -130,6 +130,11 @@ P.~Mikkola, M.~Todorovi{\'c}, J.~J{\"a}rvi, P.~Rinke, and S.~Kaski,
   Proceedings of Machine Learning Research, vol. 119.\hskip 1em plus 0.5em
   minus 0.4em\relax {ML Research Press}, Jul. 2020, pp. 6884--6892.
 
+\bibitem{rasmussen_gaussian_2006}
+C.~E. Rasmussen and C.~K.~I. Williams, \emph{Gaussian Processes for Machine
+  Learning}, ser. Adaptive {{Comput}}. {{Mach}}. {{Learn}}.\hskip 1em plus
+  0.5em minus 0.4em\relax {Cambridge, Mass}: {MIT Press}, 2006.
+
 \bibitem{shahriari_taking_2016}
 B.~Shahriari, K.~Swersky, Z.~Wang, R.~P. Adams, and N.~de~Freitas, ``Taking the
   human out of the loop: A review of {{Bayesian}} optimization,''
@@ -150,11 +155,6 @@ J.~Weickert, \emph{Anisotropic {{Diffusion}} in {{Image Processing}}}, ser.
   {{ECMI}}.\hskip 1em plus 0.5em minus 0.4em\relax {Stuttgart, Germany}:
   {Teubner-Verlag,}, 1998.
 
-\bibitem{10.1145/2010324.1964963}
-S.~Paris, S.~W. Hasinoff, and J.~Kautz, ``Local {{Laplacian}} filters:
-  {{Edge}}-aware image processing with a {{Laplacian}} pyramid,'' \emph{ACM
-  Transactions on Graphics}, vol.~30, no.~4, Jul. 2011.
-
 \bibitem{zhang_multiscale_2006}
 F.~Zhang, Y.~M. Yoo, Y.~Kim, L.~Zhang, and L.~M. Koh, ``Multiscale nonlinear
   diffusion and shock filter for ultrasound image enhancement,'' in
@@ -168,6 +168,13 @@ F.~Zhang, Y.~M. Yoo, L.~M. Koh, and Y.~Kim, ``Nonlinear {{Diffusion}} in
   {{Laplacian Pyramid Domain}} for {{Ultrasonic Speckle Reduction}},''
   \emph{IEEE Transactions on Medical Imaging}, vol.~26, no.~2, pp. 200--211,
   Feb. 2007.
+
+\bibitem{vu_bf_2012}
+C.~T. Vu, T.~D. Phan, and D.~M. Chandler, ``\$\{\textbackslash bf
+  \vphantom\}{{S}}\vphantom\{\}\_\{3\}\$: {{A Spectral}} and {{Spatial
+  Measure}} of {{Local Perceived Sharpness}} in {{Natural Images}},''
+  \emph{IEEE Transactions on Image Processing}, vol.~21, no.~3, pp. 934--945,
+  Mar. 2012.
 
 \bibitem{10.2307/27821441}
 D.~C. Kingsley and T.~C. Brown, ``Preference uncertainty, preference learning,
@@ -188,11 +195,6 @@ J.~Marks, B.~Andalman, P.~A. Beardsley, W.~Freeman, S.~Gibson, J.~Hodgins,
   on Computer Graphics and Interactive Techniques ({{SIGGRAPH}})}.\hskip 1em
   plus 0.5em minus 0.4em\relax {USA}: {ACM Press/Addison-Wesley Publishing
   Co.}, 1997, pp. 389--400.
-
-\bibitem{rasmussen_gaussian_2006}
-C.~E. Rasmussen and C.~K.~I. Williams, \emph{Gaussian Processes for Machine
-  Learning}, ser. Adaptive {{Comput}}. {{Mach}}. {{Learn}}.\hskip 1em plus
-  0.5em minus 0.4em\relax {Cambridge, Mass}: {MIT Press}, 2006.
 
 \bibitem{williams_bayesian_1998}
 C.~K. Williams and D.~Barber, ``Bayesian classification with {{Gaussian}}
@@ -293,6 +295,11 @@ G.~Gilboa, N.~Sochen, and Y.~Zeevi, ``\BIBforeignlanguage{en}{Image enhancement
   \emph{\BIBforeignlanguage{en}{IEEE Transactions on Pattern Analysis and
   Machine Intelligence}}, vol.~26, no.~8, pp. 1020--1036, Aug. 2004.
 
+\bibitem{10.1145/2010324.1964963}
+S.~Paris, S.~W. Hasinoff, and J.~Kautz, ``Local {{Laplacian}} filters:
+  {{Edge}}-aware image processing with a {{Laplacian}} pyramid,'' \emph{ACM
+  Transactions on Graphics}, vol.~30, no.~4, Jul. 2011.
+
 \bibitem{yu_ultrasound_2010}
 J.~Yu, J.~Tan, and Y.~Wang, ``\BIBforeignlanguage{en}{Ultrasound speckle
   reduction by a {{SUSAN}}-controlled anisotropic diffusion method},''
@@ -318,11 +325,6 @@ K.~Krissian, C.-F. Westin, R.~Kikinis, and K.~G. Vosburgh, ``Oriented speckle
   reducing anisotropic diffusion,'' \emph{IEEE Transactions on Image
   Processing}, vol.~16, no.~5, pp. 1412--1424, May 2007.
 
-\bibitem{coupe_nonlocal_2009}
-P.~Coupe, P.~Hellier, C.~Kervrann, and C.~Barillot, ``Nonlocal means-based
-  speckle filtering for ultrasound images,'' \emph{IEEE Transactions on Image
-  Processing}, vol.~18, no.~10, pp. 2221--2229, Oct. 2009.
-
 \bibitem{breivik_realtime_2017}
 L.~H. Breivik, S.~R. Snare, E.~N. Steen, and A.~H.~S. Solberg, ``Real-{{Time}}
   nonlocal means-based despeckling,'' \emph{IEEE Transactions on Ultrasonics,
@@ -335,11 +337,41 @@ L.~Zhu, C.-W. Fu, M.~S. Brown, and P.-A. Heng, ``A non-local low-rank framework
   {{Computer Vision}} and {{Pattern Recognition}}}, ser. {{CVPR}}'07.\hskip 1em
   plus 0.5em minus 0.4em\relax {Honolulu, HI}: {IEEE}, Jul. 2017, pp. 493--501.
 
-\bibitem{vu_bf_2012}
-C.~T. Vu, T.~D. Phan, and D.~M. Chandler, ``\$\{\textbackslash bf
-  \vphantom\}{{S}}\vphantom\{\}\_\{3\}\$: {{A Spectral}} and {{Spatial
-  Measure}} of {{Local Perceived Sharpness}} in {{Natural Images}},''
-  \emph{IEEE Transactions on Image Processing}, vol.~21, no.~3, pp. 934--945,
-  Mar. 2012.
+\bibitem{yongjianyu_generalized_2004}
+{Yongjian Yu}, J.~Molloy, and S.~Acton, ``Generalized speckle reducing
+  anisotropic diffusion for ultrasound imagery,'' in \emph{Proceedings. 17th
+  {{IEEE Symposium}} on {{Computer}}-{{Based Medical Systems}}}.\hskip 1em plus
+  0.5em minus 0.4em\relax {Bethesda, MD, USA}: {IEEE}, 2004, pp. 279--284.
+
+\bibitem{patterson_improvement_1983}
+M.~S. Patterson and F.~S. Foster, ``\BIBforeignlanguage{en}{The improvement and
+  quantitative assessment of {{B}}-mode images produced by an annular
+  array/cone hybrid},'' \emph{\BIBforeignlanguage{en}{Ultrasonic Imaging}},
+  vol.~5, no.~3, pp. 195--213, Jul. 1983.
+
+\bibitem{smith_ultrasound_1984}
+S.~Smith and R.~Wagner, ``\BIBforeignlanguage{en}{Ultrasound speckle size and
+  lesion signal to noise ratio: Verification of theory},''
+  \emph{\BIBforeignlanguage{en}{Ultrasonic Imaging}}, vol.~6, no.~2, pp.
+  174--180, Apr. 1984.
+
+\bibitem{rindal_effect_2019}
+O.~M.~H. Rindal, A.~Austeng, A.~Fatemi, and A.~{Rodriguez-Molares}, ``The
+  effect of dynamic range alterations in the estimation of contrast,''
+  \emph{IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency
+  Control}, vol.~66, no.~7, pp. 1198--1208, Jul. 2019.
+
+\bibitem{rodriguez-molares_generalized_2020}
+A.~{Rodriguez-Molares}, O.~M.~H. Rindal, J.~D'hooge, S.-E. Masoy, A.~Austeng,
+  M.~A. Lediju~Bell, and H.~Torp, ``The generalized contrast-to-noise ratio:
+  {{A}} formal definition for lesion detectability,'' \emph{IEEE Transactions
+  on Ultrasonics, Ferroelectrics, and Frequency Control}, vol.~67, no.~4, pp.
+  745--759, Apr. 2020.
+
+\bibitem{wang_image_2004a}
+Z.~Wang, A.~Bovik, H.~Sheikh, and E.~Simoncelli,
+  ``\BIBforeignlanguage{en}{Image quality assessment: From error visibility to
+  structural similarity},'' \emph{\BIBforeignlanguage{en}{IEEE Transactions on
+  Image Processing}}, vol.~13, no.~4, pp. 600--612, Apr. 2004.
 
 \end{thebibliography}

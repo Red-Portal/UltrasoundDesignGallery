@@ -1,27 +1,28 @@
 
-\begin{figure}[th]
-  \centering
-  \includegraphics[scale=0.30]{figures/ui.png}
-  \caption{User interface of the Ultrasound Design Gallery. We can see the \textbf{video (preview) window} (left), the \textbf{line search window} (top right), and the \textbf{video control window} (bottom right) }\label{fig:ui}
-\end{figure}
-
 \section{Ultrasound Design Gallery}\label{section:usdg}
 
 In this section, we introduce the \usdg.
-The \usdg~is primarily based on two components a user interface (\cref{section:ui}) and an algorithm for learning (\cref{section:gp}) and optimizing the sonographer's preference (\cref{section:bo}).
+The \usdg~is primarily based on two components: a user interface (\cref{section:ui}) and an algorithm for learning (\cref{section:gp}) and optimizing the sonographer's preference (\cref{section:bo}).
 
 \subsection{User Interface of the \usdg}\label{section:ui}
 \subsubsection{Design Galleries}
 Humans are notorious for not being able to quantify their preference in an \textit{absolute scale}.
-In comparison, when asked to compare different candidates, humans are more capable of telling which one they liked over the others~\cite{10.2307/27821441, NIPS2007_b6a1085a}.
+In comparison, when asked to \textit{relatively compare} different candidates, humans are more capable of telling which one they liked over the others~\cite{10.2307/27821441, NIPS2007_b6a1085a}.
 The \textit{Design Gallery interface}~\cite{10.1145/258734.258887} builds upon this principle.
 It proposes multiple different \textit{candidates} and lets the user choose which one he preferred over the others.
-While the original Design Gallery and the variant proposed by Brochu et al.~\cite{brochu_bayesian_2010} propose only a discrete set of candidates, Koyama et al.~proposed design galleries that suggest a continuous set of candidates embedded on a 1D line~\cite{10.1145/3072959.3073598} and a 2D plane~\cite{koyama_sequential_2020}.
+While the original Design Gallery and the variant proposed by Brochu et al.~\cite{brochu_bayesian_2010} propose only a discrete set of candidates, Koyama \textit{et al.}~proposed design galleries that suggest a continuous set of candidates embedded on a 1D line~\cite{10.1145/3072959.3073598} and a 2D plane~\cite{koyama_sequential_2020}.
 In our context, an important consideration is that medical ultrasound images are best presented in videos rather than still images.
 In this case, presenting multiple videos on a 2D plane can be confusing.
-Therefore, the Ultrasound Design Gallery is based on the 1D sequential line search scheme proposed by Koyama et al.~\cite{10.1145/3072959.3073598}.
+Therefore, the Ultrasound Design Gallery is based on the 1D sequential line search scheme proposed by Koyama \textit{et al.}~\cite{10.1145/3072959.3073598}.
 
 \subsubsection{Overview of the Ultrasound Design Gallery Interface}
+%
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.30]{figures/ui.png}
+  \caption{User interface of the Ultrasound Design Gallery. We can see the \textbf{video (preview) window} (left), the \textbf{line search window} (top right), and the \textbf{video control window} (bottom right) }\label{fig:ui}
+\end{figure}
+%
 The user interface of the Ultrasound Design Gallery is shown in~\cref{fig:ui}.
 It comprises of three basic components:
     \vspace{0.05in}
@@ -39,9 +40,9 @@ Note that the image processed and displayed through the \textbf{video window} is
 
 \subsubsection{Interacting with the Ultrasound Design Gallery}
 %
-\begin{figure}[t]
+\begin{figure}[h]
   \centering
-  \includegraphics[scale=0.25]{figures/ui_interaction.pdf}
+  \includegraphics[scale=0.3]{figures/ui_interaction.pdf}
   \caption{Visualization of the interaction with the Ultrasound Design Gallery}\label{fig:interaction}
 \end{figure}
 %
@@ -54,6 +55,15 @@ The basic workflow of using the \usdg~is as follows:
 \item[\ding{186}] Go back to step~\ding{184} until convergence.
 \end{enumerate}
 
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.35]{figures/linesearch.pdf}
+  \caption{Visualization of the relationship between the slider interface and the parameter space \(\mathcal{X}\).
+    We show a two-dimensional parameter space \(\mathcal{X} = {[0, 1]}^2\) for illustration.
+    The one dimensional projection is performed using the basis vector \(\vx\) and the direction vector \(\vxi\).
+  }\label{fig:linesearch}
+\end{figure}
+%
 Formally, the user is solving the line seach problem
 \begin{align}
  \alpha = &\argmax_{ \beta }\; f\,(\beta\,\vxi + \vx) \\
@@ -64,22 +74,12 @@ where \(f\) is the preference function of the user, \(\beta\) is a position on t
 The user choice minimizing \(\alpha\) is denoted as \(\alpha\).
 A geometric illustration of the correspondance between the graphical interface and our mathematical notations is provided in~\cref{fig:linesearch}.
 
-Our goal is to find the best parameter setting \(\vx^{*}\) that maximizes the user preference \(f\) by successively solving this line search problem.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[scale=0.35]{figures/linesearch.pdf}
-  \caption{Visualization of the relationship between the slider interface and the parameter space \(\mathcal{X}\).
-    We show a two-dimensional parameter space \(\mathcal{X} = {[0, 1]}^2\) for illustration.
-    The one dimensional projection is performed using the basis vector \(\vx\) and the direction vector \(\vxi\).
-  }\label{fig:linesearch}
-\end{figure}
-%
+Our goal is to find the best parameter setting \(\vx^{*}\) that maximizes the user preference \(f\) given that the user successively solves this line search problem.
 
 \subsection{Learning the Preference of Sonographers with Gaussian Processes}\label{section:gp}
 \subsubsection{Probabilistic Model}
 \paragraph{Gaussian Process Formulation}
-Once the user has provided his feedback, we analyze it and suggest a new 1D embedding that potentially contains the optimal parameter setting \(x^{*}\).
+Once the user has provided his feedback, we analyze it and suggest a new 1D embedding that potentially contains the optimal parameter setting \(\vx^{*}\).
 At the \(t\)th iteration, the user feedback is represented by \(\vx_t\), \(\vxi_t\) which are the sufficient information about the 1D line, and the optimal position on the line \(\alpha_t\).
 Analyzing this information is posed as a machine learning problem where we reconstruct \(f\) given the history of the user choices from 1 to \(t\), \(\mathcal{D}_t = \{\,(\vx_1, \vxi_1, \alpha_1), \ldots, (\vx_t, \vxi_t, \alpha_t)\,\}\).
 
@@ -375,19 +375,18 @@ The two most popular approaches are based on the wavelet decomposition and the L
 Multiscale analysis 
 
 \subsubsection{Laplacian Pyramids}
+%
 \begin{figure*}
   \centering
   \subfloat[Conventional Laplacian Pyramid]{
-    \includegraphics[scale=0.6]{figures/conventional_laplacian_pyramid.pdf}
+    \includegraphics[scale=0.7]{figures/conventional_laplacian_pyramid.pdf}
   }
   \hspace{0.2in}
   \subfloat[Cascaded Laplacian Pyramid]{
-    \includegraphics[scale=0.6]{figures/multiscale_filter.pdf}
+    \includegraphics[scale=0.7]{figures/multiscale_filter.pdf}
   }
   \caption{Block diagram of the considered image enhancement scheme.}
 \end{figure*}
-
-
 
 \subsubsection{Local Laplacian Filters}
 

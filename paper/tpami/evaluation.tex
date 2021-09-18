@@ -1,11 +1,50 @@
 
-\section{Evaluation}
+\section{Experiments}\label{section:eval}
 
 \subsection{Experimental Setup}
-\subsubsection{Overview of Baselines}
-We evaluate \textcolor{red}{name} against a diverse range of speckle reduction algorithms.
+We now use the Ultrasound Design Gallery for tuning the cascaded Laplacian pyramid diffusion.
+
+\subsubsection{Experiment Design}
+\paragraph{Sonographer Subjects}
+We recruited five sonographers and a cardiologist from the Kangbuk Samsung Hospital Total Healthcare Center and asked them to optimize a video sequence of a liver images and two sequences of echocardiographic heart images.
+All five sonographers are Registered Diagnostic Cardiac Sonographers (RDCS) certified by the American Registry for Diagnostic Medical Sonography (ARDMS) with at least three years of practicing experience.
+The cardiologist is a actively practicing cardiologist with ten years of clinical experience.
+
+\begin{table}
+  \centering
+  \caption{Hardware used for the Experiments}\label{table:specs}
+  \begin{threeparttable}
+  \begin{tabular}{ll}
+    \toprule
+    \multicolumn{1}{c}{\textbf{Type}}
+    & \multicolumn{1}{c}{\textbf{Model and Specifications}}
+    \\ \midrule
+    Processor & Intel i7--7700HQ, 2.8 GHz (maximum 3.8 GHz) \\
+    GPU       & Nvidia GeForce GTX 1050 Mobile \\
+    Display   & Sharp LQ156D1, 15.6 inch, \(3840 \times 2160\), 282ppi  \\
+    Memory    & 16GB DDR4--2400 \\ \bottomrule
+  \end{tabular}
+  \end{threeparttable}
+\end{table}
+%
+\paragraph{Experiment Protocol}
+Each of the sonographers were given access to the~\usdg~through same laptop.
+The hardware specification of the laptop are shown in~\cref{table:specs}.
+Then, the sonographers interact with the~\usdg~until the iteration counter indicated 15.
+The first 4 iterations used random settings such that \(\vx\) is a random uniform vector and \(\vxi\) is sampled from a unit \(L_{\infty}\) hypersphere.
+
+The sonographers were instructed to freely interact with the video control panel at any time.
+However, they were strictly instructed to choose a position on the slider \textit{relative} to other positions.
+Without such instruction, some users were unable to choose a candidate becase all of the positions seemed to result in equality disliked images.
+Also, in some cases, all of the positions on the slider resulted in images visually indistinguisable.
+For such iteration, We instructed the sonographers to choose a random position.
+
+For evaluating the final results, we choose the parameter setting maximizing the mean utility function of each sonographer such as \( \vx^* = \argmax_{\vx} \mu\left(\vx \mid \mathcal{D}_{15} \right) \).
+
+\subsubsection{Image Enhancement Baselines}
+We evaluate the tuned cascaded Laplacian pyramid diffusion filters against a diverse range of speckle reduction algorithms.
 Among diffusion algorithms, we compare against the speckle reducing anisotropic diffusion (OSRAD,~\cite{krissian_oriented_2007}), the anisotropic diffusion filter with memory based on speckle statistics (ADMSS,~\cite{ramos-llorden_anisotropic_2015}), and the multiscale nonlinear diffusion and shock filter (LPNDSF,~\cite{zhang_multiscale_2006}) methods.
-Among non-local means based methods, we compare against the optimized Bayesian non-local means with block (OBNLM,~\cite{coupe_nonlocal_2009}), the unnormalized multiscale non-local means (MNLM,~\cite{breivik_realtime_2017}), and the non-local low-rank patch recovery (NLLR,~\cite{zhu_nonlocal_2017}) methods.
+Among non-local means based methods, we compare against the multiscale non-local means (MNLM,~\cite{breivik_realtime_2017}), and the non-local low-rank patch recovery (NLLR,~\cite{zhu_nonlocal_2017}) methods.
 Lastly, we compare against the phase asymmetry ultrasound despeckling with fractional anisotropic diffusion and total variation (PFDTV,~\cite{mei_phase_2020}) method.
 
 \input{baselines}
@@ -14,35 +53,110 @@ Lastly, we compare against the phase asymmetry ultrasound despeckling with fract
 To ensure a fair comparison, we will use the official implementation of the considered baselines whenever available.
 The implementations and parameter settings of the considered baselines are organized in~\cref{table:baselines}.
 For the OSRAD, MNLM, LPNDSF, and PFDTV algorithms, we reimplemented the algorithms according to the descriptions in the original papers.
-We thoroughly evaluated our custom implementations so that their original reported performance is reproduced.
+While the official implementation of PFDTV is publically available online, we had to reimplement it due to numerical issues.
 
-In the case of PFDTV, the official implementation is publically available online.
-However, due to numerical issues in the official implementation, we wrote our own implementation in Julia.
-We carefully compared the results against the official implementaion, and made sure that the results were identical while having better numerical stability.
-In addition, we experienced that the phase-asymmetry edge detector used within PFDTV is sensitive to the initial scale of the input image.
-Since the images used in our work have a higher resolution that those used in the original paper, the the phase-asymmetry detector performs poorly.
-Thus, only for PFDTV, we downscaled the images before applying the filter and then upscaled the images for visualization.
+\paragraph{Issues with Pixel Spacing}
+For the NLLR and PFDTV, the pixel spacing of the data used in the original works (\(300 \times 225\)) differed significantly with ours (our images are \(800 \times 600\)).
+Because of this, when applied to our data, the results were qualitatively different from those reported in the original papers.
+Thus, for PFDTV and NLLR, we downscaled the images by \(40\%\), applyed the respective methods, and then upscaled the images for evaluation.
+
+\paragraph{Input Transformations}
+While often not clearly stated, the input format of ultrasound speckle reduction methods vary.
+For example, OSRAD requires the input image to be in natural scale rather than logarithmic scale.
+Therefore, for OSRAD, we decompressed the log-compressed images as recommended by~\cite{yongjianyu_generalized_2004} and then recompressed the output.
+Other than OSRAD, we applied all methods to log-compressed images with pixel intensities in the range of \([0, 255]\).
 
 \subsubsection{Metrics}
-For evaluating the blurriness of the images, we use the \(S_3\) metric proposed in~\cite{vu_bf_2012}.
+For objective quality assessment, we apply the following quality metrics to the image \textit{before} dynamic range adjustment.
+All results are presented up to three significant digits.
 
-\begin{figure}
+\paragraph{(Speckle) Signal-to-Noise Ratio (SNR)}
+The SNR measures the amount of speckle noise relative to the mean response of a region-of-interest.
+It is given as
+\begin{align}
+  \mathrm{SSNR} \texttt{[dB]} = 10 \log_{10} \frac{\mu}{\sigma}
+\end{align}
+where \(\mu\) is the mean response and \(\sigma\) is the standard deiviation of the region-of-interest.
+When computed against a fully-formed speckle region, the SNR is called the \textit{speckle} SNR (SSNR).
+In this case, \(\sigma\) corresponds to the noise standard deiviation.
+We present the SNR in decibel scale.
+
+\paragraph{Contrast-to-Noise Ratio (CNR)}
+The CNR first introduced by Patterson and Foster~\cite{patterson_improvement_1983} measures the mean response difference of two regions-of-interests relative to their standard deviations such as
+\begin{align}
+  \mathrm{CNR} \texttt{[dB]} = 10 \log_{10} \frac{| \mu_{1} - \mu_{2} |}{ \sqrt{\sigma^2_1 + \sigma^2_2} }
+\end{align}
+where \(\mu_1, \mu_2\) are the mean responses of the regions-of-interests, and \(\sigma_1, \sigma_2\) are their standard deviations, respectively.
+While the CNR has been shown to be loosely related to the detectibility of lesions~\cite{smith_ultrasound_1984}, Rindal \textit{et al.} has shown that it can be misleading when used against methods altering the natural dynamic range~\cite{rindal_effect_2019}.
+Also, the CNR can be viewed as a special case of the Q-index used in~\cite{tay_ultrasound_2006} where only two classes are used.
+We present the CNR in decibel scale.
+
+%% Nonetheless, the CNR still provides a measure of relative contrast.
+
+\paragraph{Generalized CNR (gCNR)}
+As a remedy to the limitations of the CNR, Rodriguez-Molares \textit{et al.}~\cite{rodriguez-molares_generalized_2020} proposed the gCNR metric.
+They also showed that the gCNR is less affected by dynamic range alternations, making it a better general performance metric for medical utlrasound.
+The gCNR is defined as
+\begin{align}
+  \text{gCNR} = 1 - \int_{-\infty}^{\infty} \min\big(p_1\left(x\right), p_2\left(x\right)\big) \, dx
+\end{align}
+where \(p_1\left(x\right)\) and \(p_2\left(x\right)\) are the probability densities of \(x\) subject to the pixel intensity distributions of the regions-of-interests 1 and 2.
+It is apparent from the explicit use of probabilities that the gCNR is directly related to the detection probability of lesions.
+
+\paragraph{Structural Similarity Index (SSIM)}
+The SSIM is a metric for measuring the \textit{structural} similarity of images, which is derived as a product of the differences in lumiance, structure, and contrast~\cite{wang_image_2004a}.
+Wang \textit{et al.} has shown that the SSIM is aligned with the perception of humans, and is sensitive to distortions such as blur and blockiness.
+Mathematically, the SSIM between image 1 and 2 is computed such that
+\begin{align}
+  \mathrm{SSIM} = \frac{1}{N} \sum_k^N \frac{
+    (2 \mu_{1,k} \, \mu_{2, k} + C_1)(2 \sigma_{12, k} + C_2)
+  }{
+    (\mu_{1,k}^2 + \mu_{2,k}^2 + C_1) ( \sigma_{1,k}^2 + \sigma_{2,k}^2 + C_2)
+  }
+\end{align}
+where \(\mu_{1,k}\), \(\mu_{2,k}\), are the mean of the \(k\)th patch on each images, \(\sigma_{1,k}^2\), \(\sigma_{2,k}^2\) are their respective variances, and \(\sigma_{12, k}\) is the covariance of the two.
+The SSIM is taken as an average over all the patches, which are taken by a \(11 \times 11\) Gaussian window of standard deviation 1.5.
+The coefficients are chosen as \(C_1 = 1 \times 10^{-4}, C_2 = 9 \times 10^{-4} \).
+We use the implementation of the \texttt{ImageQualityIndexes.jl} library\footnote{\url{https://github.com/JuliaImages/ImageQualityIndexes.jl}}
+
+\paragraph{\(S_3\) Index}
+Finally, we use a metric for evaluating the blurriness of the images.
+Blurriness metrics have not been tradiionally used for evaluating the quality of medical ultrasound images.
+However, we will later show that blurriness is an important quality factor for sonographers.
+In this work, we use the \(S_3\) metric proposed in~\cite{vu_bf_2012}.
+The \(S_3\) value of the \(k\)th patch is defined as a harmonic mean such that
+\begin{align}
+  S_3\left(k\right) = \sqrt{S_1\left(k\right)} \sqrt{S_2\left(k\right)}
+\end{align}
+where \(S_1\left(k\right)\) and \(S_2\left(k\right)\) are its spatial and spectral measures of sharpness.
+The final \(S_3\) index of an image is given as the average of the top 1\% \(S_3\) values.
+We use the official implementation\footnote{\url{https://sites.google.com/site/cuongvt101/research/Sharpness-measure}} provided by the authors.
+
+%
+\begin{figure}[h]
   \centering
-  \begin{minipage}[c]{0.2\textwidth}
-    \includegraphics[width=\textwidth]{figures/liver_roi.png}
-  \end{minipage}
-  \begin{minipage}[c]{0.215\textwidth}
-    \includegraphics[width=\textwidth]{figures/cardiac_roi.png}
-  \end{minipage}
-  \caption{}
+  \subfloat[Liver image]{
+    \includegraphics[height=3cm]{figures/liver_roi.png}\label{fig:liver_roi}
+  }
+  \subfloat[Cardiac image]{
+    \includegraphics[height=3cm]{figures/cardiac_roi.png}\label{fig:cardiac_roi}
+  }
+  \caption{Regions-of-interests used for using the objective performance metrics.
+    (a) The \textcolor{orange}{orange} region is used for computing the SSNR.
+    (b) The \textcolor{red}{red} region (endocardium of the left ventricle) and \textcolor{blue}{blue} region (blood of the left ventricle) are used for computing the gCNR and CNR.
+    The red region is also used for computing the SNR.
+  }\label{fig:roi}
 \end{figure}
+% 
+\paragraph{Regions-of-Interests}
+The regions-of-interests used for computing the performance metrics are shown in~\cref{fig:roi}.
+For the liver image, we compute the metrics over multiple frames, while for the echocardiographic image, we compute the metrics only using the presented frame.
 
-\subsection{Phantom Experiment}
-\subsection{\textit{in vivo} Experiment}
-
+\input{liver1_figure}
+%
 \begin{table*}
   \centering
-  \caption{Objective Performance Comparison on a Liver}
+  \caption{Objective Performance Comparison on a Liver}\label{table:liver1}
   \begin{threeparttable}
   \begin{tabular}{llrrr}
     \toprule
@@ -69,8 +183,42 @@ For evaluating the blurriness of the images, we use the \(S_3\) metric proposed 
   \end{tablenotes}
   \end{threeparttable}
 \end{table*}
+%
+\subsection{Experiment with Liver}
+We first conduct an experiment on a liver image shown in~\cref{fig:liver_original}.
 
-\begin{table*}
+\subsubsection{Qualitative Resuls}
+A single frame from the optimized results are shown in~\cref{fig:liver1}.
+
+\input{cardiac3_figure}
+
+\subsubsection{Quantitative Results}
+The quantatitive results using objective performance metrics are shown in~\cref{table:liver1}.
+First, we can see that the SSNR values obtained using the CLPDs are worse compared to the baselines except for CLPD-obj., which is natural since it was explicitly tuned to obtain a high SSNR.
+This shows that, while it is definitely possible to obtain a high SSNR with the CLPD, none of the sonographers preferred a high SSNR.
+Instead, they preferred to preserve some level of speckle noise.
+In contrast, all of the baselines except for ADMSS obtained higher SSNR.
+In particular, the MNLM obtains the highest leverl of SSNR, which supports the statement that non-local means methods are excellent at removing speckle (which is unfortunately, not desirable).
+
+Meanwhile, when looking at other metrics than the SSNR, the results look quite different.
+The CLPDs obtained both high SSIM and high \(S_3\) overall.
+Only ADMSS obtained a high SSIM, which is natural since it refrains diffusing tissues.
+CLPDs on the other hand all resulted in high levels of SSIMs, which shows that sonographers strongly prefer images that do not look different from the original image.
+
+Lastly, when looking at the \(S_3\) metric, we can see that all CLPDs obtained much higher values.
+This shows that the CLPD is capable of conserving sharpness, and that sonographers strongly prefer sharp-looking images.
+In fact, many of the participating sonographers explicitly stated that they ``do not want to trade sharpness for less speckle''.
+Our results clearly reflect this sentiment.
+For this reason, while the NLLR is very good at reinforcing strucutres and reducing speckle, it results in images that are significantly blurry both qualititatively and quantitatively (according to \(S_3\)), which limits its clinical value.
+
+
+\subsection{Experiment with Echocardocraphic 4-Chamber View}
+We present results on echocardiographic images.
+We first present experiments performed on a 4-chamber image shown in~\cref{fig:cardiac3_original}.
+
+\subsubsection{Quanlitative Results}
+
+\begin{table}
   \centering
   \caption{Objective Performance Comparison on a Liver}
   \begin{threeparttable}
@@ -78,10 +226,16 @@ For evaluating the blurriness of the images, we use the \(S_3\) metric proposed 
     \toprule
     & \multicolumn{1}{c}{\textbf{Algorithm}}
     & \multicolumn{1}{c}{\textbf{gCNR}}
-    & \multicolumn{1}{c}{\textbf{CNR} \texttt{[dB]}}
-    & \multicolumn{1}{c}{\textbf{SSNR} \texttt{[dB]}}
+    & \multicolumn{1}{c}{\textbf{CNR}}
+    & \multicolumn{1}{c}{\textbf{SNR}}
     & \multicolumn{1}{c}{\textbf{SSIM}}
-    & \multicolumn{1}{c}{\(\mathbf{S_{3}}\)} \\\midrule
+    & \multicolumn{1}{c}{\(\mathbf{S_{3}}\)}\\
+    & \multicolumn{1}{c}{}
+    & \multicolumn{1}{c}{}
+    & \texttt{[dB]}
+    & \texttt{[dB]}
+    & \multicolumn{1}{c}{}
+    & \multicolumn{1}{c}{} \\\midrule
     \multirow{6}{*}{Baselines}
     & OSRAD  & 0.490          & -1.62          & 4.51          & 0.891          & 0.500 \\
     & ADMSS  & 0.467          & -1.67          & 4.33          & \textbf{0.967} & 0.204 \\
@@ -99,10 +253,12 @@ For evaluating the blurriness of the images, we use the \(S_3\) metric proposed 
     \item[*] The performance of the top 4 algorithms for each metric are shown in bold face.
   \end{tablenotes}
   \end{threeparttable}
-\end{table*}
+\end{table}
+%
+\paragraph{Quantitative Results}
 
-\input{liver1_figure}
-\input{cardiac3_figure}
+\subsection{Experiment with Echocardocraphic Parasternal Long-Axis View}
+
 
 \input{cardiac1_figure}
 

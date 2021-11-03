@@ -207,6 +207,11 @@ J.~Nocedal and S.~J. Wright, \emph{\BIBforeignlanguage{en}{Numerical
   {{Financial Engineering}}.\hskip 1em plus 0.5em minus 0.4em\relax {Springer
   New York}, 2006.
 
+\bibitem{nelder_simplex_1965}
+J.~A. Nelder and R.~Mead, ``\BIBforeignlanguage{en}{A simplex method for
+  function minimization},'' \emph{\BIBforeignlanguage{en}{The Computer
+  Journal}}, vol.~7, no.~4, pp. 308--313, Jan. 1965.
+
 \bibitem{henrandez-lobato_predictive_2014}
 J.~M. {Henr{\'a}ndez-Lobato}, M.~W. Hoffman, and Z.~Ghahramani, ``Predictive
   entropy search for efficient global optimization of black-box functions,'' in
@@ -238,38 +243,16 @@ I.~Murray and M.~Graham, ``Pseudo-marginal slice sampling,'' in
   Learning Research, vol.~51.\hskip 1em plus 0.5em minus 0.4em\relax {Cadiz,
   Spain}: {ML Research Press}, May 2016, pp. 911--919.
 
-\bibitem{berkenkamp_noregret_2019}
-F.~Berkenkamp, A.~P. Schoellig, and A.~Krause, ``No-{{Regret Bayesian
-  Optimization}} with {{Unknown Hyperparameters}},'' \emph{Journal of Machine
-  Learning Research}, vol.~20, p.~50, 2019.
-
-\bibitem{wang_adaptive_2013}
-Z.~Wang, S.~Mohamed, and N.~De~Freitas, ``Adaptive {{Hamiltonian}} and
-  {{Riemann Manifold Monte Carlo Samplers}},'' in \emph{Proceedings of the 30th
-  {{International Conference}} on {{International Conference}} on {{Machine
-  Learning}}}, ser. Proceedings of {{Machine Learning Research}},
-  vol.~28.\hskip 1em plus 0.5em minus 0.4em\relax {ML Research Press}, 2013,
-  pp. 1462--1470.
-
 \bibitem{jones_efficient_1998}
 D.~R. Jones, M.~Schonlau, and W.~J. Welch, ``Efficient global optimization of
   expensive black-box functions,'' \emph{Journal of Global Optimization},
   vol.~13, no.~4, pp. 455--492, 1998.
 
-\bibitem{spall_overview_1998}
-J.~C. Spall, ``An overview of the simultaneous perturbation method for
-  efficient optimization,'' \emph{Johns Hopkins APL Technical Digest}, vol.~19,
-  no.~4, pp. 482--492, 1998.
-
-\bibitem{spall_implementation_1998}
-J.~Spall, ``Implementation of the simultaneous perturbation algorithm for
-  stochastic optimization,'' \emph{IEEE Transactions on Aerospace and
-  Electronic Systems}, vol.~34, no.~3, pp. 817--823, Jul. 1998.
-
-\bibitem{karnopp_random_1963}
-D.~C. Karnopp, ``\BIBforeignlanguage{en}{Random search techniques for
-  optimization problems},'' \emph{\BIBforeignlanguage{en}{Automatica}}, vol.~1,
-  no. 2-3, pp. 111--121, Aug. 1963.
+\bibitem{liu_limited_1989}
+D.~C. Liu and J.~Nocedal, ``\BIBforeignlanguage{en}{On the limited memory
+  {{BFGS}} method for large scale optimization},''
+  \emph{\BIBforeignlanguage{en}{Mathematical Programming}}, vol.~45, no. 1-3,
+  pp. 503--528, Aug. 1989.
 
 \bibitem{abd-elmoniem_realtime_2002}
 K.~{Abd-Elmoniem}, A.-B. Youssef, and Y.~Kadah,

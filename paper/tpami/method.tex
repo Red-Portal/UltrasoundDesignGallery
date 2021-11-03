@@ -50,9 +50,10 @@ The basic workflow of using the \usdg~is as follows:
 \begin{enumerate}
 \item[\ding{182}] The user is first presented with images processed using randomly sampled parameter settings.
 \item[\ding{183}] The user compares the random settings embedded on the 1D line by interacting with the slider in the line search and approves the most preferred setting. This process is illustrated in~\cref{fig:interaction}.
-\item[\ding{184}] The \usdg~records the choice and recommends a new set of parameter settings using Bayesian optimization, which is also embedded on a 1D line.
-\item[\ding{185}] The user compares the recommeded settings by interacting with the slider as in step~\ding{183}.
-\item[\ding{186}] Go back to step~\ding{184} until convergence.
+\item[\ding{184}] The \usdg~records the choice and infers the visual preference function \(f\) of the user (\textbf{\cref{section:gp}}).
+\item[\ding{185}] Based on the inferred probabilistic model, it recommends a new set of parameter settings using Bayesian optimization, which is also embedded on a 1D line (\textbf{\cref{section:bo}}).
+\item[\ding{186}] The user compares the recommeded settings by interacting with the slider as in step~\ding{183}.
+\item[\ding{187}] Go back to step~\ding{184} until convergence.
 \end{enumerate}
 
 \begin{figure}[h]
@@ -66,11 +67,10 @@ The basic workflow of using the \usdg~is as follows:
 %
 Formally, the user is solving the line seach problem
 \begin{align}
- \alpha = &\argmax_{ \beta }\; f\,(\beta\,\vxi + \vx) \\
- &\text{subject to}\;\; \beta_{\mathrm{min}} \leq \beta \leq \beta_{\mathrm{max}}
+ \alpha = &\argmax_{ \beta }\; f\,(\beta\,\vxi + \vx) \label{eq:line_search}\\
+ &\text{subject to}\;\; \beta \in \mathcal{I}\left(\vx, \vxi\right) 
 \end{align}
-where \(f\) is the preference function of the user, \(\beta\) is a position on the 1D line, \(\vx\) and \(\vxi\) are the basis and direction of the 1D line, \(\mathcal{X}\) is the domain of all the parameter settings.
-\(\beta_{\mathrm{min}}\) are \(\beta_{\mathrm{max}}\) are bounds that ensure that \(\beta\,\vxi + \vx  \in \mathrm{X}\).
+{\noindent}where \(f\) is the preference function of the user, \(\beta\) is a position on the 1D line, \(\vx\) and \(\vxi\) are the basis and direction of the 1D line, \(\mathcal{X}\) is the domain of all the parameter settings, and \(\mathcal{I}\left(\vx, \vxi\right)\) is the inverval \([\beta_{\mathrm{min}}, \beta_{\mathrm{max}}]\) that ensures that \(\beta\,\vxi + \vx  \in \mathcal{X}\).
 The user choice minimizing \(\alpha\) is denoted as \(\alpha\).
 A geometric illustration of the correspondance between the graphical interface and our mathematical notations is provided in~\cref{fig:linesearch}.
 
@@ -85,27 +85,68 @@ Analyzing this information is posed as a machine learning problem where we recon
 
 For a datapoint \( (\vx_t, \vxi_t, \alpha_t) \), each point \(\beta\,\vx_t + \vxi_t\) on the line sastisfies
 \begin{align}
-f(\beta\,\vx_t + \vxi_t ) > f(\alpha\,\vx_t + \vxi_t) \;\;\text{for all}\;\; \beta \in [\beta_{\mathrm{min}}, \beta_{\mathrm{max}}]
+f(\beta\,\vx_t + \vxi_t ) > f(\alpha\,\vx_t + \vxi_t) \;\;\text{for all}\;\; \beta \in \mathcal{I}\left(\vx, \vxi\right)\nonumber
 \end{align}
-Note that \(\beta_{\mathrm{min}}\) and \(\beta_{\mathrm{max}}\) are in fact dependent on \(\vx\), \(\vxi\).
-For conciseness, we drop the dependence in our notation.
 We formulate this setting into a latent Gaussian process model~\cite{rasmussen_gaussian_2006} described as follows:
 \begin{align}
-\epsilon_{\vf}           &\sim p\,(\epsilon_{\vf}) \\
-\sigma                  &\sim p\,(\sigma) \\
-\vf \mid \epsilon_{\vf}  &\sim \mathcal{GP}(0, \mK + \epsilon_{\vf}^2\mI) \\
-  f(\alpha\,\vxi + \vx) > f(\beta_i \,\vxi + \vx) \mid \vf,\, \sigma
-  &\sim p\,(\alpha,\, \beta_i,\, \vx,\,\vxi,\, \mid \epsilon,\, \vf). 
+\ell                    &\sim p\,(\ell) \nonumber\\
+\epsilon_{\vf}           &\sim p\,(\epsilon_{\vf}) \nonumber\\
+\sigma                  &\sim p\,(\sigma) \nonumber\\
+\vf \mid \epsilon_{\vf}  &\sim \mathcal{GP}(0, \mK_{\ell} + \epsilon_{\vf}^2\mI) \nonumber\\
+  f(\alpha\,\vxi + \vx) > f(\beta^{(i)} \,\vxi + \vx) \mid \vf,\, \sigma
+  &\sim p\,(\alpha,\, \beta^{(i)},\, \vx,\,\vxi,\, \mid \sigma,\, \vf).\nonumber 
 \end{align}
-where \(\epsilon_{\vf}\) is the noise included in the preference evaluations, \(\sigma\) is the variance of the values of \(f\), \(\vf\) is the function represented as a vector in the Gaussian process, \(\mathcal{\mK}\) is 
+%
+{\noindent}where \((\alpha, \vxi, \vx)\) form a single datapoint, \(\epsilon_{\vf}\) is the noise included in the preference evaluations, \(\sigma\) is the variance of the values of \(f\), \(\vf\) is the function represented as a vector in the Gaussian process, \(\mathcal{\mK}\) is the Gram matrix where each element is defined as
+\(
+  {[\mK_{\ell}]}_{i,j} = k\left(\vx^\prime_i, \vx^\prime_j; \ell \right)
+\)
+where \(k\left(\cdot, \cdot; \ell \right)\) is the isotropic Matern 5/2 covariance kernel with a line scale of \(\ell\), and \({\vx^\prime}_i, {\vx^\prime}_j\) are the positions formed by all the combinations of the different \(\alpha, \beta, \vxi, \vx\) in \(\mathcal{D}_t\).
 
 \paragraph{Likelihood Function}
-The most important component in our model is the likelihood function \(p\,(\alpha,\, \beta_i,\, \vx,\,\vxi,\, \mid \epsilon,\, \vf)\).
+The most important component in our model is the likelihood function \(p\,(\alpha,\, \beta^{(i)},\, \vx,\,\vxi,\, \mid \sigma,\, \vf)\).
 Since our 1D line contains an \textit{infinite} number of duels between each \(\beta\) and \(\alpha\), it is difficult to formulate a proper likelihood function.
 The original sequential line search design galleriy discretized the 1D line and proposed a likelihood function based on the Bradley-Terry-Luce model~\cite{10.1145/3072959.3073598}.
-Since the Bradley-Terry-Luce model assumes a discrete number of candidates, there is no reason to belive discretization is appropriate.
-Instead, we take a much more principled approach by Mikkola \textit{et al.}~\cite{pmlr-v119-mikkola20a}.
-In particular, Mikkola \textit{et al.} propose a likelihood function that can fully represent candidates embedded on a continuous space.
+Since the Bradley-Terry-Luce (BTL) model assumes a discrete number of candidates, it is unknown how this discretization relates to the continous ideal.
+Recently, Mikkola \textit{et al.}~\cite{pmlr-v119-mikkola20a} proposed a more principled approach that does not rely on the BTL model.
+They first chose the likelihood of a single comparison to be 
+\begin{align}
+  &p\left(\alpha, \beta^{(i)}, \vxi, \vx \mid \sigma, \vf \right) \\
+  &= p\left(\alpha \, \vxi + \vx \succ \beta^{(i)} \, \vxi + \vx \mid \sigma, \vf \right) \\
+  &= 1 - \left(\Phi * \phi \right)\left( \frac{ f\left(\beta^{(i)} \, \vxi + \vx \right) - f\left(\alpha \, \vxi + \vx \right) }{\sigma} \right)
+\end{align}
+{\noindent}where ``\(\succ\)'' denotes the preferential ordering between two parameter settings, \(\left(\Phi*\phi\right)\left(\cdot\right)\) is the convolution between the cummulative and probability density functions of the standard Gaussian distribution. 
+
+At the limit of infinitely many \(\beta\)s, the likelihood of the discrete comparisons converges to the continuous ideal by the type-I Volterra integral such as
+{\small
+\begin{align}
+  &p\left(\alpha, \vxi, \vx \mid \sigma, \vf \right) \\
+  &= \lim_{N \rightarrow \infty} \prod^{N}_{i=1} \left(  1 - \left(\Phi * \phi \right)\left( \frac{ f\left(\beta^{(i)} \, \vxi + \vx \right) - f\left(\alpha \, \vxi + \vx \right) }{\sigma} \right) \right) \\
+  &\rightarrow \exp\left(  - \int_{\mathcal{I}\left(\vx, \vxi\right)} \left(\Phi * \phi \right) \left( \frac{ f\left(\beta \, \vxi + \vx \right) - f\left(\alpha \, \vxi + \vx \right) }{\sigma} \right) d\beta \right)
+\end{align}
+}%
+%
+{\noindent}where \(\beta^{(1)}, \ldots, \beta^{(N)}\) is taken to be an increasing sequence partitioning \(\mathcal{I\left(\vx, \vxi\right)}\).
+
+Now, the log-likelihood of the dataset is given as
+{\small
+\begin{align}
+  &\log p\left(\mathcal{D}_t \mid \sigma, \vf \right) \\
+  &= \sum_{\tau=1}^{t} \log p\left(\alpha_{\tau}, \vxi_{\tau}, \vx_{\tau} \mid \sigma, \vf \right) \\
+  &= -\sum_{\tau=1}^{t} \int_{\mathcal{I}\left(\vx_{\tau}, \vxi_{\tau}\right)} \left(\Phi * \phi \right) \left( \frac{ f\left(\beta \, \vxi_{\tau} + \vx_{\tau} \right) - f\left(\alpha_{\tau} \, \vxi_{\tau} + \vx_{\tau} \right) }{\sigma} \right) d\beta \\
+  &\approx -\frac{1}{N}  \sum_{\tau=1}^{t} \sum_{i=1}^N \left(\Phi * \phi \right) \left( \frac{ f\left(\beta^{(i)} \, \vxi_{\tau} + \vx_{\tau} \right) - f\left(\alpha_{\tau} \, \vxi_{\tau} + \vx_{\tau} \right) }{\sigma} \right) d\beta
+\end{align}
+}%
+{\noindent}where the convolution \(*\) can be accurately approximated using quadrature methods.
+In our case, we use the 16-point Gauss-Hermite quadrature.
+Finally, for the outer integral, Mikkola \textit{et al.} perform Monte Carlo integration by sampling \(\beta^{(1)}, \ldots, \beta^{(N)} \) from a truncated generalized normal distribution depending on \(\vx, \vxi\) and \(t\).
+This choice is simply heuristic, and they adaptively concentrate \(\beta_i\) towards \(\alpha\) as \(t\) increases.
+For the number of Monte Carlo samples, we set \(N=20\).
+
+\paragraph{Computational Costs}
+Considering the likelihood approximation, the dataset is actually represented as \(\mathcal{D}_{t} = {\{\,(\,\vx_{\tau},\, \vxi_{\tau},\, \alpha_{\tau},\, \beta^{(1)}_{\tau},\, \ldots\, \beta^{(N)}_{\tau})\,\}}_{i=1}^{t}\).
+The maximum memory requirement for storing the dataset is \(\mathcal{O}\left( T^2 \, N^2  \right)\) where evaluating the likelihood involves a Cholesky decomposition resulting in a time complexity of \(\mathcal{O}\left( T^3 \, N^3 \, M^3  \right)\) where \(T\) is the maximum number of BO iterations, \(N\) is the number of Monte Carlo samples of \(\beta\), and \(M\) is the number of quadrature points for the convolution integral.
+While the computational complexity might seem unreasonable, our C++ implementation is efficient enough to maintain the inference time to few seconds up to 50 BO iterations on a laptop.
 
 \begin{figure}[t]
   \removelatexerror
@@ -185,13 +226,18 @@ The GP prediction using \(q\,(\vf)\) are computed as
 \end{align}
 
 \subsubsection{Hyperparameter Treatment}
+Our model has 3 hyperparameters: the covariance scale \(\ell\), the likelihood noise scale \(\sigma\), and the GP noise scale \(\sigma_\epsilon\).
+We set log-normal hyperpriors such that \(\log \ell \sim \mathcal{N}\left(-1, 1\right)\), \(\log \sigma \sim \mathcal{N}\left(0, 1\right)\), and \(\log \sigma_{\epsilon} \sim \mathcal{N}\left(0, 1\right)\).
+Inference is performed with type-II maximum a-posteriori (MAP-II) with the Nelder-Mead simplex method~\cite{nelder_simplex_1965}.
+Although MAP-II for GP hyperparameters is often done with gradient descent, it significantly complicates the handling of Cholesky failures.
+
 While previous works observed that the full Bayesian approach improves performance~\cite{henrandez-lobato_predictive_2014, snoek_practical_2012}, recent experimental results suggest that such performance improvement may not be significant~\cite{ath_bayesian_2021}.
 In our case, the exact marginal likelihood is not available.
-Thus, full Bayesian inference requires pseudo-marginal MCMC~\cite{filippone_pseudomarginal_2014, pmlr-v51-murray16} methods, which suffer from low statistical effieciency for high-dimensions.
-Also, the real-time nature of our application makes the use of these methods very delicate in terms of computational efficiency and robustness.
-We experimented with full Bayesian inference using pseudo-marginal slice-sampling~\cite{pmlr-v51-murray16} and concluded that it is not worth the computational cost.
+Thus, full Bayesian inference requires pseudo-marginal MCMC~\cite{filippone_pseudomarginal_2014, pmlr-v51-murray16} methods, which suffer in high-dimensions.
+Also, the real-time nature of our application makes the use of pseudo-marignal MCMC very delicate in terms of computational efficiency and robustness.
+Nonetheless, we experimented with full Bayesian inference using pseudo-marginal slice-sampling~\cite{pmlr-v51-murray16} and concluded that it is not worth the computational cost.
 
-Some theoretical~\cite{berkenkamp_noregret_2019} and practical~\cite{wang_adaptive_2013} works have suggested that expert tuned hyperparameters achieve better performance than full Bayesian treatments.
+%Some theoretical~\cite{berkenkamp_noregret_2019} and practical~\cite{wang_adaptive_2013} works have suggested that expert tuned hyperparameters achieve better performance than full Bayesian treatments.
 
 %% \paragraph{Pseudo-Marginal MCMC}
 %% Using our approximation \(q\,(\vf)\), we use  for sampling both \(\vf\) and \(\vtheta\) from the posterior.
@@ -212,33 +258,27 @@ Some theoretical~\cite{berkenkamp_noregret_2019} and practical~\cite{wang_adapti
 %% ARD is severely affected by dimensionality.
 %% This manifests as low acceptance rates in MCMC procedures~\cite{filippone_pseudomarginal_2014}.
 
-\subsection{Optimizing \User~Preference with Preferential Bayesian Optimization}\label{section:bo}
-
+\subsection{Optimizing User Preference with Preferential Bayesian Optimization}\label{section:bo}
+Now that we have inferred the preference function \(f\) of the sonographer, we use Bayesian Optimization (BO) to find its optimum.
+The key step of BO is the \textit{inner optimization problem} where the next 1D line formed by \(\vx_{t+1}, \vxi_{t+1}\) is determined.
+Given the 1D line the user will solve the line search problem in~\cref{eq:line_search}.
+The inner optimization problem is described as
+%
 \begin{align}
- &\minimize_{\vx,\, \vxi}\;\; a\,(\vx, \vxi \mid \mathcal{D}) \\
- &\text{subject to}\;\; \vx \in \mathcal{X},\; \norm{\vxi}_{\infty} = 1
+ &\maximize_{\vx,\, \vxi}\;\; a\,(\vx, \vxi \mid \mathcal{D}_t) \\
+ &\text{subject to}\;\; \vx \in \mathcal{X},\; \norm{\vxi}_{\infty} = 1.
 \end{align}
-
-Given \(\vx_t\) and \(\vxi_t\), the user is expected to solve the line-search problem
-\begin{align}
- \alpha = &\argmax_{ \beta }\; f\,(\beta\,\vxi + \vx) \\
- &\text{subject to}\;\; \beta_{\text{min}} \leq \beta \leq \beta_{\text{max}}\;.
-\end{align}
-
-For binary discrete comparisons, the \textit{expected improvement} (EI) acquisition function~\cite{jones_efficient_1998} defined as
-\begin{align}
-  a_{\mathrm{EI}}(\vx) = \Esub{ y \sim \mathcal{N}(\mu(\vx),\, \sigma^{2}(\vx)) }{ \max\big(\, y - y^*, 0 \,\big) }
-\end{align}
-where \(y^* = \argmax_{\vx} \mu\,(\vx) \), has been commonly used~\cite{NIPS2007_b6a1085a}.
-In our case, the fact that \(\vx\) and \(\vxi\) form a \textit{line} complicates the use of EI.
+where \(a\,(\vx, \vxi \mid \mathcal{D}_t)\) is known as the acquisition function.
+Given a GP trained on \(\mathcal{D}_t\), the acquisition function quantifies the utility of choosing \(\vx, \vxi\) next.
+Naturally, choosing the right acquisition function is crucial to the convergence of BO.
 
 \subsubsection{Approximate Expected Improvement}
-\cite{10.1145/3072959.3073598} proposed to formulate EI as
+Mikkola \textit{et al.}~\cite{10.1145/3072959.3073598} proposed to reformulate the popular expected improvement (EI,~\cite{jones_efficient_1998}) acquisition as
 \begin{align}
   a\,(\vx, \vxi)
   = \mathbb{E}\,\Big[\, \max\big(\, \max\,\big\{\; f\,(\,\beta \xi + \vx\,) \mid \beta \in \mathcal{I} \;\big\}, 0 \,\big)\,\Big],
 \end{align}
-which is approximated using discrete thompson sampling (DTS) such as
+which they approximated using discrete thompson sampling (DTS) such as
 \begin{align}
   &a_{\mathrm{AEI}}\,(\vx, \vxi) 
   = \frac{1}{N_{\mathrm{mc}}} \sum_{j=1}^{N_{\mathrm{mc}}} \max\,(\, \max\,\big\{\; y_i, \ldots, y_{N_\beta} \;\big\}, 0 \,) \label{eq:aei} \\
@@ -246,40 +286,25 @@ which is approximated using discrete thompson sampling (DTS) such as
   &\quad\qquad y_i \sim \mathcal{N}\big( \mu\,(\,\beta_i \vxi + \vx \,),\, \sigma^2\,(\, \beta_i \vxi + \vx \,) \big).\nonumber
 \end{align}
 The outer expectation is approximated using a Monte Carlo average and \(y_i\) are the DTS samples generated from the GP predictive distribution.
-We will call the DTS realization \textit{approximate EI} (AEI).
 
-Computing gradients of AEI (whether stochastic or not) is in general challenging.
-The original implementation of~\cite{pmlr-v119-mikkola20a} thus approximates the gradients using finite-difference and used L-BFGS for optimization.
-However, since the gradients approximated using~\cref{eq:aei} are \textit{stochastic}, the use of L-BFGS can be tricky depending implementation details.
-For example, line-search schemes commonly used in L-BFGS can easily fail with noisy objective functions.
-Instead, we use the stochastic approximation simultaneous perturbation (SPSA,~\cite{spall_overview_1998, spall_implementation_1998}) which is a more principled method for using noisy finite-difference apprroximations.
-Fundamentally, SPSA is a stochastic gradient descent method where the gradients are approximated using finite-difference.
-
-\subsubsection{Hybrid Expected Improvement Schemes}
-The stochastic nature of AEI may negatively affect the resolution of the solutions.
-We therefore consider a more deterministic scheme
-\begin{align}
-  \vx_t  &= \argmax_{\vx}  a_{\mathrm{EI}}(\vx) \\
-  \vxi_t &= \argmax_{\vxi} a_{\mathrm{AEI}}(\vx_t, \vxi) \label{eq:hei_xi}
-\end{align}
-which is a hybrid of vanilla EI and AEI.
-For solving~\cref{eq:hei_xi}, we use random search~\cite{karnopp_random_1963} by evaluating AEI on samples from the \(L\)-\(\infty\) hypersphere.
-Our hybrid EI (HEI) scheme has two advantages:
-\begin{enumerate}
-\item The exact gradient \(a_{\mathrm{EI}}(\vx)\) is available.
-  This enables the use of L-BFGS for finding \(\vx\) with high fidelity.
-\item The line \(\mathcal{I}\) formed by \(\vx_t, \xi_t\) always includes the point optimal with respect to vanilla EI.
-\end{enumerate}
+Since computing gradients of~\cref{eq:aei} (whether stochastic or not) is tricky, the original implementation of~\cite{pmlr-v119-mikkola20a} uses the finite-difference approximation.
+To reduce variance, they averaged a large number of stochastic gradient samples, which is less effective with higher dimensions, and significantly impacts the computational performance.
+Therefore, we use an alternative acquisition function.
 
 \subsubsection{Expected Improvement with Koyama's Scheme}
-\paragraph{Anisotropic Diffusion}
-Facing a similar problem, Koyama et al. used a heuristic scheme where
+In~\cite{10.1145/3072959.3073598}, Koyama \textit{et al.} proposed a similar slider based preferential BO interface.
+Here, they proposed a heuristic acquisition strategy where the slider \(\mathcal{I}\) is determined using
 \begin{align}
-  \vx_t   &= \argmax_{\vx} a_{\mathrm{EI}}(\vx) \\
-  \vx^*   &= \argmax_{\vx} \mu\,(\vx) \\
-  \vxi_t  &=  \frac{\vx_t - \vx^*}{\norm{ \vx_t - \vx^* }_{\infty}}.
+  \vx_t   &= \argmax_{\vx} a_{\mathrm{EI}}(\vx) \label{eq:koyama_ei} \\
+  \vx^*   &= \argmax_{\vx} \mu\,(\vx) \label{eq:koyama_opt}
 \end{align}
-That is, they chose to interpolate between the EI point and the currently best known solution.
+such that \(\mathcal{I}\) interpolates \(\vx_t\) and \(\vx^*\).
+We adapt this idea to our setup by adding a projection step
+\begin{align}
+  \vxi_t  &=  \frac{\vx_t - \vx^*}{\norm{ \vx_t - \vx^* }_{\infty}}.\label{eq:xi_proj}
+\end{align}
+This scheme is neat in that both~\cref{eq:koyama_ei} and~\cref{eq:koyama_opt} have closed form deterministic gradients, enabling the use of the popular L-BFGS~\cite{liu_limited_1989} optimizer.
+Also, the 1D slider chosen by the Koyama scheme contains the duel \(\vx^*\) v.s. \(\vx_t\), which naturally draws connections with preferential BO methods with binary discrete comparisons~\cite{NIPS2007_b6a1085a}.
 
 \section{Cascaded Filters in Laplacian Pyramids}\label{section:filter}
 

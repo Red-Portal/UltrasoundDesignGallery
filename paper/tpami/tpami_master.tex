@@ -56,10 +56,6 @@
 % manually specify the path to it like:
 % \documentclass[10pt,journal,compsoc]{../sty/IEEEtran}
 
-
-
-
-
 % Some very useful LaTeX packages include:
 % (uncomment the ones you want to load)
 
@@ -282,6 +278,7 @@
 \usepackage{xcolor}
 \usepackage{cite}
 \usepackage{pifont}
+\usepackage{nicefrac}
 
 \let\labelindent\relax
 \usepackage[inline]{enumitem}
@@ -291,7 +288,10 @@
 \usepackage{pgf}
 \usepackage{pgfplots}
 \usepackage{pgfplotstable}
-\usetikzlibrary{spy,calc}
+\usetikzlibrary{spy,calc,dsp,chains}
+
+\DeclareMathAlphabet{\mathpzc}{OT1}{pzc}{m}{it}
+\newcommand{\z}{\mathpzc{z}}
 
 \tikzstyle{redwindow}         = [red,  line width=0.25mm]
 \tikzstyle{bluewindow}        = [blue, line width=0.25mm]

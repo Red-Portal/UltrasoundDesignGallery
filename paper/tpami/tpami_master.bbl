@@ -196,6 +196,13 @@ J.~Marks, B.~Andalman, P.~A. Beardsley, W.~Freeman, S.~Gibson, J.~Hodgins,
   plus 0.5em minus 0.4em\relax {USA}: {ACM Press/Addison-Wesley Publishing
   Co.}, 1997, pp. 389--400.
 
+\bibitem{pmlr-v70-gonzalez17a}
+J.~Gonz{\'a}lez, Z.~Dai, A.~Damianou, and N.~D. Lawrence, ``Preferential
+  {{Bayesian}} optimization,'' in \emph{Proceedings of the 34th International
+  Conference on Machine Learning}, ser. Proceedings of Machine Learning
+  Research, vol.~70.\hskip 1em plus 0.5em minus 0.4em\relax {ML Research
+  Press}, Aug. 2017, pp. 1282--1291.
+
 \bibitem{williams_bayesian_1998}
 C.~K. Williams and D.~Barber, ``Bayesian classification with {{Gaussian}}
   processes,'' \emph{IEEE Transactions on Pattern Analysis and Machine
@@ -254,12 +261,74 @@ D.~C. Liu and J.~Nocedal, ``\BIBforeignlanguage{en}{On the limited memory
   \emph{\BIBforeignlanguage{en}{Mathematical Programming}}, vol.~45, no. 1-3,
   pp. 503--528, Aug. 1989.
 
+\bibitem{yongjianyu_speckle_2002}
+{Yongjian Yu} and S.~Acton, ``\BIBforeignlanguage{en}{Speckle reducing
+  anisotropic diffusion},'' \emph{\BIBforeignlanguage{en}{IEEE Transactions on
+  Image Processing}}, vol.~11, no.~11, pp. 1260--1270, Nov. 2002.
+
 \bibitem{abd-elmoniem_realtime_2002}
 K.~{Abd-Elmoniem}, A.-B. Youssef, and Y.~Kadah,
   ``\BIBforeignlanguage{en}{Real-time speckle reduction and coherence
   enhancement in ultrasound imaging via nonlinear anisotropic diffusion},''
   \emph{\BIBforeignlanguage{en}{IEEE Transactions on Biomedical Engineering}},
   vol.~49, no.~9, pp. 997--1014, Sep. 2002.
+
+\bibitem{xulizong_speckle_1998}
+{Xuli Zong}, A.~Laine, and E.~Geiser, ``Speckle reduction and contrast
+  enhancement of echocardiograms via multiscale nonlinear processing,''
+  \emph{IEEE Transactions on Medical Imaging}, vol.~17, no.~4, pp. 532--540,
+  Aug./1998.
+
+\bibitem{xiaohuihao_novel_1999}
+{Xiaohui Hao}, {Shangkai Gao}, and {Xiaorong Gao}, ``A novel multiscale
+  nonlinear thresholding method for ultrasonic speckle suppressing,''
+  \emph{IEEE Transactions on Medical Imaging}, vol.~18, no.~9, pp. 787--794,
+  Sept./1999.
+
+\bibitem{pizurica_versatile_2003}
+A.~Pizurica, W.~Philips, I.~Lemahieu, and M.~Acheroy,
+  ``\BIBforeignlanguage{en}{A versatile wavelet domain noise filtration
+  technique for medical imaging},'' \emph{\BIBforeignlanguage{en}{IEEE
+  Transactions on Medical Imaging}}, vol.~22, no.~3, pp. 323--331, Mar. 2003.
+
+\bibitem{yongyue_nonlinear_2006}
+{Yong Yue}, M.~Croitoru, A.~Bidani, J.~Zwischenberger, and J.~Clark,
+  ``Nonlinear multiscale wavelet diffusion for speckle suppression and edge
+  enhancement in ultrasound images,'' \emph{IEEE Transactions on Medical
+  Imaging}, vol.~25, no.~3, pp. 297--311, Mar. 2006.
+
+\bibitem{sattar_image_1997}
+F.~Sattar, L.~Floreby, G.~Salomonsson, and B.~Lovstrom, ``Image enhancement
+  based on a nonlinear multiscale method,'' \emph{IEEE Transactions on Image
+  Processing}, vol.~6, no.~6, pp. 888--895, Jun. 1997.
+
+\bibitem{vuylsteke_multiscale_1994}
+P.~Vuylsteke and E.~P. Schoeters, ``Multiscale image contrast amplification
+  ({{MUSICA}}),'' in \emph{Medical {{Imaging}} 1994}, {Newport Beach, CA}, May
+  1994, pp. 551--560.
+
+\bibitem{stahl_noiseresistant_1999}
+M.~Stahl, T.~Aach, T.~M. Buzug, S.~Dippel, and U.~Neitzel, ``Noise-resistant
+  weak-structure enhancement for digital radiography,'' in \emph{Medical
+  {{Imaging}} '99}, {San Diego, CA}, May 1999, pp. 1406--1417.
+
+\bibitem{dippel_multiscale_2002}
+S.~Dippel, M.~Stahl, R.~Wiemker, and T.~Blaffert,
+  ``\BIBforeignlanguage{en}{Multiscale contrast enhancement for radiographies:
+  {{Laplacian}} pyramid versus fast wavelet transform},''
+  \emph{\BIBforeignlanguage{en}{IEEE Transactions on Medical Imaging}},
+  vol.~21, no.~4, pp. 343--353, Apr. 2002.
+
+\bibitem{10.1145/2010324.1964963}
+S.~Paris, S.~W. Hasinoff, and J.~Kautz, ``Local {{Laplacian}} filters:
+  {{Edge}}-aware image processing with a {{Laplacian}} pyramid,'' \emph{ACM
+  Transactions on Graphics}, vol.~30, no.~4, Jul. 2011.
+
+\bibitem{gilboa_image_2004}
+G.~Gilboa, N.~Sochen, and Y.~Zeevi, ``\BIBforeignlanguage{en}{Image enhancement
+  and denoising by complex diffusion processes},''
+  \emph{\BIBforeignlanguage{en}{IEEE Transactions on Pattern Analysis and
+  Machine Intelligence}}, vol.~26, no.~8, pp. 1020--1036, Aug. 2004.
 
 \bibitem{hutchison_probabilisticdriven_2010}
 D.~Hutchison, T.~Kanade, J.~Kittler, J.~M. Kleinberg, F.~Mattern, J.~C.
@@ -272,36 +341,11 @@ D.~Hutchison, T.~Kanade, J.~Kittler, J.~M. Kleinberg, F.~Mattern, J.~C.
   {{MICCAI}} 2010}.\hskip 1em plus 0.5em minus 0.4em\relax {Berlin,
   Heidelberg}: {Springer Berlin Heidelberg}, 2010, vol. 6361, pp. 518--525.
 
-\bibitem{gilboa_image_2004}
-G.~Gilboa, N.~Sochen, and Y.~Zeevi, ``\BIBforeignlanguage{en}{Image enhancement
-  and denoising by complex diffusion processes},''
-  \emph{\BIBforeignlanguage{en}{IEEE Transactions on Pattern Analysis and
-  Machine Intelligence}}, vol.~26, no.~8, pp. 1020--1036, Aug. 2004.
-
-\bibitem{10.1145/2010324.1964963}
-S.~Paris, S.~W. Hasinoff, and J.~Kautz, ``Local {{Laplacian}} filters:
-  {{Edge}}-aware image processing with a {{Laplacian}} pyramid,'' \emph{ACM
-  Transactions on Graphics}, vol.~30, no.~4, Jul. 2011.
-
-\bibitem{yu_ultrasound_2010}
-J.~Yu, J.~Tan, and Y.~Wang, ``\BIBforeignlanguage{en}{Ultrasound speckle
-  reduction by a {{SUSAN}}-controlled anisotropic diffusion method},''
-  \emph{\BIBforeignlanguage{en}{Pattern Recognition}}, vol.~43, no.~9, pp.
-  3083--3092, Sep. 2010.
-
-\bibitem{smith_susan_1997}
-S.~M. Smith and J.~M. Brady, ``{{SUSAN}}\textemdash{{A}} new approach to low
-  level image processing,'' \emph{International Journal of Computer Vision},
-  vol.~23, no.~1, pp. 45--78, 1997.
-
-\bibitem{mei_phase_2020}
-K.~Mei, B.~Hu, B.~Fei, and B.~Qin, ``Phase asymmetry ultrasound despeckling
-  with fractional anisotropic diffusion and total variation,'' \emph{IEEE
-  Transactions on Image Processing}, vol.~29, pp. 2845--2859, 2020.
-
-\bibitem{kovesi_image_1999}
-P.~Kovesi, ``Image features from phase congruency,'' \emph{Journal of Computer
-  Vision Research}, vol.~1, no.~3, pp. 1--26, 1999.
+\bibitem{aja-fernandez_estimation_2006}
+S.~{Aja-Fernandez} and C.~{Alberola-Lopez}, ``On the estimation of the
+  coefficient of variation for anisotropic diffusion speckle filtering,''
+  \emph{IEEE Transactions on Image Processing}, vol.~15, no.~9, pp. 2694--2701,
+  Sep. 2006.
 
 \bibitem{krissian_oriented_2007}
 K.~Krissian, C.-F. Westin, R.~Kikinis, and K.~G. Vosburgh, ``Oriented speckle
@@ -319,6 +363,11 @@ L.~Zhu, C.-W. Fu, M.~S. Brown, and P.-A. Heng, ``A non-local low-rank framework
   for ultrasound speckle reduction,'' in \emph{{{IEEE Conference}} on
   {{Computer Vision}} and {{Pattern Recognition}}}, ser. {{CVPR}}'07.\hskip 1em
   plus 0.5em minus 0.4em\relax {Honolulu, HI}: {IEEE}, Jul. 2017, pp. 493--501.
+
+\bibitem{mei_phase_2020}
+K.~Mei, B.~Hu, B.~Fei, and B.~Qin, ``Phase asymmetry ultrasound despeckling
+  with fractional anisotropic diffusion and total variation,'' \emph{IEEE
+  Transactions on Image Processing}, vol.~29, pp. 2845--2859, 2020.
 
 \bibitem{yongjianyu_generalized_2004}
 {Yongjian Yu}, J.~Molloy, and S.~Acton, ``Generalized speckle reducing

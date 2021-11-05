@@ -65,54 +65,63 @@ The basic workflow of using the \usdg~is as follows:
   }\label{fig:linesearch}
 \end{figure}
 %
-Formally, the user is solving the line seach problem
+Formally, the user solves the line seach problem
 \begin{align}
- \alpha = &\argmax_{ \beta }\; f\,(\beta\,\vxi + \vx) \label{eq:line_search}\\
- &\text{subject to}\;\; \beta \in \mathcal{I}\left(\vx, \vxi\right) 
+ \alpha_t = &\argmax_{ \beta }\; f\,(\beta\,\vxi_t + \vx_t) \label{eq:line_search}\\
+ &\text{subject to}\;\; \beta \in \mathcal{I}\left(\vx_t, \vxi_t\right) 
 \end{align}
-{\noindent}where \(f\) is the preference function of the user, \(\beta\) is a position on the 1D line, \(\vx\) and \(\vxi\) are the basis and direction of the 1D line, \(\mathcal{X}\) is the domain of all the parameter settings, and \(\mathcal{I}\left(\vx, \vxi\right)\) is the inverval \([\beta_{\mathrm{min}}, \beta_{\mathrm{max}}]\) that ensures that \(\beta\,\vxi + \vx  \in \mathcal{X}\).
-The user choice minimizing \(\alpha\) is denoted as \(\alpha\).
+{\noindent}where \(f\) is the preference function of the user, \(\beta\) is a position on the 1D line, \(\vx_t\) and \(\vxi_t\) are respectively the basis and direction of the 1D line, \(\mathcal{X}\) is the domain of all the parameter settings, and \(\mathcal{I}\left(\vx_t, \vxi_t\right)\) is the inverval \([\beta_{\mathrm{min}}, \beta_{\mathrm{max}}]\) that ensures that \(\beta\,\vxi + \vx  \in \mathcal{X}\).
+The user choice maximizing \(f\) is denoted as \(\alpha_t\).
 A geometric illustration of the correspondance between the graphical interface and our mathematical notations is provided in~\cref{fig:linesearch}.
 
 Our goal is to find the best parameter setting \(\vx^{*}\) that maximizes the user preference \(f\) given that the user successively solves this line search problem.
 
 \subsection{Learning the Preference of Sonographers with Gaussian Processes}\label{section:gp}
 \subsubsection{Probabilistic Model}
-\paragraph{Gaussian Process Formulation}
+%\paragraph{Gaussian Process Formulation}
 Once the user has provided his feedback, we analyze it and suggest a new 1D embedding that potentially contains the optimal parameter setting \(\vx^{*}\).
 At the \(t\)th iteration, the user feedback is represented by \(\vx_t\), \(\vxi_t\) which are the sufficient information about the 1D line, and the optimal position on the line \(\alpha_t\).
-Analyzing this information is posed as a machine learning problem where we reconstruct \(f\) given the history of the user choices from 1 to \(t\), \(\mathcal{D}_t = \{\,(\vx_1, \vxi_1, \alpha_1), \ldots, (\vx_t, \vxi_t, \alpha_t)\,\}\).
+Analyzing this information is posed as a machine learning problem where we reconstruct \(f\) given the history of the user choices from 1 to \(t\), \[\mathcal{D}_T = \{\,(\vx_1, \vxi_1, \alpha_1),\, \ldots\,, (\vx_t, \vxi_t, \alpha_t),\,\ldots\,, (\vx_T, \vxi_T, \alpha_T), \,\}\].
 
 For a datapoint \( (\vx_t, \vxi_t, \alpha_t) \), each point \(\beta\,\vx_t + \vxi_t\) on the line sastisfies
 \begin{align}
-f(\beta\,\vx_t + \vxi_t ) > f(\alpha\,\vx_t + \vxi_t) \;\;\text{for all}\;\; \beta \in \mathcal{I}\left(\vx, \vxi\right)\nonumber
+f(\alpha_t\,\vx_t + \vxi_t ) > f(\beta^{(i)}\,\vx_t + \vxi_t) \;\;\text{for all}\;\; \beta^{(i)} \in \mathcal{I}\left(\vx, \vxi\right) \setminus \alpha_t. \label{eq:likelihood}
 \end{align}
-We formulate this setting into a latent Gaussian process model~\cite{rasmussen_gaussian_2006} described as follows:
+This relationship will form our likelihood.
+We will call a single instance of such comparison a ``duel'' following the preferential BO terminology~\cite{pmlr-v70-gonzalez17a}.
+Each datapoint form an infinite number of duels as \(\mathcal{I}\left(\vx, \vxi\right)\) contains an infinite number of \(\beta\)s.
+
+We perform Bayesian inference of the latent preference function \(f\) by setting a Gaussian process prior~\cite{rasmussen_gaussian_2006} on it.
+Then, the overall probabilistic model is stated as 
 \begin{align}
-\ell                    &\sim p\,(\ell) \nonumber\\
-\epsilon_{\vf}           &\sim p\,(\epsilon_{\vf}) \nonumber\\
-\sigma                  &\sim p\,(\sigma) \nonumber\\
-\vf \mid \epsilon_{\vf}  &\sim \mathcal{GP}(0, \mK_{\ell} + \epsilon_{\vf}^2\mI) \nonumber\\
-  f(\alpha\,\vxi + \vx) > f(\beta^{(i)} \,\vxi + \vx) \mid \vf,\, \sigma
-  &\sim p\,(\alpha,\, \beta^{(i)},\, \vx,\,\vxi,\, \mid \sigma,\, \vf).\nonumber 
+\ell          &\sim p\,(\ell) \nonumber\\
+\epsilon_{\vf} &\sim p\,(\epsilon_{\vf}) \nonumber\\
+\sigma        &\sim p\,(\sigma) \nonumber\\
+\vf           &\sim \mathcal{GP}(0, \mK_{\ell} + \epsilon_{\vf}^2\mI) \nonumber\\
+ f(\alpha_t\,\vxi + \vx_t) &> f(\beta\,\vxi_t + \vx_t),\; \forall\beta \in \mathcal{I}\left(\vx_t,\vxi_t\right) \setminus \alpha \nonumber\\
+%
+&\sim p\left(\alpha_t \succ \beta,\; \forall \beta \in \mathcal{I}\left(\vx_t, \vxi_t\right) \mid\, \vf,\, \sigma,\, \alpha_t,\, \vx_t,\, \vxi_t\,\right).\nonumber
 \end{align}
 %
-{\noindent}where \((\alpha, \vxi, \vx)\) form a single datapoint, \(\epsilon_{\vf}\) is the noise included in the preference evaluations, \(\sigma\) is the variance of the values of \(f\), \(\vf\) is the function represented as a vector in the Gaussian process, \(\mathcal{\mK}\) is the Gram matrix where each element is defined as
+    {\noindent}where \((\alpha, \vxi, \vx)\) form a single datapoint, \(\epsilon_{\vf}\) is the noise included in the preference evaluations, \(\sigma\) is the variance of the noise of the comparisons (more details in the next section), \(\vf\) is the function represented as a vector in the Gaussian process \(\mathcal{\mK}\) is the Gram matrix.
+
+Each element of the Gram matrix is defined as
 \(
   {[\mK_{\ell}]}_{i,j} = k\left(\vx^\prime_i, \vx^\prime_j; \ell \right)
 \)
-where \(k\left(\cdot, \cdot; \ell \right)\) is the isotropic Matern 5/2 covariance kernel with a line scale of \(\ell\), and \({\vx^\prime}_i, {\vx^\prime}_j\) are the positions formed by all the combinations of the different \(\alpha, \beta, \vxi, \vx\) in \(\mathcal{D}_t\).
+where \(k\left(\cdot, \cdot; \ell \right)\) is an isotropic Matern 5/2 covariance kernel with a line scale of \(\ell\), and \({\vx^\prime}_i, {\vx^\prime}_j\) are the positions formed by all the combinations of the different \(\alpha, \beta^{(i)}, \vxi, \vx\) in \(\mathcal{D}_t\).
+For more details about Gaussian processes, see~\cite{rasmussen_gaussian_2006}.
 
-\paragraph{Likelihood Function}
-The most important component in our model is the likelihood function \(p\,(\alpha,\, \beta^{(i)},\, \vx,\,\vxi,\, \mid \sigma,\, \vf)\).
-Since our 1D line contains an \textit{infinite} number of duels between each \(\beta\) and \(\alpha\), it is difficult to formulate a proper likelihood function.
+\subsubsection{Likelihood}
+%The most important component in our model is the likelihood function \(p\left(\alpha \, \vxi + \vx \succ \beta^{(i)} \, \vxi + \vx \mid \sigma, \vf \right)\).
+Since our 1D line \(\mathcal{I}\left(\vx, \vxi\right)\) contains an \textit{infinite} number of duels between each \(\beta\) and \(\alpha\), it is difficult to formulate a proper likelihood function.
 The original sequential line search design galleriy discretized the 1D line and proposed a likelihood function based on the Bradley-Terry-Luce model~\cite{10.1145/3072959.3073598}.
-Since the Bradley-Terry-Luce (BTL) model assumes a discrete number of candidates, it is unknown how this discretization relates to the continous ideal.
+Since this model assumes a discrete number of comparisons, it is unclear how this discretization relates to the continuous limit.
+
 Recently, Mikkola \textit{et al.}~\cite{pmlr-v119-mikkola20a} proposed a more principled approach that does not rely on the BTL model.
 They first chose the likelihood of a single comparison to be 
 \begin{align}
-  &p\left(\alpha, \beta^{(i)}, \vxi, \vx \mid \sigma, \vf \right) \\
-  &= p\left(\alpha \, \vxi + \vx \succ \beta^{(i)} \, \vxi + \vx \mid \sigma, \vf \right) \\
+  &p\left(\alpha \, \vxi + \vx \succ \beta^{(i)} \, \vxi + \vx \mid \sigma, \vf \right) \\
   &= 1 - \left(\Phi * \phi \right)\left( \frac{ f\left(\beta^{(i)} \, \vxi + \vx \right) - f\left(\alpha \, \vxi + \vx \right) }{\sigma} \right)
 \end{align}
 {\noindent}where ``\(\succ\)'' denotes the preferential ordering between two parameter settings, \(\left(\Phi*\phi\right)\left(\cdot\right)\) is the convolution between the cummulative and probability density functions of the standard Gaussian distribution. 
@@ -120,7 +129,8 @@ They first chose the likelihood of a single comparison to be
 At the limit of infinitely many \(\beta\)s, the likelihood of the discrete comparisons converges to the continuous ideal by the type-I Volterra integral such as
 {\small
 \begin{align}
-  &p\left(\alpha, \vxi, \vx \mid \sigma, \vf \right) \\
+  &p\left(\alpha \succ \beta,\; \forall \beta \in \mathcal{I}\left(\vx, \vxi\right) \mid\, \vf,\, \sigma,\, \alpha,\, \vx,\, \vxi\,\right) \\
+  &= \lim_{N \rightarrow \infty} \prod^{N}_{i=1} p\left(\alpha \, \vxi + \vx \succ \beta^{(i)} \, \vxi + \vx \mid \sigma,\, \vf \right) \\
   &= \lim_{N \rightarrow \infty} \prod^{N}_{i=1} \left(  1 - \left(\Phi * \phi \right)\left( \frac{ f\left(\beta^{(i)} \, \vxi + \vx \right) - f\left(\alpha \, \vxi + \vx \right) }{\sigma} \right) \right) \\
   &\rightarrow \exp\left(  - \int_{\mathcal{I}\left(\vx, \vxi\right)} \left(\Phi * \phi \right) \left( \frac{ f\left(\beta \, \vxi + \vx \right) - f\left(\alpha \, \vxi + \vx \right) }{\sigma} \right) d\beta \right)
 \end{align}
@@ -131,10 +141,10 @@ At the limit of infinitely many \(\beta\)s, the likelihood of the discrete compa
 Now, the log-likelihood of the dataset is given as
 {\small
 \begin{align}
-  &\log p\left(\mathcal{D}_t \mid \sigma, \vf \right) \\
-  &= \sum_{\tau=1}^{t} \log p\left(\alpha_{\tau}, \vxi_{\tau}, \vx_{\tau} \mid \sigma, \vf \right) \\
-  &= -\sum_{\tau=1}^{t} \int_{\mathcal{I}\left(\vx_{\tau}, \vxi_{\tau}\right)} \left(\Phi * \phi \right) \left( \frac{ f\left(\beta \, \vxi_{\tau} + \vx_{\tau} \right) - f\left(\alpha_{\tau} \, \vxi_{\tau} + \vx_{\tau} \right) }{\sigma} \right) d\beta \\
-  &\approx -\frac{1}{N}  \sum_{\tau=1}^{t} \sum_{i=1}^N \left(\Phi * \phi \right) \left( \frac{ f\left(\beta^{(i)} \, \vxi_{\tau} + \vx_{\tau} \right) - f\left(\alpha_{\tau} \, \vxi_{\tau} + \vx_{\tau} \right) }{\sigma} \right) d\beta
+  &\log p\left(\mathcal{D}_T \mid \sigma,\, \vf \right) \\
+  &= \sum_{t=1}^{T} p\left(\alpha_t \succ \beta,\; \forall \beta \in \mathcal{I}\left(\vx_t, \vxi_t\right) \mid \vf,\, \sigma,\, \alpha_t,\, \vx_t,\, \vxi_t\right) \\
+  &= -\sum_{t=1}^{T} \int_{\mathcal{I}\left(\vx_{t}, \vxi_{t}\right)} \left(\Phi * \phi \right) \left( \frac{ f\left(\beta \, \vxi_{t} + \vx_{t} \right) - f\left(\alpha_{t} \, \vxi_{t} + \vx_{t} \right) }{\sigma} \right) d\beta \\
+  &\approx -\frac{1}{N}  \sum_{t=1}^{T} \sum_{i=1}^N \left(\Phi * \phi \right) \left( \frac{ f\left(\beta^{(i)} \, \vxi_{t} + \vx_{t} \right) - f\left(\alpha_{t} \, \vxi_{t} + \vx_{t} \right) }{\sigma} \right) d\beta
 \end{align}
 }%
 {\noindent}where the convolution \(*\) can be accurately approximated using quadrature methods.
@@ -143,10 +153,10 @@ Finally, for the outer integral, Mikkola \textit{et al.} perform Monte Carlo int
 This choice is simply heuristic, and they adaptively concentrate \(\beta_i\) towards \(\alpha\) as \(t\) increases.
 For the number of Monte Carlo samples, we set \(N=20\).
 
-\paragraph{Computational Costs}
-Considering the likelihood approximation, the dataset is actually represented as \(\mathcal{D}_{t} = {\{\,(\,\vx_{\tau},\, \vxi_{\tau},\, \alpha_{\tau},\, \beta^{(1)}_{\tau},\, \ldots\, \beta^{(N)}_{\tau})\,\}}_{i=1}^{t}\).
+\subsubsection{Computational Costs}
+Considering the likelihood approximation, the dataset is actually represented as \(\mathcal{D}_{T} = {\{\,(\,\vx_{t},\, \vxi_{t},\, \alpha_{t},\, \beta^{(1)}_{t},\, \ldots\, \beta^{(N)}_{t})\,\}}_{t=1}^{T}\).
 The maximum memory requirement for storing the dataset is \(\mathcal{O}\left( T^2 \, N^2  \right)\) where evaluating the likelihood involves a Cholesky decomposition resulting in a time complexity of \(\mathcal{O}\left( T^3 \, N^3 \, M^3  \right)\) where \(T\) is the maximum number of BO iterations, \(N\) is the number of Monte Carlo samples of \(\beta\), and \(M\) is the number of quadrature points for the convolution integral.
-While the computational complexity might seem unreasonable, our C++ implementation is efficient enough to maintain the inference time to few seconds up to 50 BO iterations on a laptop.
+While the computational complexity might seem unreasonable, our C++ implementation is efficient enough to maintain real-time inference on a laptop.
 
 \begin{figure}[t]
   \removelatexerror
@@ -227,7 +237,7 @@ The GP prediction using \(q\,(\vf)\) are computed as
 
 \subsubsection{Hyperparameter Treatment}
 Our model has 3 hyperparameters: the covariance scale \(\ell\), the likelihood noise scale \(\sigma\), and the GP noise scale \(\sigma_\epsilon\).
-We set log-normal hyperpriors such that \(\log \ell \sim \mathcal{N}\left(-1, 1\right)\), \(\log \sigma \sim \mathcal{N}\left(0, 1\right)\), and \(\log \sigma_{\epsilon} \sim \mathcal{N}\left(0, 1\right)\).
+We set log-normal hyperpriors such that \(\log \ell \sim \mathcal{N}\left(\text{-}1, 1\right)\), \(\log \sigma \sim \mathcal{N}\left(0, 1\right)\), and \(\log \sigma_{\epsilon} \sim \mathcal{N}\left(0, 1\right)\).
 Inference is performed with type-II maximum a-posteriori (MAP-II) with the Nelder-Mead simplex method~\cite{nelder_simplex_1965}.
 Although MAP-II for GP hyperparameters is often done with gradient descent, it significantly complicates the handling of Cholesky failures.
 
@@ -258,7 +268,7 @@ Nonetheless, we experimented with full Bayesian inference using pseudo-marginal 
 %% ARD is severely affected by dimensionality.
 %% This manifests as low acceptance rates in MCMC procedures~\cite{filippone_pseudomarginal_2014}.
 
-\subsection{Optimizing User Preference with Preferential Bayesian Optimization}\label{section:bo}
+\subsection{Optimizing Preference with Bayesian Optimization}\label{section:bo}
 Now that we have inferred the preference function \(f\) of the sonographer, we use Bayesian Optimization (BO) to find its optimum.
 The key step of BO is the \textit{inner optimization problem} where the next 1D line formed by \(\vx_{t+1}, \vxi_{t+1}\) is determined.
 Given the 1D line the user will solve the line search problem in~\cref{eq:line_search}.
@@ -295,175 +305,396 @@ Therefore, we use an alternative acquisition function.
 In~\cite{10.1145/3072959.3073598}, Koyama \textit{et al.} proposed a similar slider based preferential BO interface.
 Here, they proposed a heuristic acquisition strategy where the slider \(\mathcal{I}\) is determined using
 \begin{align}
-  \vx_t   &= \argmax_{\vx} a_{\mathrm{EI}}(\vx) \label{eq:koyama_ei} \\
+  \vx_{\mathrm{EI}}   &= \argmax_{\vx} a_{\mathrm{EI}}(\vx) \label{eq:koyama_ei} \\
   \vx^*   &= \argmax_{\vx} \mu\,(\vx) \label{eq:koyama_opt}
 \end{align}
-such that \(\mathcal{I}\) interpolates \(\vx_t\) and \(\vx^*\).
-We adapt this idea to our setup by adding a projection step
+such that \(\mathcal{I}\) interpolates \(\vx_{\mathrm{EI}}\) and \(\vx^*\).
+In our case, we choose the 1D line \(\mathcal{I}\) formed by \((\vx_{t+1}, \vxi_{t+1})\) to extend across the whole space \(\mathcal{X}\).
+We adapt Koyama's scheme to our setup by finding the 1D line that contains both \(\vx_{\mathrm{EI}}\) and \(\vx^*\) such that
 \begin{align}
-  \vxi_t  &=  \frac{\vx_t - \vx^*}{\norm{ \vx_t - \vx^* }_{\infty}}.\label{eq:xi_proj}
+  \vx_{t+1}   = \vx_{\mathrm{EI}}\;\; \text{and} \;\;
+  \vxi_{t+1} = \frac{\vx_{\mathrm{EI}} - \vx^*}{\norm{ \vx_{\mathrm{EI}} - \vx^* }_{\infty}}.\label{eq:xi_proj}
 \end{align}
-This scheme is neat in that both~\cref{eq:koyama_ei} and~\cref{eq:koyama_opt} have closed form deterministic gradients, enabling the use of the popular L-BFGS~\cite{liu_limited_1989} optimizer.
-Also, the 1D slider chosen by the Koyama scheme contains the duel \(\vx^*\) v.s. \(\vx_t\), which naturally draws connections with preferential BO methods with binary discrete comparisons~\cite{NIPS2007_b6a1085a}.
 
-\section{Cascaded Filters in Laplacian Pyramids}\label{section:filter}
+Koyama's scheme is neat in that both~\cref{eq:koyama_ei} and~\cref{eq:koyama_opt} have closed form deterministic gradients, enabling the use of the popular L-BFGS~\cite{liu_limited_1989} optimizer.
+Also, the 1D slider chosen by the Koyama scheme contains the duel \(\vx^*\) v.s. \(\vx_{\mathrm{EI}}\), which naturally draws connections with preferential BO methods with binary discrete comparisons~\cite{NIPS2007_b6a1085a}.
+
+
+\section{Cascaded Laplacian Pyramid Diffusion}\label{section:filter}
 
 We will now discuss the image enhancement algorithm used for evaluating the Ultrasound Design Gallery.
-Instead of using a previously proposed approach, we contribute our own ultrasound image enhancement algorithm.
-Our approach is primarily based on Laplacian pyramids~\cite{zhang_multiscale_2006, zhang_nonlinear_2007, kang_new_2016} and anisotropic diffusion.
+Instead of using a previously proposed approach, we contribute our own ultrasound image enhancement algorithm, which is primarily based on Laplacian pyramids~\cite{zhang_multiscale_2006, zhang_nonlinear_2007, kang_new_2016} and anisotropic diffusion~\cite{perona_scalespace_1990, weickert_anisotropic_1998}.
 
-\subsection{Anisotropic Diffusion}
-A popular approach for speckle reduction in medical ultrasound images is to use diffusion partial differential equations~\cite{perona_scalespace_1990, weickert_anisotropic_1998}.
-In particular, anisotropic diffusion methods have shown excellent speckle reduction properties with low computational cost~\cite{finn_echocardiographic_2011}.
-Furthermore, they are able to enhance the structure (such as edges) and coherence of images~\cite{abd-elmoniem_realtime_2002, kang_new_2016}.
+\subsection{Background}
+We first briefly discuss Laplacian pyramids and anisotropic diffusion before describing our cascaded Laplacian pyramid diffusion.
+
+\subsubsection{Anisotropic Diffusion}\label{section:diffusion}
+%
+Diffusion partial differential equations (PDE) are popular for enhancing the quality of medical ultrasound images~\cite{perona_scalespace_1990, weickert_anisotropic_1998, contrerasortiz_ultrasound_2012}.
+Especially, anisotropic diffusions have shown to reduce speckle noise~\cite{yongjianyu_speckle_2002}, strenghten image edges~\cite{zhang_multiscale_2006}, and enhance image structures~\cite{abd-elmoniem_realtime_2002, kang_new_2016} with low computational cost (see~\cite{finn_echocardiographic_2011} for a comparative evaluation of some classic anisotropic diffusions).
 However, anisotropic diffusion methods are also known to be highly sensitive to their parameters~\cite{duarte-salazar_speckle_2020}, making them a perfect candidates for this study.
 
-
-\subsubsection{Generic Anisotropic Diffusion}
 A generic form of anisotropic diffusion is
 \begin{align}
   \frac{\partial I\,(x, y, t)}{\partial t} = \nabla \cdot [ \mD\,(x, y, t) \, \nabla I\,(x, y, t) ] \label{eq:generic_diffusion}
 \end{align}
 where \(I\,(x, y, t)\) is the image intensity at position \((x, y)\) and time point \(t\), \(\nabla I\) is the image gradient, and \(\mD\) is the \textit{diffusion matrix}.
-Solving~\eqref{eq:generic_diffusion} for a certain time period \([0, T]\) results in the enhanced image.
-
-The diffusion matrix is most often position and time dependent but we omit the dependence on \(x, y, t\).
+Solving~\cref{eq:generic_diffusion} for a certain time period \([0, T]\) results in the enhanced image.
 Different choices for determining the diffusion matrix result in completely different algorithms.
-In general, the diffusion matrix is decomposed in diagonal form such as
-\begin{align}
-  \mD = 
-  \left(
-  \begin{array}{cc}
-    \vv_1 \\
-    \midrule
-    \vv_2
-  \end{array}
-  \right)
-  \begin{pmatrix}
-    \lambda_1 & 0 \\
-    0 & \lambda_2
-  \end{pmatrix}
-  \left(
-  \begin{array}{c|c}
-       \vv_1 & \vv_2
-  \end{array}
-  \right)
-\end{align}
-with respect to the eigenvectors \(\vv_1, \vv_2\) and eigenvalues \(\lambda_1, \lambda_2\).
-The eigenvalues and eigenvectors determine how much diffusion occurs towards which direction.
+
+%% The diffusion matrix is most often position and time dependent but we omit the dependence on \(x, y, t\).
+%% Different choices for determining the diffusion matrix result in completely different algorithms.
+%% In general, the diffusion matrix is decomposed in diagonal form such as
+%% \begin{align}
+%%   \mD = 
+%%   \left(
+%%   \begin{array}{cc}
+%%     \vv_1 \\
+%%     \midrule
+%%     \vv_2
+%%   \end{array}
+%%   \right)
+%%   \begin{pmatrix}
+%%     \lambda_1 & 0 \\
+%%     0 & \lambda_2
+%%   \end{pmatrix}
+%%   \left(
+%%   \begin{array}{c|c}
+%%        \vv_1 & \vv_2
+%%   \end{array}
+%%   \right)
+%% \end{align}
+%% with respect to the eigenvectors \(\vv_1, \vv_2\) and eigenvalues \(\lambda_1, \lambda_2\).
+%% The eigenvalues and eigenvectors determine how much diffusion occurs towards which direction.
 %Since \(\mD\) determines how much diffusion occurs towards which direction, different diffusion matrices result in completely different behavior.
 
-\subsubsection{Nonlinear Coherent Diffusion}
-\paragraph{Overview}
-In this work, we utilize the \textit{nonlinear coherent diffusion} (NCD,~\cite{abd-elmoniem_realtime_2002}) algorithm by Abd-Elmoniem et al.
-While we experimented with various alternative anisotropic diffusion designs, we concluded that NCD is the most useful for our purpose.
-For example, methods based on probabilistic tissue segmentation~\cite{hutchison_probabilisticdriven_2010, ramos-llorden_anisotropic_2015} require accurately estimating a mixture model during execution.
-This is not straightforward to implement in a real-time manner that can exploit accelerators such as graphical processing units (GPU).
-Similarly, the method proposed by Mishra et al.~\cite{mishra_edge_2018} involves computing histogram of oriented gradients in the superpixel domain, which also cannot take advantage of GPUs.
-Non
-
-\paragraph{Diffusion Direction \(\vv_1\), \(\vv_2\)}
-We will now briefly describe NCD and some modifications that we made.
-For the diffusion directions \(\vv_1\) and \(\vv_2\), NCD uses the eigenvectors of the structure tensor 
-\begin{align}
-  \mT = K_{\rho} * \left( \nabla_{\sigma} I \; {\nabla_{\sigma} I}^{\top} \right) 
-\end{align}
-where \(K_{\rho}\) is a Gaussian smoothing filter with standard deviation \(\rho\), \(\nabla_{\sigma}I\) is the gradient of \(I\) smoothed with a Gaussian filter with standard deviation \(\sigma\).
-Smoothing the outer product of the gradient with \(K_{\rho}\) improves the spatial coherence of the diffusion directions
-
-\paragraph{Diffusion Strength \(\lambda_1\), \(\lambda_2\)}
-For the diffusion strengths \(\lambda_1\) and \(\lambda_2\), NCD uses the eigenvalues of the structure tensor \(\mu_1\) and \(\mu_2\) such that
-\begin{align}
-  \lambda_1 &= \begin{cases}
-    \; \alpha \, \left(1 - \frac{\kappa}{s^2}\right) &  \text{if}\quad \kappa < s^2  \\
-    \; 0 & \text{otherwise}\quad
-    \end{cases} \\
-  \lambda_2 &= \alpha
-\end{align}
-where \(\kappa = {(\mu_1 - \mu_2)}^2\), \(s\) is a threshold determining the amount smoothing towards \(\vv_1\), and \(\alpha\) determines the overall amount of smoothing.
-While the original NCD algorithm uses a regularization term \(\beta\), we ommited it as we did not find it useful.
-
-\subsubsection{Ramp-Preserving Nonlinear Complex Diffusion}
-Meanwhile, Gilboa et al.~\cite{gilboa_image_2004} proposed a novel diffusion scheme that circumvents the need for explicit edge detection.
-They proposed the \textit{ramp-preserving nonlinear complex diffusion} (RPNCD) which is described as
-\begin{align}
-  \frac{\partial  I\,(x, y, t)}{\partial t} &= \nabla \cdot \big(\, c\,(x, y, t) \, \nabla I(x, y, t) \big) \\
-  c\left(x, y, t\right) &= \frac{e^{j \theta}}{ 1 + {\left( \frac{\mathrm{Im}\left(I(x, y, t)\right)}{ k \, \theta } \right)}^2}
-\end{align}
-where \(k\) is an edge threshold, \(\mathrm{Im}\left(I(x, y, t)\right)\) is the imaginary part of \(I(x,y,t)\), \(\theta\) is a phase angle parameter.
-Here, \(\mathrm{Im}\left(I(x, y, t)\right)\) acts as an edge detector which behaves similarly as the smoothed image laplacian.
-
-
-While many speckle reduction algorithms have been designed to be used on a single scale, many of these algorithms can be improved by considering \textit{multiple image scales}.
-The two most popular approaches are based on the wavelet decomposition and the Laplacian pyramid decomposition.
-
-Multiscale analysis 
-
-\subsubsection{Laplacian Pyramids}
+\subsubsection{Laplacian Pyramids}\label{section:pyramid}
 %
+Compared to other image modalities, medical ultrasound images suffer from noise artifacts, and damaged image structures.
+These types of problems are difficult to detect in low pixel scales.
+Therefore, multiscale approaches based on the Wavelet~\cite{xulizong_speckle_1998, xiaohuihao_novel_1999, pizurica_versatile_2003, yongyue_nonlinear_2006} and Laplacian pyramid~\cite{sattar_image_1997, zhang_multiscale_2006, zhang_nonlinear_2007, kang_new_2016} decompositions have shown great success in ultrasound images.
+
+An \(L\)-level Laplacian pyramid~\cite{burt_laplacian_1983} is first defined using a Gaussian pyramid \(\{\vg_0,\, \ldots\, \vg_L \}\) where each level \(\vg_{i}\) is defined as
+%
+\begin{equation}
+\begin{tikzpicture}[baseline=(current  bounding  box.center)]
+	% Place nodes using a matrix
+  \node[dspnodeopen, dsp/label=left]                (c0) {\(\vg_{i-1}\)};
+  \node[dspsquare,   right= of c0]                  (c1) {\(G_{\sigma}\)};
+  \node[dspsquare,   right= of c1]                  (c2) {\(\downarrow 2\)};
+  \node[dspnodeopen, right= of c2, dsp/label=right] (c3) {\(\vg_{i}\)};
+%
+  \foreach \i [evaluate = \i as \j using int(\i+1)] in {0,1,2}
+  \draw[dspconn] (c\i) -- (c\j);
+\end{tikzpicture}
+\end{equation}
+%
+where \(\vg_0\) is the original image, \(G_{\sigma}\) is a Gaussian low-pass filter with standard deviation \(\sigma\).
+From this, the Laplacian pyramid \(\{{\boldsymbol\ell}_0,\, \ldots\, {\boldsymbol\ell}_L \}\) is defined such that each level \({\boldsymbol\ell}_i\) is defined as
+%
+\begin{equation}
+\begin{tikzpicture}[baseline=(current  bounding  box.center)]
+  \matrix (m1) [row sep=2.5mm, column sep=5mm]
+  {
+    \node[dspnodeopen, dsp/label=left] (g0) {\(\vg_{i+1}\)};   &
+    \node[dspsquare]                   (g1) {\(2 \uparrow\)}; &
+    \node[coordinate]                  (g2) {}; \\
+%
+    \node[dspnodeopen, dsp/label=left]  (g3) {\(\vg_{i}\)}; &
+    \node[coordinate]                   (g4) {};           &
+    \node[dspadder, label=94:\(-\)]     (g5) {};           &
+    \node[coordinate]                   (g6) {};           &
+    \node[dspnodeopen, dsp/label=right] (g7) {\({\boldsymbol\ell}_{i}\)}; \\
+  };
+%
+  \draw[dspconn] (g0) -- (g1);
+  \draw[dspline] (g1) -- (g2);
+  \draw[dspconn] (g2) -- (g5);
+%
+  \draw[dspline] (g3) -- (g4);
+  \draw[dspconn] (g4) -- (g5);
+  \draw[dspline] (g5) -- (g6);
+  \draw[dspconn] (g6) -- (g7);
+%
+\end{tikzpicture}
+\end{equation}
+%
+where the last level is defined as \({\boldsymbol\ell}_{L} = \vg_{L}\).
+Each level of the Laplacian pyramid contains an overlapping band-bass representation of the image, which can be used to detect different features in the scale space.
+Higher levels (close to \({\boldsymbol\ell_{L}}\)) contain lower frequency components such as image structures while the lower levels (close to \({\boldsymbol\ell_{0}}\)) contain higher frequency components such as edges.
+The original image \(I\) can be reconstructed by reducing all the levels such that \(I = \sum_{i=0}^L {\boldsymbol\ell}_{i} \).
+An illustration of a 4-level conventional Laplacian pyramid based filter is shown in~\cref{fig:lpnd}.
+
 \begin{figure*}
   \centering
-  \subfloat[Conventional Laplacian Pyramid]{
-    \includegraphics[scale=0.7]{figures/conventional_laplacian_pyramid.pdf}
-  }
-  \hspace{0.2in}
-  \subfloat[Cascaded Laplacian Pyramid]{
-    \includegraphics[scale=0.7]{figures/multiscale_filter.pdf}
-  }
-  \caption{Block diagram of the considered image enhancement scheme.}
+  \begin{minipage}[c]{0.43\textwidth}
+    \centering
+    \includegraphics[scale=0.75]{figures/conventional_laplacian_pyramid.pdf}
+    \subcaption{Laplacian Pyramid in Parallel Form \\ (conventional)}\label{fig:lpnd}
+  \end{minipage}
+  \begin{minipage}[c]{0.53\textwidth}
+    \centering
+    \includegraphics[scale=0.75]{figures/multiscale_filter.pdf}
+    \subcaption{Laplacian Pyramid in Cascaded Form \\ (proposed)}\label{fig:clpd}
+  \end{minipage}
+  \caption{Block diagrams of Laplacian pyramids in parallel and cascaded form.
+    Coherent diffusion denotes the NCD while complex diffusion denotes the RPNCD.
+  }\label{fig:filters}
 \end{figure*}
+%
+\subsection{Limitations of Conventional Laplacian Pyramids}\label{section:limitations}
+\subsubsection{Conventional Laplacian Pyramids Filters}
+As illustrated in~\cref{section:pyramid}, Laplacian pyramids are based on a band-pass decomposition of the image.
+Previous Laplacian pyramid approaches modified the intermediate Laplacian image \({\boldsymbol\ell_i}\) so that the reconstructed image is enhanced.
+For example, Zhang \textit{et al.} applied anisotropic diffusion~\cite{perona_scalespace_1990} and shock filters~\cite{zhang_multiscale_2006} to each Laplacian image.
+More recently, Kang \textit{et al.}~\cite{kang_new_2016} applied different types of anisotropic diffusion filters to each level so that their corresponding features are enhanced appropriately.
+However, these previous approaches have been ignoring some issues that should be raised when combining conventional filters with Laplacian pyramids.
 
-\subsubsection{Local Laplacian Filters}
+\subsubsection{Limitations of Conventional Laplacian Pyramids}
+Conventional image enhancement algorithms, especially anisotropic diffusion methods, are designed to work on low-pass or full-bandwidth images.
+Therefore, it is questionable whether applying these algorithms to the Laplacian band-pass images is appropriate.
+For example, most anisotropic diffusion methods perform some sort of edge-detection, which is not straightforward to perform on band-pass images.
+Indeed, Zhang \textit{et al.} circumvented this issue by first performing diffusion on \(\vg_{i}\)
+performing edge-detection on the low-pass image \(\vg_{i}\) and then perform diffusion on \({\boldsymbol\ell}_{i}\)~\cite{zhang_multiscale_2006}.
+Still, it is unknown whether diffusing on the band-pass image results in ideal behavior.
 
-\cite{10.1145/2010324.1964963}
+Previous Laplacian pyramid approaches only applied filters in parallel to each \({\boldsymbol\ell}_i\).
+That is, no information is propagated across different levels.
+This is wasteful since each level in the pyramid contain different feature information that could reinforce filtering at other levels.
+Espacially, higher level Laplacian images contain structural information that are less affected by noise.
 
+\subsection{Cascaded Filters in Laplacian Pyramids}
+\subsubsection{Laplacian Pyramids in Cascaded Mode}
+We will now present our new Laplacian pyramid based schema: the \textsc{Cascaded Laplacian Pyramid Filter}.
+We utilize the Laplacian pyramid in \textit{cascaded form}, which does not have the limitations of the conventional \textit{parallel form} discussed in~\cref{section:limitations}.
+Filtering is performed top level first to bottom level last, so that lower levels can fully utilize the ifnromation acquired from the higher levels.
+Also, each level of our filter form a low-pass image, which is fully compatible with conventional anisotropic diffusion filters.
 
-\subsubsection{Overview}
+First, at the top level, recall that \({\boldsymbol\ell}_L = \vg_L\).
+By applying an arbitrary image enhancement filter \(F_L\left(\cdot\right)\), we obtain the filtered result \( \widehat{\vg}_L = F_L \left( \vg_L \right) \).
+Now, at each level, filtering is performed as
+%
+\begin{equation}
+\begin{tikzpicture}[baseline=(current  bounding  box.center)]
+  \matrix (m1) [row sep=2.5mm, column sep=5mm]
+  {
+    \node[dspnodeopen, dsp/label=left] (g0) {\(\widehat{\vg}_{i+1}\)};   &
+    \node[dspsquare]                   (g1) {\(2 \uparrow\)}; &
+    \node[coordinate]                  (g2) {}; \\
+%
+    \node[dspnodeopen, dsp/label=left]  (g3) {\({\boldsymbol\ell}_{i}\)}; &
+    \node[coordinate]                   (g4) {};        &
+    \node[dspadder]                     (g5) {};        &
+    \node[dspsquare]                    (g6) {\(F_i\)}; &
+    \node[dspnodeopen, dsp/label=right] (g7) {\(\widehat{\vg}_{i}\)}; \\
+  };
+%
+  \draw[dspconn] (g0) -- (g1);
+  \draw[dspline] (g1) -- (g2);
+  \draw[dspconn] (g2) -- (g5);
+%
+  \draw[dspline] (g3) -- (g4);
+  \draw[dspconn] (g4) -- (g5);
+  \draw[dspline] (g5) -- (g6);
+  \draw[dspconn] (g6) -- (g7);
+%
+\end{tikzpicture}
+\end{equation}
+%
+where \(\widehat{\vg}_{0}\) is the reconstructed enhanced image and the summation of \(\widehat{\vg}_{i+1}\) and \({\boldsymbol\ell}_{i}\) results in a low-pass image, which is passed to \(F_i\).
+\begin{enumerate}
+  \item[\ding{232}] \(\widehat{\vg}_{i+1}\) contains the full low frequency information and the enhanced features.
+  \item[\ding{232}] \({\boldsymbol\ell}_{i}\) contains both noise and high frequency features (higher compared to that of \(\widehat{\vg}_{i+1}\))
+\end{enumerate}
+From the sum of \(\widehat{\vg}_{i+1}\) and \({\boldsymbol\ell}_i\), \(F_i\) is now able to utilize information from the upper levels when suppressing the noise and ehancing the features.
+Notice that the enhancement filters \(F_0,\, \ldots\, F_L\) are \textit{cascaded} over and over to the propagated signal \(\widehat{\vg}_{i}\), hence cascaded form.
+A full illustration of a 4-level cascaded Laplacian pyramid is shown in~\cref{fig:clpd}.
+Notice the difference with~\cref{fig:lpnd}. 
 
+\subsubsection{Edge-Enhancement with Laplacian Pyramids}
+%
+While anisotropic diffusion alone is known to have edge-enhancing effects~\cite{weickert_anisotropic_1998}, employing additional edge-enhancement filters often improve the perceived quality of medical images.
+However, apart from shock filters~\cite{zhang_multiscale_2006, kang_new_2016}, edge-enhancement have been overlooked in the context of medical ultrasound images.
+Conventionly, Laplacian pyramids provide a convenient way to boost edges and contrast~\cite{vuylsteke_multiscale_1994, stahl_noiseresistant_1999, dippel_multiscale_2002}.
 
-\paragraph{Diffusion Strength and Edge Detection}
-While various alternative choices for determining \(\lambda_1, \lambda_2\), have been proposed over the years, most of them require some form of edge detection.
-Therefore, accurate edge-detection must be performed \textit{before} we perform speckle reduction, which is particularly challenging.
-In the case of NCD, \(\kappa = {(\mu_1 - \mu_2)}^2\) acts as an edge detector which provides a good cost-performance tradeoff when used as a primary edge-detector for speckle reduction.
+The image Laplacian operator is often used as an edge detector.
+Obtaining the Laplacian image \({\boldsymbol\ell_i}\) is equivalent to a image Laplacian operation.
+Therefore, the Laplacian pyramid already provides a multi-scale representation of the edges.
+Indeed the MUSICA algorithm~\cite{vuylsteke_multiscale_1994} have shown great success in radiographies and mammographies by simply amplify the Laplacian images.
+However, it tend to be sensitive to noise, as it amplifies small contrasts according to a power law.
+While Stahl \textit{et al.} relaxed this by linearly amplfying contrasts below a threshold~\cite{stahl_noiseresistant_1999}, this is still insufficient for ultrasound images.
+Therefore, we use an amplfyer function \(g\left(\cdot\right)\) inspired by~\cite{10.1145/2010324.1964963} that strongly penalizes weak contrast such as
+\begin{align}
+  g\left(x; \sigma, \beta \right) =
+  \begin{cases}
+    \;\mathrm{sign}\left( x \right) \, \sigma \, {\left( |x|/\sigma \right)}^2, & \text{if}\; |x| \leq \sigma \\
+    \;\mathrm{sign}\left( x \right) \left( \beta \left(|x| - \sigma \right) + \sigma \right), & \text{otherwise}
+  \end{cases}
+\end{align}
+where \(\sigma\) is the threshold for small contrast.
+%
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+      declare function={
+        func(\x) = and(\x <= 0.3, \x >= 0) * (0.3*(abs(\x) / 0.3)^(2)) + 
+        and(\x >= -0.3, \x < 0) * (-1*0.3*(abs(\x) / 0.3)^2) +
+        (\x > 0.3)  * (4*(abs(\x) - 0.3) + 0.3) +
+        (\x < -0.3) * ((-1)*(4*(abs(\x) - 0.3) + 0.3));
+     } 
+    ]
+    \begin{axis} [
+        axis lines=center,
+        ylabel=\(g\left(x\right)\),
+        xlabel=\(x\),
+        width=6cm,
+        height=4cm
+      ]
+      \addplot [domain=-1:1, smooth, thick, blue] { func(x) };
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Plot of amplification function with \(\sigma=0.3\), \(\beta=4\).}\label{fig:amp}
+\end{figure}
+%
+An exmaple plot is shown in~\cref{fig:amp}.
+We can see that the low contrast values close to \(x=0\) are suppressed and large contrast values are linearly amplified by \(\beta=4\).
 
-While some alternatives have been introduced over the years, they either provided a poor cost-performance benefit, or turned out to be system dependent.
-For example, Yu et al.~\cite{yu_ultrasound_2010} proposed to use the smallest univalue segment assimilating nucleus (SUSAN,~\cite{smith_susan_1997}) edge detector while Mei et al.~\cite{mei_phase_2020} proposed to use phase assymetry (PAS,~\cite{kovesi_image_1999}).
-While SUSAN is very robust, it requires large computation windows which harms its cost-performance benefits.
-On the other hand, the PAS detector showed excellent results on the data used by Mei et al., but performed poorly on the data that we used for this study.
-This suggests that PAS is highly dependent on the properties of the ultrasound system it is applied.
+In the context of the cascaded Laplacian pyramid, we amplify the Laplacian image \({\boldsymbol\ell}_i\) using \(\vg_i\) before adding \(\widehat{\vg}_i\).
+Therefore, both the edges and noise are amplified when entering the enhancement filter \(F_i\), and the appropriate factor \(\beta\) will thus depend on the characteristics of \(F_i\).
 
-
-\subsubsection{Combining RPNCD and NCD}
-While RPNCD has yet been applied to ultrasound images, it exhibits good fine-graded speckle reduction properties.
-However, it cannot enhance the spatial coherence.
-
-
-While using the eigenvectors of the structure tensor improves spatial coherence, it is still succeptible to textured speckle patterns.
-This is shown in~\cref{fig:ncd_liver}, where we can see that the image processed with NCD exhibits flow-like artifacts.
-Therefore, naively applying 
-
-We will later combine both NCD and RPNCD, so that we can achieve both structure 
-
-
+\subsubsection{Cascading Anisotropic Diffusion Filters}
+For the filters \(F_0,\,\ldots\,, F_L\) in the cascaded Laplacian diffusion, we follow the approach of~\cite{kang_new_2016} and use a different filter for each level.
+In particular, we leverage the nonlinear coherent diffusion (NCD,~\cite{abd-elmoniem_realtime_2002}) and ramp-preserving nonlinear complex diffusion (RPNCD,~\cite{gilboa_image_2004}) filters.
+Both NCD and RPNCD can be efficiently implemented on GPUs and show good performance for our purpose.
+Recently introduced diffusion filters based on probabilistic tissue segmentation~\cite{hutchison_probabilisticdriven_2010, ramos-llorden_anisotropic_2015} require accurately estimating a probabilistic mixture model during execution, which is both computationally expensive and difficult to take advantage of GPUs.
+The method proposed by Mishra et al.~\cite{mishra_edge_2018} involves computing histogram of oriented gradients in the superpixel domain, which also cannot take advantage of GPUs.
+%
 \begin{figure}[H]
   \centering
   \subfloat[Original]{
     \includegraphics[trim={10cm, 10cm, 12cm, 5cm}, clip, scale=0.3]{figures/ncd_liver1.png}
   }
   \subfloat[NCD]{
-    \includegraphics[trim={10cm, 10cm, 12cm, 5cm}, clip, scale=0.3]{figures/ncd_liver2.png}
+    \includegraphics[trim={10cm, 10cm, 12cm, 5cm}, clip, scale=0.3]{figures/ncd_liver2.png}\label{fig:ncd}
   }
   \subfloat[RPNCD]{
-    \includegraphics[trim={10cm, 10cm, 12cm, 5cm}, clip, scale=0.3]{figures/rpncd_liver.png}
+    \includegraphics[trim={10cm, 10cm, 12cm, 5cm}, clip, scale=0.3]{figures/rpncd_liver.png}\label{fig:rpncd}
   }
-  \caption{Example of a liver image processed with NCD.
-    The textured speckle patterns result in flow-like artifacts.}\label{fig:ncd_liver}
+  \caption{Liver image processed with NCD and RPNCD.}\label{fig:ncd_liver}
 \end{figure}
+%
+
+Upper levels of the Laplacian pyramid contain macro structural features.
+In these levels, it is important to enhance large structures such as the myocardium in echocardiographic images, or the portal veins in the liver.
+Also, since upper levels contain the low frequency bands, they contain less noise, which allows aggressive filtering.
+For this purpose we leverage NCD, which enhances spatial coherence.
+When naively applied to ultrasound images, coherence enhancement tends to interact badly with speckle noise, resulting in artistic flow-like artifacts as shown in~\cref{fig:ncd}.
+Therefore, at last, NCD will be able to display its true potential when used in the upper levels of the cascaded Laplacian pyramid.
+
+On the other hand, lower levels contain lots of speckle noise, and less structural information.
+Therefore, on the lower levels, a filter with good speckle reduction property and good edge preservation shall be used.
+Ironically, most anisotropic diffusion filters perform some sort of edge-detection, which leaves us with a chicken-and-egg problem.
+On the other hand, anisotropic diffusion filters based on Kuan and Lee's coefficients~\cite{yongjianyu_speckle_2002, aja-fernandez_estimation_2006, krissian_oriented_2007} tend to result in blurry images that are less desirable.
+Instead, we propose to use RPNCD, which is based on a complex formulation of the anisotropic diffusion equation.
+Gilboa \textit{et al.} showed that the phase evolution of the complex diffusion acts as a smoothed Laplacian edge-detector, which is highly robust to noise.
+Although the RPNCD has not been used for ultrasound images, we found that it shows excellent speckle reduction properties, as shown in~\cref{fig:rpncd}.
+
+The overall cascaded Laplacian pyramid with edge-enhancement and our filters of choice is shown in~\cref{fig:clpd}.
+We use the NCD for the top two levels while the RPNCD is used only in the bottom level.
+Edge enhancement is only performed on the bottom two levels.
+
+\subsubsection{Parameters of the Cascaded Laplacian Pyramid}
+Our specific instance of the cascaded Laplacian pyramid has 4 levels (3 decimations).
+For the pre-aliasing filter before decimation, we use a Gaussian low-pass filter with standard deviation 1.
+We use a decimation rate of 2 for all levels.
+The two edge-enhancement steps have two parameters each: the contrast threshold \(\sigma_{\mathrm{LL}}\) and the gain \(\beta_{\mathrm{LL}}\).
+Each of the NCDs originally have 6 parameters: the smoothing rate of the structure tensor \(\rho\), the step size \(\Delta t\), the number of iterations \(N_{\text{iter.}}\), the diffusion threshold \(s\), the diffusion strength coefficient \(\alpha\).
+We set \(\rho = 2\), \(\Delta t = 2\), and \(N_{\text{iter.}} = 10\).
+The other parameters are tuned by the~\usdg.
+The RPNCD has 4 parameters: the edge threshold \(k\), the phase angle \(\theta\), the step size \(\Delta t\), and the number of iterations \(N_{\text{iter.}}\).
+We set \(\theta = 5^{\circ}\) as proposed in~\cite{gilboa_image_2004}, \(\Delta t = 0.3\), and \(N_{\text{iter.}} = 20\).
+The edge threshold \(k\) is tuned by the~\usdg.
+
+While ideally we would tune all the parameters using the~\usdg, BO takes longer to converge in high-dimensions.
+Therefore, we reduced the number of parameters as possible.
+Also, nonlinearity between parameters make the optimization problem fundamentally more challenging.
+This happens when different parameters strongly depend on each other, or have a similar effect.
+A typical example is the diffusion step size \(\Delta t\) and iteration number \(N_{\text{iter.}}\), where their effect is determined by the product (diffusion time) \(\Delta t \cdot N_{\text{iter.}}\).
+
+\begin{table}
+  \centering
+  \caption{Parameters Tuned by the~\usdg}\label{table:params}
+  \begin{threeparttable}
+  \begin{tabular}{llrl}
+    \toprule
+    \multicolumn{1}{c}{\textbf{Parameter}}
+    & \multicolumn{1}{c}{\textbf{Origin}}
+    & \multicolumn{1}{c}{\textbf{Range}}
+    & \multicolumn{1}{c}{\textbf{Scale}}
+    \\ \midrule
+    \(\sigma_{\mathrm{LL}_0}\), \(\sigma_{\mathrm{LL}_1}\)  & Edge-Enhance & [\(10^{\text{-}4}\), \(10^{\text{-}2}\)] & Exp.  \\
+    \(\beta_{\mathrm{LL}_0}\), \(\sigma_{\mathrm{LL}_1}\)   & Edge-Enhance & [1, 5]                   & Lin. \\
+    \(\alpha_{\mathrm{NCD}_1}\), \(\alpha_{\mathrm{NCD}_2}\) & NCD          & [\(0.03\), \(0.1\)]     & Lin.  \\
+    \(s_{\mathrm{NCD}_1}\), \(s_{\mathrm{NCD}_2}\)           & NCD          & [\(1\), \(100\)]        & Lin. \\
+    \(k_{\text{RPNCD}}\)                                & RPNCD        & [\(10^{\text{-}4}\), \(10^{\text{-}2}\)] & Exp. \\\bottomrule
+  \end{tabular}
+  \end{threeparttable}
+\end{table}
+%
+The ranges and scales of the parameters to be tuned by the~\usdg~are organized in~\cref{table:params}.
+A total of 9 parameters are used, resulting in a 9-dimensional optimization problem.
+The number in the subscript denote the level they are used within the pyramid (also refer to~\cref{fig:clpd}).
+The range \([0, 1]\) used by the~\usdg~is transformed either linearly (Lin.) or exponentially (Exp.) to the range of each parameter.
+
+%% \begin{align}
+%%   \mT = K_{\rho} * \left( \nabla_{\sigma} I \; {\nabla_{\sigma} I}^{\top} \right) 
+%% \end{align}
+%% where \(K_{\rho}\) is a Gaussian smoothing filter with standard deviation \(\rho\), \(\nabla_{\sigma}I\) is the gradient of \(I\) smoothed with a Gaussian filter with standard deviation \(\sigma\).
+%% NCD is known to 
+
+%% Smoothing the outer product of the gradient with \(K_{\rho}\) improves the spatial coherence of the diffusion directions.
+%% For the diffusion strengths \(\lambda_1\) and \(\lambda_2\), NCD uses the eigenvalues of the structure tensor \(\mu_1\) and \(\mu_2\) such that
+%% \begin{align}
+%%   \lambda_1 &= \begin{cases}
+%%     \; \alpha \, \left(1 - \frac{\kappa}{s^2}\right) &  \text{if}\quad \kappa < s^2  \\
+%%     \; 0 & \text{otherwise}\quad
+%%     \end{cases} \\
+%%   \lambda_2 &= \alpha
+%% \end{align}
+%% where \(\kappa = {(\mu_1 - \mu_2)}^2\), \(s\) is a threshold determining the amount smoothing towards \(\vv_1\), and \(\alpha\) determines the overall amount of smoothing.
+%% While the original NCD algorithm uses a regularization term \(\beta\), we ommited it as we did not find it useful.
+
+%% Meanwhile, Gilboa et al.~\cite{gilboa_image_2004} proposed a novel diffusion scheme that circumvents the need for explicit edge detection.
+%% They proposed the \textit{ramp-preserving nonlinear complex diffusion} (RPNCD) which is described as
+%% \begin{align}
+%%   \frac{\partial  I\,(x, y, t)}{\partial t} &= \nabla \cdot \big(\, c\,(x, y, t) \, \nabla I(x, y, t) \big) \\
+%%   c\left(x, y, t\right) &= \frac{e^{j \theta}}{ 1 + {\left( \frac{\mathrm{Im}\left(I(x, y, t)\right)}{ k \, \theta } \right)}^2}
+%% \end{align}
+%% where \(k\) is an edge threshold, \(\mathrm{Im}\left(I(x, y, t)\right)\) is the imaginary part of \(I(x,y,t)\), \(\theta\) is a phase angle parameter.
+%% Here, \(\mathrm{Im}\left(I(x, y, t)\right)\) acts as an edge detector which behaves similarly as the smoothed image laplacian.
 
 
-When combined with multiscale methods, the structure matrix 
+%% While many speckle reduction algorithms have been designed to be used on a single scale, many of these algorithms can be improved by considering \textit{multiple image scales}.
+%% The two most popular approaches are based on the wavelet decomposition and the Laplacian pyramid decomposition.
+
+%% Multiscale analysis 
+
+%% \cite{10.1145/2010324.1964963}
 
 
+%% \subsubsection{Overview}
+
+
+%% \paragraph{Diffusion Strength and Edge Detection}
+%% While various alternative choices for determining \(\lambda_1, \lambda_2\), have been proposed over the years, most of them require some form of edge detection.
+%% Therefore, accurate edge-detection must be performed \textit{before} we perform speckle reduction, which is particularly challenging.
+%% In the case of NCD, \(\kappa = {(\mu_1 - \mu_2)}^2\) acts as an edge detector which provides a good cost-performance tradeoff when used as a primary edge-detector for speckle reduction.
+
+%% While some alternatives have been introduced over the years, they either provided a poor cost-performance benefit, or turned out to be system dependent.
+%% For example, Yu et al.~\cite{yu_ultrasound_2010} proposed to use the smallest univalue segment assimilating nucleus (SUSAN,~\cite{smith_susan_1997}) edge detector while Mei et al.~\cite{mei_phase_2020} proposed to use phase assymetry (PAS,~\cite{kovesi_image_1999}).
+%% While SUSAN is very robust, it requires large computation windows which harms its cost-performance benefits.
+%% On the other hand, the PAS detector showed excellent results on the data used by Mei et al., but performed poorly on the data that we used for this study.
+%% This suggests that PAS is highly dependent on the properties of the ultrasound system it is applied.
 
 %%% Local Variables:
 %%% TeX-master: "master"

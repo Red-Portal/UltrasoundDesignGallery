@@ -24,13 +24,13 @@
 \bibitem{contrerasortiz_ultrasound_2012}
 S.~H. Contreras~Ortiz, T.~Chiu, and M.~D. Fox,
   ``\BIBforeignlanguage{en}{Ultrasound image enhancement: A review},''
-  \emph{\BIBforeignlanguage{en}{Biomedical Signal Processing and Control}},
-  vol.~7, no.~5, pp. 419--428, Sep. 2012.
+  \emph{\BIBforeignlanguage{en}{Biomed. Signal Process. Control}}, vol.~7,
+  no.~5, pp. 419--428, Sep. 2012.
 
 \bibitem{finn_echocardiographic_2011}
 S.~Finn, M.~Glavin, and E.~Jones, ``Echocardiographic speckle reduction
-  comparison,'' \emph{IEEE Transactions on Ultrasonics, Ferroelectrics and
-  Frequency Control}, vol.~58, no.~1, pp. 82--101, Jan. 2011.
+  comparison,'' \emph{IEEE Trans. Ultrason., Ferroelect., Freq. Contr.},
+  vol.~58, no.~1, pp. 82--101, Jan. 2011.
 
 \bibitem{duarte-salazar_speckle_2020}
 C.~A. {Duarte-Salazar}, A.~E. {Castro-Ospina}, M.~A. Becerra, and
@@ -42,368 +42,340 @@ C.~A. {Duarte-Salazar}, A.~E. {Castro-Ospina}, M.~A. Becerra, and
 G.~{Ramos-Llorden}, G.~{Vegas-Sanchez-Ferrero}, M.~{Martin-Fernandez},
   C.~{Alberola-Lopez}, and S.~{Aja-Fernandez}, ``Anisotropic diffusion filter
   with memory based on speckle statistics for ultrasound images,'' \emph{IEEE
-  Transactions on Image Processing}, vol.~24, no.~1, pp. 345--358, Jan. 2015.
+  Trans. Image Process.}, vol.~24, no.~1, pp. 345--358, Jan. 2015.
 
 \bibitem{tay_ultrasound_2006}
 P.~C. Tay, S.~T. Acton, and J.~A. Hossack, ``Ultrasound despeckling using an
-  adaptive window stochastic approach,'' in \emph{International {{Conference}}
-  on {{Image Processing}}}.\hskip 1em plus 0.5em minus 0.4em\relax {Atlanta,
-  GA}: {IEEE}, Oct. 2006, pp. 2549--2552.
+  adaptive window stochastic approach,'' in \emph{Proc. {{Int}}. {{Conf}}.
+  {{Image Process}}.}, {Atlanta, GA}, Oct. 2006, pp. 2549--2552.
 
 \bibitem{mishra_edge_2018}
 D.~Mishra, S.~Chaudhury, M.~Sarkar, A.~S. Soin, and V.~Sharma, ``Edge
   probability and pixel relativity-based speckle reducing anisotropic
-  diffusion,'' \emph{IEEE Transactions on Image Processing}, vol.~27, no.~2,
-  pp. 649--664, Feb. 2018.
+  diffusion,'' \emph{IEEE Trans. Image Process.}, vol.~27, no.~2, pp. 649--664,
+  Feb. 2018.
 
 \bibitem{outtas_subjective_2018}
-M.~Outtas, L.~Zhang, O.~Deforges, A.~Serir, W.~Hamidouche, and Y.~Chen,
-  ``Subjective and objective evaluations of feature selected multi output
-  filter for speckle reduction on ultrasound images,'' \emph{Physics in
-  Medicine \& Biology}, vol.~63, no.~18, p. 185014, Sep. 2018.
+M.~Outtas \emph{et~al.}, ``Subjective and objective evaluations of feature
+  selected multi output filter for speckle reduction on ultrasound images,''
+  \emph{Phys. Med. Biol.}, vol.~63, no.~18, p. 185014, Sep. 2018.
 
 \bibitem{loizou_comparative_2005}
-C.~Loizou, C.~Pattichis, C.~Christodoulou, R.~Istepanian, M.~Pantziaris, and
-  A.~Nicolaides, ``Comparative evaluation of despeckle filtering in ultrasound
-  imaging of the carotid artery,'' \emph{IEEE Transactions on Ultrasonics,
-  Ferroelectrics and Frequency Control}, vol.~52, no.~10, pp. 1653--1669, Oct.
-  2005.
+C.~Loizou \emph{et~al.}, ``Comparative evaluation of despeckle filtering in
+  ultrasound imaging of the carotid artery,'' \emph{IEEE Trans. Ultrason.,
+  Ferroelect., Freq. Contr.}, vol.~52, no.~10, pp. 1653--1669, Oct. 2005.
 
 \bibitem{loizou_quality_2006}
 C.~P. Loizou, C.~S. Pattichis, M.~Pantziaris, T.~Tyllis, and A.~Nicolaides,
   ``\BIBforeignlanguage{en}{Quality evaluation of ultrasound imaging in the
   carotid artery based on normalization and speckle reduction filtering},''
-  \emph{\BIBforeignlanguage{en}{Medical \& Biological Engineering \&
-  Computing}}, vol.~44, no.~5, pp. 414--426, May 2006.
+  \emph{\BIBforeignlanguage{en}{Med. Biol. Eng. Comput.}}, vol.~44, no.~5, pp.
+  414--426, May 2006.
 
 \bibitem{hemmsen_ultrasound_2010}
 M.~C. Hemmsen, M.~M. Petersen, S.~I. Nikolov, M.~B. Nielsen, and J.~A. Jensen,
   ``Ultrasound image quality assessment: A framework for evaluation of clinical
-  image quality,'' in \emph{{{SPIE Medical Imaging}}}, {San Diego, California,
-  USA}, Mar. 2010, p. 76290C.
+  image quality,'' in \emph{Proc. {{SPIE Med}}. {{Imag}}.}, {San Diego,
+  California, USA}, Mar. 2010, p. 76290C.
 
 \bibitem{wong_monte_2012}
 A.~Wong and J.~Scharcanski, ``\BIBforeignlanguage{en}{Monte {{Carlo}}
   despeckling of transrectal ultrasound images of the prostate},''
-  \emph{\BIBforeignlanguage{en}{Digital Signal Processing}}, vol.~22, no.~5,
-  pp. 768--775, Sep. 2012.
+  \emph{\BIBforeignlanguage{en}{Digit. Signal Process.}}, vol.~22, no.~5, pp.
+  768--775, Sep. 2012.
 
 \bibitem{kang_new_2016}
 J.~Kang, J.~Y. Lee, and Y.~Yoo, ``A new feature-enhanced speckle reduction
   method based on multiscale analysis for ultrasound {{B}}-mode imaging,''
-  \emph{IEEE Transactions on Biomedical Engineering}, vol.~63, no.~6, pp.
-  1178--1191, Jun. 2016.
+  \emph{IEEE Trans. Biomed. Eng.}, vol.~63, no.~6, pp. 1178--1191, Jun. 2016.
 
 \bibitem{chow_review_2016}
 L.~S. Chow and R.~Paramesran, ``\BIBforeignlanguage{en}{Review of medical image
-  quality assessment},'' \emph{\BIBforeignlanguage{en}{Biomedical Signal
-  Processing and Control}}, vol.~27, pp. 145--154, May 2016.
+  quality assessment},'' \emph{\BIBforeignlanguage{en}{Biomed. Signal Process.
+  Control}}, vol.~27, pp. 145--154, May 2016.
 
 \bibitem{brochu_bayesian_2010}
 E.~Brochu, T.~Brochu, and N.~{de Freitas}, ``A {{Bayesian Interactive
-  Optimization Approach}} to {{Procedural Animation Design}},'' in
-  \emph{Proceedings of the 2010 {{ACM SIGGRAPH}}/{{Eurographics Symposium}} on
-  {{Computer Animation}}}, ser. {{SCA}} '10.\hskip 1em plus 0.5em minus
-  0.4em\relax {Goslar, DEU}: {Eurographics Association}, 2010, pp. 103--112.
+  Optimization Approach}} to {{Procedural Animation Design}},'' in \emph{Proc.
+  {{ACM SIGGRAPH}}/{{Eurographics Symp}}. {{Comput}}. {{Animation}}}, ser.
+  {{SCA}} '10, {Goslar, DEU}, 2010, pp. 103--112.
 
 \bibitem{10.1145/3072959.3073598}
 Y.~Koyama, I.~Sato, D.~Sakamoto, and T.~Igarashi, ``Sequential line search for
-  efficient visual design optimization by crowds,'' \emph{ACM Transactions on
-  Graphics}, vol.~36, no.~4, Jul. 2017.
+  efficient visual design optimization by crowds,'' \emph{ACM Trans. Graph.},
+  vol.~36, no.~4, Jul. 2017.
 
 \bibitem{koyama_sequential_2020}
 Y.~Koyama, I.~Sato, and M.~Goto, ``\BIBforeignlanguage{en}{Sequential gallery
   for interactive visual design optimization},''
-  \emph{\BIBforeignlanguage{en}{ACM Transactions on Graphics}}, vol.~39, no.~4,
-  pp. 88:1--88:12, Jul. 2020.
+  \emph{\BIBforeignlanguage{en}{ACM Trans. Graph.}}, vol.~39, no.~4, pp.
+  88:1--88:12, Jul. 2020.
 
 \bibitem{phan_color_2018}
 H.~Q. Phan, H.~Fu, and A.~B. Chan, ``Color orchestra: {{Ordering}} color
-  palettes for interpolation and prediction,'' \emph{IEEE Transactions on
-  Visualization and Computer Graphics}, vol.~24, no.~6, pp. 1942--1955, Jun.
-  2018.
+  palettes for interpolation and prediction,'' \emph{IEEE Trans. Visual.
+  Comput. Graphics}, vol.~24, no.~6, pp. 1942--1955, Jun. 2018.
 
 \bibitem{pmlr-v119-mikkola20a}
 P.~Mikkola, M.~Todorovi{\'c}, J.~J{\"a}rvi, P.~Rinke, and S.~Kaski,
-  ``Projective preferential {{Bayesian}} optimization,'' in \emph{Proceedings
-  of the 37th International Conference on Machine Learning ({{ICML}})}, ser.
-  Proceedings of Machine Learning Research, vol. 119.\hskip 1em plus 0.5em
-  minus 0.4em\relax {ML Research Press}, Jul. 2020, pp. 6884--6892.
+  ``Projective preferential {{Bayesian}} optimization,'' in \emph{Proc.
+  {{Int}}. {{Conf}}. {{Mach}}. {{Learn}}.}, ser. Proceedings of Machine
+  Learning Research, vol. 119, Jul. 2020, pp. 6884--6892.
 
 \bibitem{rasmussen_gaussian_2006}
 C.~E. Rasmussen and C.~K.~I. Williams, \emph{Gaussian Processes for Machine
-  Learning}, ser. Adaptive {{Comput}}. {{Mach}}. {{Learn}}.\hskip 1em plus
-  0.5em minus 0.4em\relax {Cambridge, Mass}: {MIT Press}, 2006.
+  Learning}, ser. Adaptive {{Comput}}. {{Mach}}. {{Learn}}., {Cambridge, Mass},
+  2006.
 
 \bibitem{shahriari_taking_2016}
 B.~Shahriari, K.~Swersky, Z.~Wang, R.~P. Adams, and N.~de~Freitas, ``Taking the
-  human out of the loop: A review of {{Bayesian}} optimization,''
-  \emph{Proceedings of the IEEE}, vol. 104, no.~1, pp. 148--175, Jan. 2016.
+  human out of the loop: A review of {{Bayesian}} optimization,'' \emph{Proc.
+  IEEE}, vol. 104, no.~1, pp. 148--175, Jan. 2016.
 
 \bibitem{burt_laplacian_1983}
 P.~Burt and E.~Adelson, ``\BIBforeignlanguage{en}{The {{Laplacian}} pyramid as
-  a compact image code},'' \emph{\BIBforeignlanguage{en}{IEEE Transactions on
-  Communications}}, vol.~31, no.~4, pp. 532--540, Apr. 1983.
+  a compact image code},'' \emph{\BIBforeignlanguage{en}{IEEE Trans. Commun.}},
+  vol.~31, no.~4, pp. 532--540, Apr. 1983.
 
 \bibitem{perona_scalespace_1990}
 P.~Perona and J.~Malik, ``Scale-space and edge detection using anisotropic
-  diffusion,'' \emph{IEEE Transactions on Pattern Analysis and Machine
-  Intelligence}, vol.~12, no.~7, pp. 629--639, Jul. 1990.
+  diffusion,'' \emph{IEEE Trans. Pattern Anal. Machine Intell.}, vol.~12,
+  no.~7, pp. 629--639, Jul. 1990.
 
 \bibitem{weickert_anisotropic_1998}
 J.~Weickert, \emph{Anisotropic {{Diffusion}} in {{Image Processing}}}, ser.
-  {{ECMI}}.\hskip 1em plus 0.5em minus 0.4em\relax {Stuttgart, Germany}:
-  {Teubner-Verlag,}, 1998.
+  {{ECMI}}, {Stuttgart, Germany}, 1998.
 
 \bibitem{zhang_multiscale_2006}
 F.~Zhang, Y.~M. Yoo, Y.~Kim, L.~Zhang, and L.~M. Koh, ``Multiscale nonlinear
-  diffusion and shock filter for ultrasound image enhancement,'' in
-  \emph{Proceedings of the {{IEEE Computer Society Conference}} on {{Computer
-  Vision}} and {{Pattern Recognition}}}, ser. {{CVPR}}'06, vol.~2.\hskip 1em
-  plus 0.5em minus 0.4em\relax {New York, NY, USA}: {IEEE}, 2006, pp.
+  diffusion and shock filter for ultrasound image enhancement,'' in \emph{Proc.
+  {{IEEE Comput}}. {{Soc}}. {{Conf}}. {{Comput}}. {{Vision Pattern
+  Recognit}}.}, ser. {{CVPR}}'06, vol.~2, {New York, NY, USA}, 2006, pp.
   1972--1977.
 
 \bibitem{zhang_nonlinear_2007}
 F.~Zhang, Y.~M. Yoo, L.~M. Koh, and Y.~Kim, ``Nonlinear {{Diffusion}} in
   {{Laplacian Pyramid Domain}} for {{Ultrasonic Speckle Reduction}},''
-  \emph{IEEE Transactions on Medical Imaging}, vol.~26, no.~2, pp. 200--211,
-  Feb. 2007.
+  \emph{IEEE Trans. Med. Imaging}, vol.~26, no.~2, pp. 200--211, Feb. 2007.
 
 \bibitem{vu_bf_2012}
 C.~T. Vu, T.~D. Phan, and D.~M. Chandler, ``\$\{\textbackslash bf
   \vphantom\}{{S}}\vphantom\{\}\_\{3\}\$: {{A Spectral}} and {{Spatial
   Measure}} of {{Local Perceived Sharpness}} in {{Natural Images}},''
-  \emph{IEEE Transactions on Image Processing}, vol.~21, no.~3, pp. 934--945,
-  Mar. 2012.
+  \emph{IEEE Trans. on Image Process.}, vol.~21, no.~3, pp. 934--945, Mar.
+  2012.
 
 \bibitem{10.2307/27821441}
 D.~C. Kingsley and T.~C. Brown, ``Preference uncertainty, preference learning,
-  and paired comparison experiments,'' \emph{Land Economics}, vol.~86, no.~3,
-  pp. 530--544, 2010.
+  and paired comparison experiments,'' \emph{Land Econ.}, vol.~86, no.~3, pp.
+  530--544, 2010.
 
 \bibitem{NIPS2007_b6a1085a}
 E.~Brochu, N.~{de Freitas}, and A.~Ghosh, ``Active preference learning with
-  discrete choice data,'' in \emph{Advances in Neural Information Processing
-  Systems}, vol.~20.\hskip 1em plus 0.5em minus 0.4em\relax {Curran Associates,
-  Inc.}, 2008.
+  discrete choice data,'' in \emph{Adv. {{Neural Inf}}. {{Process}}.
+  {{Syst}}.}, vol.~20, 2008.
 
 \bibitem{10.1145/258734.258887}
-J.~Marks, B.~Andalman, P.~A. Beardsley, W.~Freeman, S.~Gibson, J.~Hodgins,
-  T.~Kang, B.~Mirtich, H.~Pfister, W.~Ruml, K.~Ryall, J.~Seims, and S.~Shieber,
-  ``Design galleries: {{A}} general approach to setting parameters for computer
-  graphics and animation,'' in \emph{Proceedings of the 24th Annual Conference
-  on Computer Graphics and Interactive Techniques ({{SIGGRAPH}})}.\hskip 1em
-  plus 0.5em minus 0.4em\relax {USA}: {ACM Press/Addison-Wesley Publishing
-  Co.}, 1997, pp. 389--400.
+J.~Marks \emph{et~al.}, ``Design galleries: {{A}} general approach to setting
+  parameters for computer graphics and animation,'' in \emph{Proc. {{Annu}}.
+  {{Conf}}. {{Comput}}. {{Graph}}. {{Interact}}. {{Techn}}.}, ser.
+  {{SIGGRAPH}}'97, {USA}, 1997, pp. 389--400.
 
 \bibitem{pmlr-v70-gonzalez17a}
 J.~Gonz{\'a}lez, Z.~Dai, A.~Damianou, and N.~D. Lawrence, ``Preferential
-  {{Bayesian}} optimization,'' in \emph{Proceedings of the 34th International
-  Conference on Machine Learning}, ser. Proceedings of Machine Learning
-  Research, vol.~70.\hskip 1em plus 0.5em minus 0.4em\relax {ML Research
-  Press}, Aug. 2017, pp. 1282--1291.
+  {{Bayesian}} optimization,'' in \emph{Proc. {{Int}}. {{Conf}}. {{Mach}}.
+  {{Learn}}.}, ser. Proc. {{Mach}}. {{Learn}}. {{Res}}., vol.~70, Aug. 2017,
+  pp. 1282--1291.
 
 \bibitem{williams_bayesian_1998}
 C.~K. Williams and D.~Barber, ``Bayesian classification with {{Gaussian}}
-  processes,'' \emph{IEEE Transactions on Pattern Analysis and Machine
-  Intelligence}, vol.~20, no.~12, pp. 1342--1351, Dec./1998.
+  processes,'' \emph{IEEE Trans. Pattern Anal. Machine Intell.}, vol.~20,
+  no.~12, pp. 1342--1351, Dec./1998.
 
 \bibitem{nocedal_numerical_2006}
 J.~Nocedal and S.~J. Wright, \emph{\BIBforeignlanguage{en}{Numerical
-  {{Optimization}}}}, ser. Springer {{Series}} in {{Operations Research}} and
-  {{Financial Engineering}}.\hskip 1em plus 0.5em minus 0.4em\relax {Springer
-  New York}, 2006.
+  {{Optimization}}}}, ser. Springer {{Ser}}. {{Oper}}. {{Res}}. {{Financial
+  Eng}}., 2006.
 
 \bibitem{nelder_simplex_1965}
 J.~A. Nelder and R.~Mead, ``\BIBforeignlanguage{en}{A simplex method for
-  function minimization},'' \emph{\BIBforeignlanguage{en}{The Computer
-  Journal}}, vol.~7, no.~4, pp. 308--313, Jan. 1965.
+  function minimization},'' \emph{\BIBforeignlanguage{en}{The Comput. J.}},
+  vol.~7, no.~4, pp. 308--313, Jan. 1965.
 
 \bibitem{henrandez-lobato_predictive_2014}
 J.~M. {Henr{\'a}ndez-Lobato}, M.~W. Hoffman, and Z.~Ghahramani, ``Predictive
   entropy search for efficient global optimization of black-box functions,'' in
-  \emph{Advances in {{Neural Information Processing Systems}}}, ser.
-  {{NIPS}}'14, vol.~27, 2014, pp. 918--926.
+  \emph{Adv. {{Neural Inf}}. {{Process}}. {{Syst}}.}, ser. {{NIPS}}'14,
+  vol.~27, 2014, pp. 918--926.
 
 \bibitem{snoek_practical_2012}
 J.~Snoek, H.~Larochelle, and R.~P. Adams, ``Practical {{Bayesian}} optimization
-  of machine learning algorithms,'' in \emph{Advances in {{Neural Information
-  Processing Systems}}}, ser. {{NIPS}}'12, vol.~25.\hskip 1em plus 0.5em minus
-  0.4em\relax {USA}: {Curran Associates Inc.}, 2012, pp. 2951--2959.
+  of machine learning algorithms,'' in \emph{Adv. {{Neural Inf}}. {{Process}}.
+  {{Syst}}.}, ser. {{NIPS}}'12, vol.~25, {USA}, 2012, pp. 2951--2959.
 
 \bibitem{ath_bayesian_2021}
 J.~F. George De~Ath, Richard~Everson, ``How {{Bayesian}} should {{Bayesian}}
-  optimisation be?'' in \emph{Proceedings of the Genetic and Evolutionary
-  Computation Conference Companion}, ser. {{GECCO}} '20.\hskip 1em plus 0.5em
-  minus 0.4em\relax {New York, NY, USA}: {Association for Computing Machinery},
-  2021.
+  optimisation be?'' in \emph{Proc. {{Genetic Evol}}. {{Comput}}. {{Conf}}.
+  {{Companion}}}, ser. {{GECCO}} '20, {New York, NY, USA}, 2021.
 
 \bibitem{filippone_pseudomarginal_2014}
 M.~Filippone and M.~Girolami, ``Pseudo-marginal {{Bayesian}} inference for
-  {{Gaussian}} processes,'' \emph{IEEE Transactions on Pattern Analysis and
-  Machine Intelligence}, vol.~36, no.~11, pp. 2214--2226, Nov. 2014.
+  {{Gaussian}} processes,'' \emph{IEEE Trans. Pattern Anal. Mach. Intell.},
+  vol.~36, no.~11, pp. 2214--2226, Nov. 2014.
 
 \bibitem{pmlr-v51-murray16}
-I.~Murray and M.~Graham, ``Pseudo-marginal slice sampling,'' in
-  \emph{Proceedings of the 19th International Conference on Artificial
-  Intelligence and Statistics ({{AISTATS}})}, ser. Proceedings of Machine
-  Learning Research, vol.~51.\hskip 1em plus 0.5em minus 0.4em\relax {Cadiz,
-  Spain}: {ML Research Press}, May 2016, pp. 911--919.
+I.~Murray and M.~Graham, ``Pseudo-marginal slice sampling,'' in \emph{Proc.
+  {{Int}}. {{Conf}}. {{Artif}}. {{Intell}}. {{Statist}}.}, ser. Proc. of
+  {{Mach}}. {{Learn}}. {{Res}}., vol.~51, {Cadiz, Spain}, May 2016, pp.
+  911--919.
 
 \bibitem{jones_efficient_1998}
 D.~R. Jones, M.~Schonlau, and W.~J. Welch, ``Efficient global optimization of
-  expensive black-box functions,'' \emph{Journal of Global Optimization},
-  vol.~13, no.~4, pp. 455--492, 1998.
+  expensive black-box functions,'' \emph{J. Glob. Optim.}, vol.~13, no.~4, pp.
+  455--492, 1998.
 
 \bibitem{liu_limited_1989}
 D.~C. Liu and J.~Nocedal, ``\BIBforeignlanguage{en}{On the limited memory
   {{BFGS}} method for large scale optimization},''
-  \emph{\BIBforeignlanguage{en}{Mathematical Programming}}, vol.~45, no. 1-3,
-  pp. 503--528, Aug. 1989.
+  \emph{\BIBforeignlanguage{en}{Math. Program.}}, vol.~45, no. 1-3, pp.
+  503--528, Aug. 1989.
 
 \bibitem{yongjianyu_speckle_2002}
 {Yongjian Yu} and S.~Acton, ``\BIBforeignlanguage{en}{Speckle reducing
-  anisotropic diffusion},'' \emph{\BIBforeignlanguage{en}{IEEE Transactions on
-  Image Processing}}, vol.~11, no.~11, pp. 1260--1270, Nov. 2002.
+  anisotropic diffusion},'' \emph{\BIBforeignlanguage{en}{IEEE Trans. Image
+  Process.}}, vol.~11, no.~11, pp. 1260--1270, Nov. 2002.
 
 \bibitem{abd-elmoniem_realtime_2002}
 K.~{Abd-Elmoniem}, A.-B. Youssef, and Y.~Kadah,
   ``\BIBforeignlanguage{en}{Real-time speckle reduction and coherence
   enhancement in ultrasound imaging via nonlinear anisotropic diffusion},''
-  \emph{\BIBforeignlanguage{en}{IEEE Transactions on Biomedical Engineering}},
-  vol.~49, no.~9, pp. 997--1014, Sep. 2002.
+  \emph{\BIBforeignlanguage{en}{IEEE Trans. Biomed. Eng.}}, vol.~49, no.~9, pp.
+  997--1014, Sep. 2002.
 
 \bibitem{xulizong_speckle_1998}
 {Xuli Zong}, A.~Laine, and E.~Geiser, ``Speckle reduction and contrast
   enhancement of echocardiograms via multiscale nonlinear processing,''
-  \emph{IEEE Transactions on Medical Imaging}, vol.~17, no.~4, pp. 532--540,
-  Aug./1998.
+  \emph{IEEE Trans. Med. Imaging}, vol.~17, no.~4, pp. 532--540, Aug./1998.
 
 \bibitem{xiaohuihao_novel_1999}
 {Xiaohui Hao}, {Shangkai Gao}, and {Xiaorong Gao}, ``A novel multiscale
   nonlinear thresholding method for ultrasonic speckle suppressing,''
-  \emph{IEEE Transactions on Medical Imaging}, vol.~18, no.~9, pp. 787--794,
-  Sept./1999.
+  \emph{IEEE Trans. Med. Imaging}, vol.~18, no.~9, pp. 787--794, Sept./1999.
 
 \bibitem{pizurica_versatile_2003}
 A.~Pizurica, W.~Philips, I.~Lemahieu, and M.~Acheroy,
   ``\BIBforeignlanguage{en}{A versatile wavelet domain noise filtration
-  technique for medical imaging},'' \emph{\BIBforeignlanguage{en}{IEEE
-  Transactions on Medical Imaging}}, vol.~22, no.~3, pp. 323--331, Mar. 2003.
+  technique for medical imaging},'' \emph{\BIBforeignlanguage{en}{IEEE Trans.
+  Med. Imaging}}, vol.~22, no.~3, pp. 323--331, Mar. 2003.
 
 \bibitem{yongyue_nonlinear_2006}
 {Yong Yue}, M.~Croitoru, A.~Bidani, J.~Zwischenberger, and J.~Clark,
   ``Nonlinear multiscale wavelet diffusion for speckle suppression and edge
-  enhancement in ultrasound images,'' \emph{IEEE Transactions on Medical
-  Imaging}, vol.~25, no.~3, pp. 297--311, Mar. 2006.
+  enhancement in ultrasound images,'' \emph{IEEE Trans. Med. Imaging}, vol.~25,
+  no.~3, pp. 297--311, Mar. 2006.
 
 \bibitem{sattar_image_1997}
 F.~Sattar, L.~Floreby, G.~Salomonsson, and B.~Lovstrom, ``Image enhancement
-  based on a nonlinear multiscale method,'' \emph{IEEE Transactions on Image
-  Processing}, vol.~6, no.~6, pp. 888--895, Jun. 1997.
+  based on a nonlinear multiscale method,'' \emph{IEEE Trans. Image Process.},
+  vol.~6, no.~6, pp. 888--895, Jun. 1997.
 
 \bibitem{vuylsteke_multiscale_1994}
 P.~Vuylsteke and E.~P. Schoeters, ``Multiscale image contrast amplification
-  ({{MUSICA}}),'' in \emph{Medical {{Imaging}} 1994}, {Newport Beach, CA}, May
-  1994, pp. 551--560.
+  ({{MUSICA}}),'' in \emph{Proc. {{SPIE Med}}. {{Imag}}.}, {Newport Beach, CA},
+  May 1994, pp. 551--560.
 
 \bibitem{stahl_noiseresistant_1999}
 M.~Stahl, T.~Aach, T.~M. Buzug, S.~Dippel, and U.~Neitzel, ``Noise-resistant
-  weak-structure enhancement for digital radiography,'' in \emph{Medical
-  {{Imaging}} '99}, {San Diego, CA}, May 1999, pp. 1406--1417.
+  weak-structure enhancement for digital radiography,'' in \emph{Proc. {{SPIE
+  Med}}. {{Imag}}.}, {San Diego, CA}, May 1999, pp. 1406--1417.
 
 \bibitem{dippel_multiscale_2002}
 S.~Dippel, M.~Stahl, R.~Wiemker, and T.~Blaffert,
   ``\BIBforeignlanguage{en}{Multiscale contrast enhancement for radiographies:
   {{Laplacian}} pyramid versus fast wavelet transform},''
-  \emph{\BIBforeignlanguage{en}{IEEE Transactions on Medical Imaging}},
-  vol.~21, no.~4, pp. 343--353, Apr. 2002.
+  \emph{\BIBforeignlanguage{en}{IEEE Trans. Med. Imaging}}, vol.~21, no.~4, pp.
+  343--353, Apr. 2002.
 
 \bibitem{10.1145/2010324.1964963}
 S.~Paris, S.~W. Hasinoff, and J.~Kautz, ``Local {{Laplacian}} filters:
   {{Edge}}-aware image processing with a {{Laplacian}} pyramid,'' \emph{ACM
-  Transactions on Graphics}, vol.~30, no.~4, Jul. 2011.
+  Trans. Graph.}, vol.~30, no.~4, Jul. 2011.
 
 \bibitem{gilboa_image_2004}
 G.~Gilboa, N.~Sochen, and Y.~Zeevi, ``\BIBforeignlanguage{en}{Image enhancement
   and denoising by complex diffusion processes},''
-  \emph{\BIBforeignlanguage{en}{IEEE Transactions on Pattern Analysis and
-  Machine Intelligence}}, vol.~26, no.~8, pp. 1020--1036, Aug. 2004.
-
-\bibitem{hutchison_probabilisticdriven_2010}
-D.~Hutchison, T.~Kanade, J.~Kittler, J.~M. Kleinberg, F.~Mattern, J.~C.
-  Mitchell, M.~Naor, O.~Nierstrasz, C.~Pandu~Rangan, B.~Steffen, M.~Sudan,
-  D.~Terzopoulos, D.~Tygar, M.~Y. Vardi, G.~Weikum, G.~{Vegas-Sanchez-Ferrero},
-  S.~{Aja-Fernandez}, M.~{Martin-Fernandez}, A.~F. Frangi, and C.~Palencia,
-  ``Probabilistic-{{Driven Oriented Speckle Reducing Anisotropic Diffusion}}
-  with {{Application}} to {{Cardiac Ultrasonic Images}},'' in \emph{Medical
-  {{Image Computing}} and {{Computer}}-{{Assisted Intervention}} \textendash{}
-  {{MICCAI}} 2010}.\hskip 1em plus 0.5em minus 0.4em\relax {Berlin,
-  Heidelberg}: {Springer Berlin Heidelberg}, 2010, vol. 6361, pp. 518--525.
+  \emph{\BIBforeignlanguage{en}{IEEE Trans. Pattern Anal. Mach. Intell.}},
+  vol.~26, no.~8, pp. 1020--1036, Aug. 2004.
 
 \bibitem{aja-fernandez_estimation_2006}
 S.~{Aja-Fernandez} and C.~{Alberola-Lopez}, ``On the estimation of the
   coefficient of variation for anisotropic diffusion speckle filtering,''
-  \emph{IEEE Transactions on Image Processing}, vol.~15, no.~9, pp. 2694--2701,
-  Sep. 2006.
+  \emph{IEEE Trans. Image Process.}, vol.~15, no.~9, pp. 2694--2701, Sep. 2006.
 
 \bibitem{krissian_oriented_2007}
 K.~Krissian, C.-F. Westin, R.~Kikinis, and K.~G. Vosburgh, ``Oriented speckle
-  reducing anisotropic diffusion,'' \emph{IEEE Transactions on Image
-  Processing}, vol.~16, no.~5, pp. 1412--1424, May 2007.
+  reducing anisotropic diffusion,'' \emph{IEEE Trans. Image Process.}, vol.~16,
+  no.~5, pp. 1412--1424, May 2007.
 
 \bibitem{breivik_realtime_2017}
 L.~H. Breivik, S.~R. Snare, E.~N. Steen, and A.~H.~S. Solberg, ``Real-{{Time}}
-  nonlocal means-based despeckling,'' \emph{IEEE Transactions on Ultrasonics,
-  Ferroelectrics, and Frequency Control}, vol.~64, no.~6, pp. 959--977, Jun.
-  2017.
+  nonlocal means-based despeckling,'' \emph{IEEE Trans. Ultrason., Ferroelect.,
+  Freq. Contr.}, vol.~64, no.~6, pp. 959--977, Jun. 2017.
 
 \bibitem{zhu_nonlocal_2017}
 L.~Zhu, C.-W. Fu, M.~S. Brown, and P.-A. Heng, ``A non-local low-rank framework
-  for ultrasound speckle reduction,'' in \emph{{{IEEE Conference}} on
-  {{Computer Vision}} and {{Pattern Recognition}}}, ser. {{CVPR}}'07.\hskip 1em
-  plus 0.5em minus 0.4em\relax {Honolulu, HI}: {IEEE}, Jul. 2017, pp. 493--501.
+  for ultrasound speckle reduction,'' in \emph{{{IEEE Conf}}. {{Comput}}.
+  {{Vision Pattern Recognit}}.}, ser. {{CVPR}}'07, {Honolulu, HI}, Jul. 2017,
+  pp. 493--501.
 
 \bibitem{mei_phase_2020}
 K.~Mei, B.~Hu, B.~Fei, and B.~Qin, ``Phase asymmetry ultrasound despeckling
   with fractional anisotropic diffusion and total variation,'' \emph{IEEE
-  Transactions on Image Processing}, vol.~29, pp. 2845--2859, 2020.
+  Trans. Image Process.}, vol.~29, pp. 2845--2859, 2020.
+
+\bibitem{leclerc_deep_2019}
+S.~Leclerc \emph{et~al.}, ``Deep learning for segmentation using an open
+  large-scale dataset in {{2D}} echocardiography,'' \emph{IEEE Trans. Med.
+  Imaging}, vol.~38, no.~9, pp. 2198--2210, Sep. 2019.
 
 \bibitem{yongjianyu_generalized_2004}
 {Yongjian Yu}, J.~Molloy, and S.~Acton, ``Generalized speckle reducing
-  anisotropic diffusion for ultrasound imagery,'' in \emph{Proceedings. 17th
-  {{IEEE Symposium}} on {{Computer}}-{{Based Medical Systems}}}.\hskip 1em plus
-  0.5em minus 0.4em\relax {Bethesda, MD, USA}: {IEEE}, 2004, pp. 279--284.
+  anisotropic diffusion for ultrasound imagery,'' in \emph{Proc. {{IEEE Symp}}.
+  {{Comput}}.-{{Based Med}}. {{Syst}}.}, ser. {{CBMS}}'04, {Bethesda, MD, USA},
+  2004, pp. 279--284.
 
 \bibitem{patterson_improvement_1983}
 M.~S. Patterson and F.~S. Foster, ``\BIBforeignlanguage{en}{The improvement and
   quantitative assessment of {{B}}-mode images produced by an annular
-  array/cone hybrid},'' \emph{\BIBforeignlanguage{en}{Ultrasonic Imaging}},
+  array/cone hybrid},'' \emph{\BIBforeignlanguage{en}{Ultrason. Imaging}},
   vol.~5, no.~3, pp. 195--213, Jul. 1983.
 
 \bibitem{smith_ultrasound_1984}
 S.~Smith and R.~Wagner, ``\BIBforeignlanguage{en}{Ultrasound speckle size and
   lesion signal to noise ratio: Verification of theory},''
-  \emph{\BIBforeignlanguage{en}{Ultrasonic Imaging}}, vol.~6, no.~2, pp.
+  \emph{\BIBforeignlanguage{en}{Ultrason Imaging}}, vol.~6, no.~2, pp.
   174--180, Apr. 1984.
 
 \bibitem{rindal_effect_2019}
 O.~M.~H. Rindal, A.~Austeng, A.~Fatemi, and A.~{Rodriguez-Molares}, ``The
   effect of dynamic range alterations in the estimation of contrast,''
-  \emph{IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency
-  Control}, vol.~66, no.~7, pp. 1198--1208, Jul. 2019.
+  \emph{IEEE Trans. Ultrason., Ferroelect., Freq. Contr.}, vol.~66, no.~7, pp.
+  1198--1208, Jul. 2019.
 
 \bibitem{rodriguez-molares_generalized_2020}
-A.~{Rodriguez-Molares}, O.~M.~H. Rindal, J.~D'hooge, S.-E. Masoy, A.~Austeng,
-  M.~A. Lediju~Bell, and H.~Torp, ``The generalized contrast-to-noise ratio:
-  {{A}} formal definition for lesion detectability,'' \emph{IEEE Transactions
-  on Ultrasonics, Ferroelectrics, and Frequency Control}, vol.~67, no.~4, pp.
-  745--759, Apr. 2020.
+A.~{Rodriguez-Molares} \emph{et~al.}, ``The generalized contrast-to-noise
+  ratio: {{A}} formal definition for lesion detectability,'' \emph{IEEE Trans.
+  Ultrason., Ferroelect. Freq. Contr.}, vol.~67, no.~4, pp. 745--759, Apr.
+  2020.
 
 \bibitem{wang_image_2004a}
 Z.~Wang, A.~Bovik, H.~Sheikh, and E.~Simoncelli,
   ``\BIBforeignlanguage{en}{Image quality assessment: From error visibility to
-  structural similarity},'' \emph{\BIBforeignlanguage{en}{IEEE Transactions on
-  Image Processing}}, vol.~13, no.~4, pp. 600--612, Apr. 2004.
+  structural similarity},'' \emph{\BIBforeignlanguage{en}{IEEE Trans. Image
+  Process.}}, vol.~13, no.~4, pp. 600--612, Apr. 2004.
+
+\bibitem{NIPS2007_89d4402d}
+A.~Sanborn and T.~Griffiths, ``Markov chain monte carlo with people,'' in
+  \emph{Adv. {{Neural Inf}}. {{Process}}. {{Syst}}.}, vol.~20, 2008.
 
 \end{thebibliography}

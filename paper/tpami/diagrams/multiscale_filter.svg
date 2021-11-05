@@ -33,8 +33,8 @@
      inkscape:snap-text-baseline="true"
      inkscape:snap-center="true"
      inkscape:zoom="1.4142136"
-     inkscape:cx="461.38715"
-     inkscape:cy="357.79601"
+     inkscape:cx="461.38716"
+     inkscape:cy="357.79602"
      inkscape:window-width="1920"
      inkscape:window-height="1052"
      inkscape:window-x="0"
@@ -3630,7 +3630,7 @@
          style="stroke-width:0.264583"
          x="53.76635"
          y="83.06871"
-         id="tspan12690-6">Edge Enhance</tspan></text>
+         id="tspan12690-6">Edge-Enhance</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:3.19176px;line-height:1.25;font-family:'TeX Gyre Schola';-inkscape-font-specification:'TeX Gyre Schola, Normal';letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;stroke-width:0.264583"
@@ -3787,7 +3787,7 @@
          style="stroke-width:0.264583"
          x="53.766354"
          y="104.3386"
-         id="tspan12690-6-7">Edge Enhance</tspan></text>
+         id="tspan12690-6-7">Edge-Enhance</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:3.19176px;line-height:1.25;font-family:'TeX Gyre Schola';-inkscape-font-specification:'TeX Gyre Schola, Normal';letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;stroke-width:0.264583"
@@ -4358,15 +4358,15 @@
        y="0"><tspan
          x="86.561175"
          y="419.38541"
-         id="tspan2955"><tspan
+         id="tspan4141"><tspan
            style="font-size:13.3333px"
-           id="tspan2953">Gaussian
+           id="tspan4139">Gaussian
 </tspan></tspan><tspan
          x="89.921177"
          y="432.02274"
-         id="tspan2959"><tspan
+         id="tspan4145"><tspan
            style="font-size:13.3333px"
-           id="tspan2957">pyramid</tspan></tspan></text>
+           id="tspan4143">pyramid</tspan></tspan></text>
     <text
        xml:space="preserve"
        transform="matrix(0.26458333,0,0,0.26458333,12.741568,0.39600171)"
@@ -4376,15 +4376,15 @@
        y="0"><tspan
          x="84.954517"
          y="419.38541"
-         id="tspan2963"><tspan
+         id="tspan4149"><tspan
            style="font-size:13.3333px"
-           id="tspan2961">Laplacian
+           id="tspan4147">Laplacian
 </tspan></tspan><tspan
          x="89.921177"
          y="432.02274"
-         id="tspan2967"><tspan
+         id="tspan4153"><tspan
            style="font-size:13.3333px"
-           id="tspan2965">pyramid</tspan></tspan></text>
+           id="tspan4151">pyramid</tspan></tspan></text>
     <text
        xml:space="preserve"
        transform="matrix(0.26458333,0,0,0.26458333,75.500891,1.1368901)"
@@ -4394,9 +4394,9 @@
        y="0"><tspan
          x="70.727932"
          y="419.38541"
-         id="tspan2971"><tspan
+         id="tspan4157"><tspan
            style="font-size:13.3333px"
-           id="tspan2969">Filter Cascade</tspan></tspan></text>
+           id="tspan4155">Filter Cascade</tspan></tspan></text>
     <g
        inkscape:label=""
        transform="matrix(0.37554027,0,0,0.37554027,22.03549,41.603307)"

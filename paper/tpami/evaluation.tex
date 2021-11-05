@@ -1,14 +1,18 @@
 
+\input{baselines}
+%
+
 \section{Experiments}\label{section:eval}
 
 \subsection{Experimental Setup}
 We now use the Ultrasound Design Gallery for tuning the cascaded Laplacian pyramid diffusion.
 
 \subsubsection{Experiment Design}
-\paragraph{Sonographer Subjects}
-We recruited five sonographers and a cardiologist from the Kangbuk Samsung Hospital Total Healthcare Center and asked them to optimize a video sequence of a liver images and two sequences of echocardiographic heart images.
+%\paragraph{Sonographer Subjects}
+We recruited five sonographers and a cardiologist from the Kangbuk Samsung Hospital Total Healthcare Center (Seoul, South Korea, Republic of) and asked them to optimize a video sequence of a liver images and two sequences of echocardiographic heart images.
 All five sonographers are Registered Diagnostic Cardiac Sonographers (RDCS) certified by the American Registry for Diagnostic Medical Sonography (ARDMS) with at least three years of practicing experience.
-The cardiologist is a actively practicing cardiologist with ten years of clinical experience.
+The cardiologist is actively practicing and has ten years of clinical experience.
+For convenience, the expert subjects are alphabetically coded from A to F where A is the cardiologist.
 
 \begin{table}
   \centering
@@ -27,7 +31,7 @@ The cardiologist is a actively practicing cardiologist with ten years of clinica
   \end{threeparttable}
 \end{table}
 %
-\paragraph{Experiment Protocol}
+%\paragraph{Experiment Protocol}
 Each of the sonographers were given access to the~\usdg~through same laptop.
 The hardware specification of the laptop are shown in~\cref{table:specs}.
 Then, the sonographers interact with the~\usdg~until the iteration counter indicated 15.
@@ -40,6 +44,18 @@ Also, in some cases, all of the positions on the slider resulted in images visua
 For such iteration, We instructed the sonographers to choose a random position.
 
 For evaluating the final results, we choose the parameter setting maximizing the mean utility function of each sonographer such as \( \vx^* = \argmax_{\vx} \mu\left(\vx \mid \mathcal{D}_{15} \right) \).
+The cascaded Laplacian pyramid setting acquired from each expert subject is denoted as CLPD-\texttt{[code]} where the trailing letter \texttt{[code]} is the subject code.
+
+\subsubsection{Ultrasound Image Data}
+We use three \textit{in vivo} ultrasound image sequences.
+A liver subcostal view sequence, a echocardiac 4-chamber view sequence, and a echocardiac parasternal long-axis view sequence.
+The liver sequence was a acquired at Sogang University (Seoul, South Korea, Republic of) from a volunteer using a Samsung Accuvix V10 scanner and a Samsung C2--5EL convex probe, while the echococardiac parasternal long-axis sequence was acquired using a GE Vivid E90 scanner with a probe.
+The echocardiac 4-chamber view sequence was extracted from the CAMUS challenge dataset~\cite{leclerc_deep_2019}, which was acquired using a GE Vivid E95 scanner with a GE M5S probe.
+
+Since the Samsung Accuvix V10 scanner research package returns beamformed radio-frequency (RF) data, we performed DC rejection, envelope detection, and then scan conversion locally.
+The RF data has 128 scanlines, which we lateral interpolate by a factor of 8.
+A prealias filter was used before scan conversion.
+For the GE Vivid E90 scanner, we extracted the quantized images from the raw DICOM files, and performed scan conversion.
 
 \subsubsection{Image Enhancement Baselines}
 We evaluate the tuned cascaded Laplacian pyramid diffusion filters against a diverse range of speckle reduction algorithms.
@@ -47,20 +63,18 @@ Among diffusion algorithms, we compare against the speckle reducing anisotropic 
 Among non-local means based methods, we compare against the multiscale non-local means (MNLM,~\cite{breivik_realtime_2017}), and the non-local low-rank patch recovery (NLLR,~\cite{zhu_nonlocal_2017}) methods.
 Lastly, we compare against the phase asymmetry ultrasound despeckling with fractional anisotropic diffusion and total variation (PFDTV,~\cite{mei_phase_2020}) method.
 
-\input{baselines}
-%
 \subsubsection{Implementations and Tuning of the Baselines}
 To ensure a fair comparison, we will use the official implementation of the considered baselines whenever available.
 The implementations and parameter settings of the considered baselines are organized in~\cref{table:baselines}.
 For the OSRAD, MNLM, LPNDSF, and PFDTV algorithms, we reimplemented the algorithms according to the descriptions in the original papers.
 While the official implementation of PFDTV is publically available online, we had to reimplement it due to numerical issues.
 
-\paragraph{Issues with Pixel Spacing}
+%\paragraph{Issues with Pixel Spacing}
 For the NLLR and PFDTV, the pixel spacing of the data used in the original works (\(300 \times 225\)) differed significantly with ours (our images are \(800 \times 600\)).
 Because of this, when applied to our data, the results were qualitatively different from those reported in the original papers.
 Thus, for PFDTV and NLLR, we downscaled the images by \(40\%\), applyed the respective methods, and then upscaled the images for evaluation.
 
-\paragraph{Input Transformations}
+%\paragraph{Input Transformations}
 While often not clearly stated, the input format of ultrasound speckle reduction methods vary.
 For example, OSRAD requires the input image to be in natural scale rather than logarithmic scale.
 Therefore, for OSRAD, we decompressed the log-compressed images as recommended by~\cite{yongjianyu_generalized_2004} and then recompressed the output.
@@ -87,21 +101,19 @@ The CNR first introduced by Patterson and Foster~\cite{patterson_improvement_198
   \mathrm{CNR} \texttt{[dB]} = 10 \log_{10} \frac{| \mu_{1} - \mu_{2} |}{ \sqrt{\sigma^2_1 + \sigma^2_2} }
 \end{align}
 where \(\mu_1, \mu_2\) are the mean responses of the regions-of-interests, and \(\sigma_1, \sigma_2\) are their standard deviations, respectively.
-While the CNR has been shown to be loosely related to the detectibility of lesions~\cite{smith_ultrasound_1984}, Rindal \textit{et al.} has shown that it can be misleading when used against methods altering the natural dynamic range~\cite{rindal_effect_2019}.
-Also, the CNR can be viewed as a special case of the Q-index used in~\cite{tay_ultrasound_2006} where only two classes are used.
+While the CNR is loosely related to the lesions detectibility~\cite{smith_ultrasound_1984}, Rindal \textit{et al.} has shown that it is less reliable across dyfferent dynamic ranges~\cite{rindal_effect_2019}.
 We present the CNR in decibel scale.
 
 %% Nonetheless, the CNR still provides a measure of relative contrast.
 
 \paragraph{Generalized CNR (gCNR)}
 As a remedy to the limitations of the CNR, Rodriguez-Molares \textit{et al.}~\cite{rodriguez-molares_generalized_2020} proposed the gCNR metric.
-They also showed that the gCNR is less affected by dynamic range alternations, making it a better general performance metric for medical utlrasound.
+They also showed that it is less affected by dynamic range alternations, making it a better general performance metric.
 The gCNR is defined as
 \begin{align}
   \text{gCNR} = 1 - \int_{-\infty}^{\infty} \min\big(p_1\left(x\right), p_2\left(x\right)\big) \, dx
 \end{align}
 where \(p_1\left(x\right)\) and \(p_2\left(x\right)\) are the probability densities of \(x\) subject to the pixel intensity distributions of the regions-of-interests 1 and 2.
-It is apparent from the explicit use of probabilities that the gCNR is directly related to the detection probability of lesions.
 
 \paragraph{Structural Similarity Index (SSIM)}
 The SSIM is a metric for measuring the \textit{structural} similarity of images, which is derived as a product of the differences in lumiance, structure, and contrast~\cite{wang_image_2004a}.
@@ -148,50 +160,66 @@ We use the official implementation\footnote{\url{https://sites.google.com/site/c
   }\label{fig:roi}
 \end{figure}
 % 
-\paragraph{Regions-of-Interests}
+%\paragraph{Regions-of-Interests}
 The regions-of-interests used for computing the performance metrics are shown in~\cref{fig:roi}.
 For the liver image, we compute the metrics over multiple frames, while for the echocardiographic image, we compute the metrics only using the presented frame.
 
 \input{liver1_figure}
 %
-\begin{table*}
+\begin{table}
   \centering
-  \caption{Objective Performance Comparison on a Liver}\label{table:liver1}
+  \caption{Quantatitive Results on a Liver Subcostal View}\label{table:liver1}
   \begin{threeparttable}
+  \setlength{\tabcolsep}{3.5pt}
   \begin{tabular}{llrrr}
     \toprule
     & \multicolumn{1}{c}{\textbf{Algorithm}}
     & \multicolumn{1}{c}{\textbf{SSNR} \texttt{[dB]}}
     & \multicolumn{1}{c}{\textbf{SSIM}}
     & \multicolumn{1}{c}{\(\mathbf{S_{3}}\)} \\\midrule
-    \multirow{6}{*}{Baselines} & OSRAD & \textbf{20.8 (20.3, 21.2)} & 0.792 (0.791, 0.794) & 0.476 (0.473, 0.481)\\
-    & ADMSS & 16.9 (16.5, 17.4) & \textbf{0.927 (0.893, 0.963)} & 0.350 (0.347, 0.353) \\
-    & LPNDSF & 19.7 (19.4, 20.0) & 0.763 (0.762, 0.764)         & 0.343 (0.340, 0.346) \\
-    & MNLM & \textbf{22.1 (21.6, 22.7)} & 0.811 (0.809, 0.812)  & 0.033 (0.329, 0.342) \\
-    & NLLR & \textbf{22.0 (21.6, 22.5)} & 0.764 (0.762, 0.765)  & 0.141 (0.140, 0.142) \\
-    & PFDTV & \textbf{20.0 (19.6, 20.4)} & 0.822 (0.820, 0.823) & 0.461 (0.456, 0.465) \\
+    \multirow{6}{*}{\footnotesize{Baselines}} & OSRAD & \textbf{20.8 {\tiny(20.3, 21.2)}} & 0.792 {\tiny(0.791, 0.794)} & 0.476 {\tiny(0.473, 0.481)}\\
+    & ADMSS & 16.9 {\tiny(16.5, 17.4)} & \textbf{0.927 {\tiny(0.893, 0.963)}} & 0.350 {\tiny(0.347, 0.353)} \\
+    & LPNDSF & 19.7 {\tiny(19.4, 20.0)} & 0.763 {\tiny(0.762, 0.764)}         & 0.343 {\tiny(0.340, 0.346)} \\
+    & MNLM & \textbf{22.1 {\tiny(21.6, 22.7)}} & 0.811 {\tiny(0.809, 0.812)}  & 0.033 {\tiny(0.329, 0.342)} \\
+    & NLLR & \textbf{22.0 {\tiny(21.6, 22.5)}} & 0.764 {\tiny(0.762, 0.765)}  & 0.141 {\tiny(0.140, 0.142)} \\
+    & PFDTV & \textbf{20.0 {\tiny(19.6, 20.4)}} & 0.822 {\tiny(0.820, 0.823)} & 0.461 {\tiny(0.456, 0.465)} \\
     \midrule
-    \multirow{5}{*}{This work} & CLPD-obj.  & \textbf{21.0 (20.7, 21.4)} & \textbf{0.914 (0.913, 0.914)} & \textbf{0.509 (0.507, 0.511)} \\
-    & CLPD-A  & 19.9 (19.6, 20.2) & 0.883 (0.882, 0.884) & \textbf{0.490 (0.486, 0.494)} \\
-    & CLPD-B  & 19.8 (19.6, 20.2) & \textbf{0.913 (0.913, 0.914)} & \textbf{0.507 (0.503, 0.511)} \\
-    & CLPD-C  & 18.2 (18.0, 18.5) & \textbf{0.954 (0.953, 0.954)} & \textbf{0.587 (0.581, 0.592)} \\
-    & CLPD-D & 19.0 (18.7, 19.3) & \textbf{0.933 (0.932, 0.933)} &  \textbf{0.565 (0.562, 0.569)} \\\bottomrule
+    \multirow{5}{*}{\footnotesize{This work}} & CLPD-{\scriptsize{SSNR}}  & \textbf{21.0 {\tiny(20.7, 21.4)}} & \textbf{0.914 {\tiny(0.913, 0.914)}} & \textbf{0.509 {\tiny(0.507, 0.511)}} \\
+    & CLPD-A  & 19.9 {\tiny(19.6, 20.2)} & 0.883 {\tiny(0.882, 0.884)} & \textbf{0.490 {\tiny(0.486, 0.494)}} \\
+    & CLPD-B  & 19.8 {\tiny(19.6, 20.2)} & \textbf{0.913 {\tiny(0.913, 0.914)}} & \textbf{0.507 {\tiny(0.503, 0.511)}} \\
+    & CLPD-C  & 18.2 {\tiny(18.0, 18.5)} & \textbf{0.954 {\tiny(0.953, 0.954)}} & \textbf{0.587 {\tiny(0.581, 0.592)}} \\
+    & CLPD-D & 19.0 {\tiny(18.7, 19.3)} & \textbf{0.933 {\tiny(0.932, 0.933)}} &  \textbf{0.565 {\tiny(0.562, 0.569)}} \\\bottomrule
   \end{tabular}
   \begin{tablenotes}
     \item[*] We report the average, 10\%, and \%90 percentiles of the metrics taken over 16 frames.
     \item[*] The performance of the top 5 algorithms for each metric are shown in bold face.
   \end{tablenotes}
   \end{threeparttable}
-\end{table*}
+\end{table}
 %
-\subsection{Experiment with Liver}
-We first conduct an experiment on a liver image shown in~\cref{fig:liver_original}.
+\subsection{Results on Liver Subcostal View}
+We first present experimental results with a liver subcostal view image sequence.
+For this experiment, we also include a CLPD setting tuned to maximize both the SSNR and SSIM metric using vanilla BO, denoted as CLPD-SSNR.
 
-\subsubsection{Qualitative Resuls}
-A single frame from the optimized results are shown in~\cref{fig:liver1}.
+\subsubsection{Qualitative Results}
+A single frame processed by each method is shown in~\cref{fig:liver1}.
+
+%\paragraph{Speckle reduction}
+The CLPDs tuned by sonographers (CLPD-A to CLPD-D) did not show significant speckle reduction.
+Notice the contrast with CLPD-SSNR, which has been tuned to obtain the least speckle.
+This shows that, for sonographers, speckle reduction is less relevant to the clinical quality of liver images.
+Among the CLDPs tuned by sonographers, CLPD-B shows the least speckle, reflecting the preferential difference among sonographers.
+On the other hand, MNLM, NLLR showed the least speckle, but NLLR results in very blurry images.
+
+When focusing on blurriness and clarity, the expert tuned CLPDs showed the best results.
+The edges of the left portal vein are noticibly sharper on CLPD-C and CLPD-D.
+In contrast, most of the considered baselines except for ADMSS and MNLM are notibly blurry.
+Meanwhile, OSRAD, LPNDSF, and PFDTV resulted in ``blocky'' patterns, possibly because of the strong presence of pepper noise. 
+Especially, ADMSS showed \textit{increased} speckle due to peppers.
+The probabilstic model of ADMSS missspecified peppers as background, resulting in their enlargation.
 
 \input{cardiac3_figure}
-
+%
 \subsubsection{Quantitative Results}
 The quantatitive results using objective performance metrics are shown in~\cref{table:liver1}.
 First, we can see that the SSNR values obtained using the CLPDs are worse compared to the baselines except for CLPD-obj., which is natural since it was explicitly tuned to obtain a high SSNR.
@@ -211,16 +239,10 @@ In fact, many of the participating sonographers explicitly stated that they ``do
 Our results clearly reflect this sentiment.
 For this reason, while the NLLR is very good at reinforcing strucutres and reducing speckle, it results in images that are significantly blurry both qualititatively and quantitatively (according to \(S_3\)), which limits its clinical value.
 
-
-\subsection{Experiment with Echocardocraphic 4-Chamber View}
-We present results on echocardiographic images.
-We first present experiments performed on a 4-chamber image shown in~\cref{fig:cardiac3_original}.
-
-\subsubsection{Quanlitative Results}
-
 \begin{table}
   \centering
-  \caption{Objective Performance Comparison on a Liver}
+  \caption{Quantatitive Results on Echocardiographic 4-Chamber View}\label{table:cardiac3}
+  \setlength{\tabcolsep}{3pt}
   \begin{threeparttable}
   \begin{tabular}{llrrrrr}
     \toprule
@@ -255,12 +277,56 @@ We first present experiments performed on a 4-chamber image shown in~\cref{fig:c
   \end{threeparttable}
 \end{table}
 %
-\paragraph{Quantitative Results}
-
-\subsection{Experiment with Echocardocraphic Parasternal Long-Axis View}
-
-
 \input{cardiac1_figure}
+%
+\subsection{Results on Echocardiographic 4-Chamber View}
+We now present results on a sequence of echocardiographic 4-chamber view images.
+
+\subsubsection{Qualititative Results}
+A single frame from each processed result is shown in~\cref{fig:cardiac3}.
+
+Similarly with the liver image, CLPD-A to CLPD-F turned out to be the least blurry.
+Unlike the liver image, however, some of the expert tuned CLPDs showed strong speckle reduction.
+For example, CLPD-F shows the cleanest myocardium wall among all methods.
+Despite the strong smoothing effect, it does not result in blurry images such as NLLR, which shows the effectiveness of the cascaded Laplacian pyramid approach.
+
+In addition, CLPDs resulted in smooth myocardium edges, thanks to the multiscale analysis of the Laplacian pyramid.
+In contrast, other methods result in jiggly myocardium edges due to structural dagmaes caused by speckle.
+While NLLR results in the best structural enhancement, the resulting blurriness shadows its benefits.
+
+Meanwhile, CLPD-A results in amplified fine details.
+Indeed, the cardiologist (A) who tuned CLPD-A expressed his preference for fine details such as papillary muscles.
+This shows the preferential difference between cardiologist and sonographers.
+Overall, the results on the echocardiographic 4-chamber view show that image enhancement methods need to be tuned, not only to each individual, but also each clinical task.
+
+\subsubsection{Quantitative Results}
+We now discuss the quantitative results on the echocardiographic 4-chamber image.
+
+For the echocardiographic images, correctly recognizing different anatomical structures and thier borders is clinically important.
+Therefore, unlike the liver image, speckle reduction and contrast enhancement is more relevant.
+This is clearly reflected in~\cref{table:cardiac3}.
+All CLPD settings showed the highest SNR on the myocardium wall.
+In terms of contrast, sonographer B and F showed preference towards high gCNR and CNR.
+However, CLPDs still achieved high SSIM and \(S_3\).
+
+Among the considered baselines, MNLM and NLLR achieved the highers contrast.
+Still, both methods are known to be good at removing speckle.
+However, they both resulted in low sharpness, where NLLR resulted in an unbelievely low \(S_3\) value.
+Meanwhile, except for NLLR, all methods did not achieve a high SNR.
+Although this is expected with ADMSS since it deliberately avoids reducing speckle on structural regions, the low SNR of MNLM is counter-intuitive.
+From visual inspection, this seems to be a result of MNLM and other methods not improving the homogeneity of similar anatomical regions.
+NLLR and CLPDs, on ther other hand, improve the structural homogeneity.
+This shows the importance of structural enhancement for echocardiographic images, which CLPDs achieve by coherence enhancement in higher scales.
+
+\subsection{Results on Echocardocraphic Parasternal Long-Axis View}
+Finally, we present qualitative results on an echocardocraphic parasternal long-axis view sequence.
+The parasternal long-axis view has many clinically relevant fine details such as the mitral valve and the aortic valve.
+These fine details, however, are difficult to differentiate from speckle and clutter.
+
+The results are shown in~\cref{fig:cardiac3}.
+Unlike the echocardiographic 4-chamber view, all CLPDs amplify fine-details regardless of speckle and clutter.
+Flow-like artifacts resulting from aggressive coherence enhancement are clearly visible near the aortic valve.
+As a result, the edges of the interventricular septum are enhanced.
 
 %%% Local Variables:
 %%% TeX-master: "master"

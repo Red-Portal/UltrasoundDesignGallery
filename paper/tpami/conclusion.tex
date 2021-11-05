@@ -1,6 +1,22 @@
 
 \section{Dissusion}\label{section:conclusion}
-Understanding the preference of sonographers
+The performance metrics used in medical ultrasound imaging have been shown to be not calibrated with the subjective metrics of sonographers.
+Therefore, understanding and optimizing the subjective metrics of sonographers is a crucial task for improving the clinical performance of our medical ultrasound imaging systems.
+In this work, we have presented the \textsc{Ultrasound Design Gallery}, a graphical tool for inferring and optimizing the subjective preference metrics of sonographers.
+By leveraging probabilistic machine learning and Bayesian optimization, our tool enables automatic, personalized, task-specific tuning of medical ultrasound imaging systems.
+We have demonstrated the utility of our tool by letting sonographers tune the parameters of the cascaded laplacian pyramid diffusion filter.
+We have also contributed a new image-enhancement algorithm, the cascaded laplacian pyramid diffusion.
+Based on the classica Laplacian pyramid, it enables sharing information between different scales and seemless integration of conventional image enhancement filters.
+
+Our experimental results have shown that individual sonographers exhibit different visual preferences.
+Also, the same sonographers show different preference depending on the clinical task and scanning view.
+Therefore, personalized, task-specific tuning of image enhancement algorithms, possibly using the Ultrasound Design Gallery, is crucial for optimal clinical performance.
+Moreover, we have shown that sonographers show strong preference towards natural and sharp looking images.
+Until now, image sharpness/blurriness have not been a focus in medical ultrasound images.
+Unfortunately, most conventional blurriness metrics are calibrated on natural images.
+Thus, appropriately quantifying the blurriness of medical ultrasound images is an open problem that will need investigating in the future.
+Last but not least, we emphasize the importance of understanding and optimizing the preference of sonographers and radiologist.
+Methods developed in psychology such as~\cite{NIPS2007_89d4402d} could be use to infer subjective preference, while other advanced Bayesian optimization methods would be worth exploring.
 
 %%% Local Variables:
 %%% TeX-master: "master"

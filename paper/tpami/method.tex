@@ -553,7 +553,7 @@ where \(\sigma\) is the threshold for small contrast.
       \addplot [domain=-1:1, smooth, thick, blue] { func(x) };
     \end{axis}
   \end{tikzpicture}
-  \caption{Plot of amplification function with \(\sigma=0.3\), \(\beta=4\).}\label{fig:amp}
+  \caption{Plot of the amplifier function \(g\) with \(\sigma=0.3\), \(\beta=4\).}\label{fig:amp}
 \end{figure}
 %
 An exmaple plot is shown in~\cref{fig:amp}.
@@ -602,6 +602,8 @@ Although the RPNCD has not been used for ultrasound images, we found that it sho
 The overall cascaded Laplacian pyramid with edge-enhancement and our filters of choice is shown in~\cref{fig:clpd}.
 We use the NCD for the top two levels while the RPNCD is used only in the bottom level.
 Edge enhancement is only performed on the bottom two levels.
+The image pixels intensities are generally in \([0, 1]\), but we rescale the input of the NCD to \([0, 255]\) and 
+For the NCD, we 
 
 \subsubsection{Parameters of the Cascaded Laplacian Pyramid}
 Our specific instance of the cascaded Laplacian pyramid has 4 levels (3 decimations).

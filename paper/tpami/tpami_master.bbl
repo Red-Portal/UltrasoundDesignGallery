@@ -181,12 +181,6 @@ J.~Marks \emph{et~al.}, ``Design galleries: {{A}} general approach to setting
   {{Conf}}. {{Comput}}. {{Graph}}. {{Interact}}. {{Techn}}.}, ser.
   {{SIGGRAPH}}'97, {USA}, 1997, pp. 389--400.
 
-\bibitem{pmlr-v70-gonzalez17a}
-J.~Gonz{\'a}lez, Z.~Dai, A.~Damianou, and N.~D. Lawrence, ``Preferential
-  {{Bayesian}} optimization,'' in \emph{Proc. {{Int}}. {{Conf}}. {{Mach}}.
-  {{Learn}}.}, ser. Proc. {{Mach}}. {{Learn}}. {{Res}}., vol.~70, Aug. 2017,
-  pp. 1282--1291.
-
 \bibitem{williams_bayesian_1998}
 C.~K. Williams and D.~Barber, ``Bayesian classification with {{Gaussian}}
   processes,'' \emph{IEEE Trans. Pattern Anal. Machine Intell.}, vol.~20,
@@ -307,6 +301,14 @@ G.~Gilboa, N.~Sochen, and Y.~Zeevi, ``\BIBforeignlanguage{en}{Image enhancement
   \emph{\BIBforeignlanguage{en}{IEEE Trans. Pattern Anal. Mach. Intell.}},
   vol.~26, no.~8, pp. 1020--1036, Aug. 2004.
 
+\bibitem{vegas-sanchez-ferrero_probabilisticdriven_2010}
+G.~{Vegas-Sanchez-Ferrero}, S.~{Aja-Fernandez}, M.~{Martin-Fernandez}, A.~F.
+  Frangi, and C.~Palencia, ``Probabilistic-{{Driven Oriented Speckle Reducing
+  Anisotropic Diffusion}} with {{Application}} to {{Cardiac Ultrasonic
+  Images}},'' in \emph{Med. {{Image Comput}}. {{Comput}}.-{{Assisted
+  Intervention}}}, ser. {{MICCAI}}'10, vol. 6361, {Berlin, Heidelberg}, 2010,
+  pp. 518--525.
+
 \bibitem{aja-fernandez_estimation_2006}
 S.~{Aja-Fernandez} and C.~{Alberola-Lopez}, ``On the estimation of the
   coefficient of variation for anisotropic diffusion speckle filtering,''
@@ -373,9 +375,5 @@ Z.~Wang, A.~Bovik, H.~Sheikh, and E.~Simoncelli,
   ``\BIBforeignlanguage{en}{Image quality assessment: From error visibility to
   structural similarity},'' \emph{\BIBforeignlanguage{en}{IEEE Trans. Image
   Process.}}, vol.~13, no.~4, pp. 600--612, Apr. 2004.
-
-\bibitem{NIPS2007_89d4402d}
-A.~Sanborn and T.~Griffiths, ``Markov chain monte carlo with people,'' in
-  \emph{Adv. {{Neural Inf}}. {{Process}}. {{Syst}}.}, vol.~20, 2008.
 
 \end{thebibliography}

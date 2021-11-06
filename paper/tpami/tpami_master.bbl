@@ -47,7 +47,8 @@ G.~{Ramos-Llorden}, G.~{Vegas-Sanchez-Ferrero}, M.~{Martin-Fernandez},
 \bibitem{tay_ultrasound_2006}
 P.~C. Tay, S.~T. Acton, and J.~A. Hossack, ``Ultrasound despeckling using an
   adaptive window stochastic approach,'' in \emph{Proc. {{Int}}. {{Conf}}.
-  {{Image Process}}.}, {Atlanta, GA}, Oct. 2006, pp. 2549--2552.
+  {{Image Process}}.}\hskip 1em plus 0.5em minus 0.4em\relax {Atlanta, GA}:
+  {IEEE}, Oct. 2006, pp. 2549--2552.
 
 \bibitem{mishra_edge_2018}
 D.~Mishra, S.~Chaudhury, M.~Sarkar, A.~S. Soin, and V.~Sharma, ``Edge
@@ -98,7 +99,8 @@ L.~S. Chow and R.~Paramesran, ``\BIBforeignlanguage{en}{Review of medical image
 E.~Brochu, T.~Brochu, and N.~{de Freitas}, ``A {{Bayesian Interactive
   Optimization Approach}} to {{Procedural Animation Design}},'' in \emph{Proc.
   {{ACM SIGGRAPH}}/{{Eurographics Symp}}. {{Comput}}. {{Animation}}}, ser.
-  {{SCA}} '10, {Goslar, DEU}, 2010, pp. 103--112.
+  {{SCA}} '10.\hskip 1em plus 0.5em minus 0.4em\relax {Goslar, DEU}:
+  {Eurographics Association}, 2010, pp. 103--112.
 
 \bibitem{10.1145/3072959.3073598}
 Y.~Koyama, I.~Sato, D.~Sakamoto, and T.~Igarashi, ``Sequential line search for
@@ -120,12 +122,13 @@ H.~Q. Phan, H.~Fu, and A.~B. Chan, ``Color orchestra: {{Ordering}} color
 P.~Mikkola, M.~Todorovi{\'c}, J.~J{\"a}rvi, P.~Rinke, and S.~Kaski,
   ``Projective preferential {{Bayesian}} optimization,'' in \emph{Proc.
   {{Int}}. {{Conf}}. {{Mach}}. {{Learn}}.}, ser. Proceedings of Machine
-  Learning Research, vol. 119, Jul. 2020, pp. 6884--6892.
+  Learning Research, vol. 119.\hskip 1em plus 0.5em minus 0.4em\relax {ML
+  Research Press}, Jul. 2020, pp. 6884--6892.
 
 \bibitem{rasmussen_gaussian_2006}
 C.~E. Rasmussen and C.~K.~I. Williams, \emph{Gaussian Processes for Machine
-  Learning}, ser. Adaptive {{Comput}}. {{Mach}}. {{Learn}}., {Cambridge, Mass},
-  2006.
+  Learning}, ser. Adaptive {{Comput}}. {{Mach}}. {{Learn}}.\hskip 1em plus
+  0.5em minus 0.4em\relax {Cambridge, Mass}: {MIT Press}, 2006.
 
 \bibitem{shahriari_taking_2016}
 B.~Shahriari, K.~Swersky, Z.~Wang, R.~P. Adams, and N.~de~Freitas, ``Taking the
@@ -144,14 +147,15 @@ P.~Perona and J.~Malik, ``Scale-space and edge detection using anisotropic
 
 \bibitem{weickert_anisotropic_1998}
 J.~Weickert, \emph{Anisotropic {{Diffusion}} in {{Image Processing}}}, ser.
-  {{ECMI}}, {Stuttgart, Germany}, 1998.
+  {{ECMI}}.\hskip 1em plus 0.5em minus 0.4em\relax {Stuttgart, Germany}:
+  {Teubner-Verlag,}, 1998.
 
 \bibitem{zhang_multiscale_2006}
 F.~Zhang, Y.~M. Yoo, Y.~Kim, L.~Zhang, and L.~M. Koh, ``Multiscale nonlinear
   diffusion and shock filter for ultrasound image enhancement,'' in \emph{Proc.
   {{IEEE Comput}}. {{Soc}}. {{Conf}}. {{Comput}}. {{Vision Pattern
-  Recognit}}.}, ser. {{CVPR}}'06, vol.~2, {New York, NY, USA}, 2006, pp.
-  1972--1977.
+  Recognit}}.}, ser. {{CVPR}}'06, vol.~2.\hskip 1em plus 0.5em minus
+  0.4em\relax {New York, NY, USA}: {IEEE}, 2006, pp. 1972--1977.
 
 \bibitem{zhang_nonlinear_2007}
 F.~Zhang, Y.~M. Yoo, L.~M. Koh, and Y.~Kim, ``Nonlinear {{Diffusion}} in
@@ -173,13 +177,15 @@ D.~C. Kingsley and T.~C. Brown, ``Preference uncertainty, preference learning,
 \bibitem{NIPS2007_b6a1085a}
 E.~Brochu, N.~{de Freitas}, and A.~Ghosh, ``Active preference learning with
   discrete choice data,'' in \emph{Adv. {{Neural Inf}}. {{Process}}.
-  {{Syst}}.}, vol.~20, 2008.
+  {{Syst}}.}, vol.~20.\hskip 1em plus 0.5em minus 0.4em\relax {Curran
+  Associates, Inc.}, 2008.
 
 \bibitem{10.1145/258734.258887}
 J.~Marks \emph{et~al.}, ``Design galleries: {{A}} general approach to setting
   parameters for computer graphics and animation,'' in \emph{Proc. {{Annu}}.
   {{Conf}}. {{Comput}}. {{Graph}}. {{Interact}}. {{Techn}}.}, ser.
-  {{SIGGRAPH}}'97, {USA}, 1997, pp. 389--400.
+  {{SIGGRAPH}}'97.\hskip 1em plus 0.5em minus 0.4em\relax {USA}: {ACM
+  Press/Addison-Wesley Publishing Co.}, 1997, pp. 389--400.
 
 \bibitem{williams_bayesian_1998}
 C.~K. Williams and D.~Barber, ``Bayesian classification with {{Gaussian}}
@@ -189,7 +195,7 @@ C.~K. Williams and D.~Barber, ``Bayesian classification with {{Gaussian}}
 \bibitem{nocedal_numerical_2006}
 J.~Nocedal and S.~J. Wright, \emph{\BIBforeignlanguage{en}{Numerical
   {{Optimization}}}}, ser. Springer {{Ser}}. {{Oper}}. {{Res}}. {{Financial
-  Eng}}., 2006.
+  Eng}}.\hskip 1em plus 0.5em minus 0.4em\relax {Springer New York}, 2006.
 
 \bibitem{nelder_simplex_1965}
 J.~A. Nelder and R.~Mead, ``\BIBforeignlanguage{en}{A simplex method for
@@ -205,12 +211,14 @@ J.~M. {Henr{\'a}ndez-Lobato}, M.~W. Hoffman, and Z.~Ghahramani, ``Predictive
 \bibitem{snoek_practical_2012}
 J.~Snoek, H.~Larochelle, and R.~P. Adams, ``Practical {{Bayesian}} optimization
   of machine learning algorithms,'' in \emph{Adv. {{Neural Inf}}. {{Process}}.
-  {{Syst}}.}, ser. {{NIPS}}'12, vol.~25, {USA}, 2012, pp. 2951--2959.
+  {{Syst}}.}, ser. {{NIPS}}'12, vol.~25.\hskip 1em plus 0.5em minus 0.4em\relax
+  {USA}: {Curran Associates Inc.}, 2012, pp. 2951--2959.
 
 \bibitem{ath_bayesian_2021}
 J.~F. George De~Ath, Richard~Everson, ``How {{Bayesian}} should {{Bayesian}}
   optimisation be?'' in \emph{Proc. {{Genetic Evol}}. {{Comput}}. {{Conf}}.
-  {{Companion}}}, ser. {{GECCO}} '20, {New York, NY, USA}, 2021.
+  {{Companion}}}, ser. {{GECCO}} '20.\hskip 1em plus 0.5em minus 0.4em\relax
+  {New York, NY, USA}: {Association for Computing Machinery}, 2021.
 
 \bibitem{filippone_pseudomarginal_2014}
 M.~Filippone and M.~Girolami, ``Pseudo-marginal {{Bayesian}} inference for
@@ -220,8 +228,8 @@ M.~Filippone and M.~Girolami, ``Pseudo-marginal {{Bayesian}} inference for
 \bibitem{pmlr-v51-murray16}
 I.~Murray and M.~Graham, ``Pseudo-marginal slice sampling,'' in \emph{Proc.
   {{Int}}. {{Conf}}. {{Artif}}. {{Intell}}. {{Statist}}.}, ser. Proc. of
-  {{Mach}}. {{Learn}}. {{Res}}., vol.~51, {Cadiz, Spain}, May 2016, pp.
-  911--919.
+  {{Mach}}. {{Learn}}. {{Res}}., vol.~51.\hskip 1em plus 0.5em minus
+  0.4em\relax {Cadiz, Spain}: {ML Research Press}, May 2016, pp. 911--919.
 
 \bibitem{jones_efficient_1998}
 D.~R. Jones, M.~Schonlau, and W.~J. Welch, ``Efficient global optimization of
@@ -306,8 +314,9 @@ G.~{Vegas-Sanchez-Ferrero}, S.~{Aja-Fernandez}, M.~{Martin-Fernandez}, A.~F.
   Frangi, and C.~Palencia, ``Probabilistic-{{Driven Oriented Speckle Reducing
   Anisotropic Diffusion}} with {{Application}} to {{Cardiac Ultrasonic
   Images}},'' in \emph{Med. {{Image Comput}}. {{Comput}}.-{{Assisted
-  Intervention}}}, ser. {{MICCAI}}'10, vol. 6361, {Berlin, Heidelberg}, 2010,
-  pp. 518--525.
+  Intervention}}}, ser. {{MICCAI}}'10, vol. 6361.\hskip 1em plus 0.5em minus
+  0.4em\relax {Berlin, Heidelberg}: {Springer Berlin Heidelberg}, 2010, pp.
+  518--525.
 
 \bibitem{aja-fernandez_estimation_2006}
 S.~{Aja-Fernandez} and C.~{Alberola-Lopez}, ``On the estimation of the
@@ -327,8 +336,8 @@ L.~H. Breivik, S.~R. Snare, E.~N. Steen, and A.~H.~S. Solberg, ``Real-{{Time}}
 \bibitem{zhu_nonlocal_2017}
 L.~Zhu, C.-W. Fu, M.~S. Brown, and P.-A. Heng, ``A non-local low-rank framework
   for ultrasound speckle reduction,'' in \emph{{{IEEE Conf}}. {{Comput}}.
-  {{Vision Pattern Recognit}}.}, ser. {{CVPR}}'07, {Honolulu, HI}, Jul. 2017,
-  pp. 493--501.
+  {{Vision Pattern Recognit}}.}, ser. {{CVPR}}'07.\hskip 1em plus 0.5em minus
+  0.4em\relax {Honolulu, HI}: {IEEE}, Jul. 2017, pp. 493--501.
 
 \bibitem{mei_phase_2020}
 K.~Mei, B.~Hu, B.~Fei, and B.~Qin, ``Phase asymmetry ultrasound despeckling
@@ -343,8 +352,8 @@ S.~Leclerc \emph{et~al.}, ``Deep learning for segmentation using an open
 \bibitem{yongjianyu_generalized_2004}
 {Yongjian Yu}, J.~Molloy, and S.~Acton, ``Generalized speckle reducing
   anisotropic diffusion for ultrasound imagery,'' in \emph{Proc. {{IEEE Symp}}.
-  {{Comput}}.-{{Based Med}}. {{Syst}}.}, ser. {{CBMS}}'04, {Bethesda, MD, USA},
-  2004, pp. 279--284.
+  {{Comput}}.-{{Based Med}}. {{Syst}}.}, ser. {{CBMS}}'04.\hskip 1em plus 0.5em
+  minus 0.4em\relax {Bethesda, MD, USA}: {IEEE}, 2004, pp. 279--284.
 
 \bibitem{patterson_improvement_1983}
 M.~S. Patterson and F.~S. Foster, ``\BIBforeignlanguage{en}{The improvement and

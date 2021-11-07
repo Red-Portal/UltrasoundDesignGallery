@@ -347,12 +347,12 @@ Also, the 1D slider chosen by the Koyama scheme contains the duel \(\vx^*\) v.s.
   \centering
   \begin{minipage}[c]{0.43\textwidth}
     \centering
-    \includegraphics[scale=0.7]{figures/conventional_laplacian_pyramid.pdf}
+    \includegraphics[scale=0.65]{figures/conventional_laplacian_pyramid.pdf}
     \subcaption{Laplacian Pyramid in Parallel Form \\ (conventional)}\label{fig:lpnd}
   \end{minipage}
   \begin{minipage}[c]{0.53\textwidth}
     \centering
-    \includegraphics[scale=0.7]{figures/multiscale_filter.pdf}
+    \includegraphics[scale=0.65]{figures/multiscale_filter.pdf}
     \subcaption{Laplacian Pyramid in Cascaded Form \\ (proposed)}\label{fig:clpd}
   \end{minipage}
   \caption{Block diagrams of Laplacian pyramids in parallel and cascaded form.
@@ -553,6 +553,7 @@ Therefore, we use an amplifier that suppresses weak contrast such that
 where \(\sigma\) is the threshold for small contrast.
 %
 \begin{figure}[t]
+  \vspace{-0.1in}
   \centering
   \begin{tikzpicture}[
       declare function={
@@ -568,7 +569,7 @@ where \(\sigma\) is the threshold for small contrast.
 	ymin=-1, ymax=1,
         ylabel=\(g\left(x\right)\),
         xlabel=\(x\),
-        width=5cm,
+        width=6cm,
         height=4cm
       ]
       \addplot [domain=-1:1, smooth, very thick, blue] { func(x) };
@@ -577,6 +578,7 @@ where \(\sigma\) is the threshold for small contrast.
   \end{tikzpicture}
   \caption{Response of the amplifier function \(g\) (\textcolor{blue}{blue line}) with \(\sigma=0.5\), \(\beta=2\).
   The dotted line shows a unity amplifier.}\label{fig:amp}
+  \vspace{-0.1in}
 \end{figure}
 %
 The amplifier response curve is shown in~\cref{fig:amp}.
@@ -593,6 +595,7 @@ In comparison, recently introduced diffusion filters based on probabilistic tiss
 Also, the recent method proposed by Mishra et al.~\cite{mishra_edge_2018} involves computing histogram of oriented gradients in the superpixel domain, which also cannot take advantage of GPUs.
 %
 \begin{figure}[t]
+  \vspace{-0.1in}
   \centering
   \subfloat[Original]{
     \includegraphics[trim={10cm, 10cm, 12cm, 5cm}, clip, scale=0.3]{figures/ncd_liver1.png}
@@ -603,7 +606,8 @@ Also, the recent method proposed by Mishra et al.~\cite{mishra_edge_2018} involv
   \subfloat[RPNCD]{
     \includegraphics[trim={10cm, 10cm, 12cm, 5cm}, clip, scale=0.3]{figures/rpncd_liver.png}\label{fig:rpncd}
   }
-  \caption{Liver image processed with NCD and RPNCD.}\label{fig:ncd_liver}
+  \caption{Example image processed with NCD and RPNCD.}\label{fig:ncd_liver}
+  \vspace{-0.1in}
 \end{figure}
 %
 

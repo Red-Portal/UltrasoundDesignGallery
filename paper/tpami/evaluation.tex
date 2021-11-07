@@ -58,22 +58,7 @@ The RF data had 128 scanlines, which we laterally interpolated by a factor of 8.
 A pre-alias filter was used before scan conversion.
 For the GE Vivid E90 scanner, we extracted the quantized unprocessed images from the raw DICOM files and performed scan conversion.
 
-%
-\begin{figure}[t]
-  \centering
-  \subfloat[Liver Subcostal]{
-    \includegraphics[height=3cm]{figures/liver_roi.png}\label{fig:liver_roi}
-  }
-  \subfloat[Echocardio. Apical 4-Chamber]{
-    \includegraphics[height=3cm]{figures/cardiac_roi.png}\label{fig:cardiac_roi}
-  }
-  \caption{Regions-of-interests used for using the objective performance metrics.
-    (a) The \textcolor{orange}{orange} region is used for computing the SSNR.
-    (b) The \textcolor{red}{red} region (endocardium of the left ventricle) and \textcolor{blue}{blue} region (blood of the left ventricle) are used for computing the gCNR and CNR.
-    The red region is also used for computing the SNR.
-  }\label{fig:roi}
-\end{figure}
-% 
+
 \subsubsection{Baseline Image Enhancement Algorithms}\label{section:baseline}
 We evaluate the USDG-tuned CLPDs against a diverse range of speckle reduction algorithms.
 Among diffusions, we compare against oriented speckle reducing anisotropic diffusion (OSRAD,~\cite{krissian_oriented_2007}), anisotropic diffusion filter with memory based on speckle statistics (ADMSS,~\cite{ramos-llorden_anisotropic_2015}), and multiscale nonlinear diffusion and shock filter (LPNDSF,~\cite{zhang_multiscale_2006}).
@@ -95,6 +80,24 @@ While often not clearly stated, ultrasound image algorithms tend to use differen
 OSRAD requires the input to be in natural scale rather than logarithmic scale.
 Therefore, for OSRAD, we decompress the log-compressed images as recommended by~\cite{yongjianyu_generalized_2004} and then recompress the output.
 Other than OSRAD, we unanimously use log-compressed images with pixel intensities in the range of \([0, 255]\).
+%
+\begin{figure}[t]
+  \vspace{-0.1in}
+  \centering
+  \subfloat[Liver Subcostal]{
+    \includegraphics[height=3cm]{figures/liver_roi.png}\label{fig:liver_roi}
+  }
+  \subfloat[Echocardio. Apical 4-Chamber]{
+    \includegraphics[height=3cm]{figures/cardiac_roi.png}\label{fig:cardiac_roi}
+  }
+  \caption{Regions-of-interests used for using the objective performance metrics.
+    (a) The \textcolor{orange}{orange} region is used for computing the SSNR.
+    (b) The \textcolor{red}{red} region (endocardium of the left ventricle) and \textcolor{blue}{blue} region (blood of the left ventricle) are used for computing the gCNR and CNR.
+    The red region is also used for computing the SNR.
+  }\label{fig:roi}
+  \vspace{-0.1in}
+\end{figure}
+% 
 
 \input{liver1_figure}
 %
@@ -201,6 +204,7 @@ For the liver subcostal view, we compute the metrics over multiple frames, while
     \item[*] The performance of the top 5 algorithms for each metric is shown in boldface.
   \end{tablenotes}
   \end{threeparttable}
+  \vspace{-0.1in}
 \end{table}
 %
 \subsection{Results on Liver Subcostal View}

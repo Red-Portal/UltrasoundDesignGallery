@@ -6,9 +6,9 @@
 
 \subsection{Problem Statement}
 Let us denote a setting (or parameter) of an image enhancement algorithm as \(\vx \in \mathcal{X}\).
-Given a certain clinical task \(t\), we assume an individual sonographer \(s\) has a subjective image quality function \(f\), which is possibly noisy.
+Given a specific clinical task \(t\), we assume an individual sonographer \(s\) has a subjective image quality function \(f\), which is possibly noisy.
 For a setting \(\vx\), the sonographer rates the images processed by the algorithm as \(f\left(\vx\right)\).
-Our goal is to find solve the problem
+Our goal is to solve the problem
 %
 \begin{align}
   \maximize_{\vx \in \mathcal{X}} \mathbb{E}\left[\,f\left(\vx; t, s \right)\,\right]
@@ -22,10 +22,10 @@ Using this knowledge, we progressively design new queries so that we can eventua
 
 \subsection{User Interface of the Ultrasound Design Gallery}\label{section:ui}
 \subsubsection{Preferential Feedback with Design Galleries}
-Humans are notoriously bad at quantifying their absolute preference.
-However, when asked to \textit{compare} different choices, they are more capable at telling which one they prefoer over the others~\cite{10.2307/27821441, NIPS2007_b6a1085a}.
+Humans are notoriously bad at quantifying their absolute preferences.
+However, when asked to \textit{compare} different choices, they are more capable of telling which one they prefer over the others~\cite{10.2307/27821441, NIPS2007_b6a1085a}.
 The \textit{Design Gallery}~\cite{10.1145/258734.258887} interface builds upon this principle.
-It optimizes human preference by diplaying multiple choices to the user and letting him choose which one he preferred over the others.
+It optimizes human preference by displaying multiple choices to the user and letting him choose which one he prefers over the others.
 
 The original Design Gallery by Marks \textit{et al.}~\cite{10.1145/258734.258887} and its variant by Brochu et al.~\cite{brochu_bayesian_2010} propose a discrete set of choices \(A = \{\vx_1, \vx_2,{\,\ldots\,}, \vx_N\}\) to the user.
 Each time the user chooses an optimal choice \(\vx^*\), we obtain the preferential feedback that \(\vx^* \succ \vx_i,\; \forall\vx_i \in A \setminus \vx^* \) where \(\succ\) denotes preferential ordering.
@@ -54,15 +54,15 @@ It comprises of three basic components:
   \item[\ding{228}] \textbf{Video control window}: This window provides basic controls of the image presentation such as dynamic range and frame rate.
 \end{enumerate}
 The sonographer compares different settings by interacting with the slider on the~\textbf{line search window}.
-Each position of the slider represent a different setting which is embedded on the 1D line.
+Each position of the slider represents a different setting which is embedded on the 1D line.
 The \textbf{video window} presents a pre-recorded sequence of ultrasound images processed with the chosen setting in real-time.
-This process is illustrasted in~\cref{fig:interaction}
+This process is illustrated in~\cref{fig:interaction}
 
 \subsubsection{Interacting with the Ultrasound Design Gallery}
 %
 \begin{figure}[h]
   \centering
-  \includegraphics[scale=0.3]{figures/ui_interaction.pdf}
+  \includegraphics[scale=0.27]{figures/ui_interaction.pdf}
   \caption{Visualization of the interaction with the USDG}\label{fig:interaction}
 \end{figure}
 %
@@ -85,23 +85,23 @@ The basic workflow of using the USDG is as follows:
   }\label{fig:linesearch}
 \end{figure}
 %
-Formally, at each BO iteration \(t\), the user conceptuall solves the line seach problem
+Formally, at each BO iteration \(t\), the user conceptually solves the line search problem
 \begin{align}
  \alpha_t = &\argmax_{ \beta }\; f\,(\beta\,\vxi_t + \vx_t) \label{eq:line_search}\\
  &\text{subject to}\;\; \beta \in \mathcal{I}\left(\vx_t, \vxi_t\right) 
 \end{align}
 {\noindent}where \(\beta\) is a position on the 1D line, \(\vx_t\) and \(\vxi_t\) are the basis and direction of the 1D line, \(\mathcal{X}\) is the domain of all the parameter settings, and \(\mathcal{I}\left(\vx_t, \vxi_t\right)\) is the inverval \([\beta_{\mathrm{min}}, \beta_{\mathrm{max}}]\), which ensures \(\beta\,\vxi + \vx  \in \mathcal{X}\).
 The choice maximizing \(f\) is denoted as \(\alpha_t\).
-The correspondance between the graphical interface and our mathematical notations is visualized in~\cref{fig:linesearch}.
+The correspondence between the graphical interface and our mathematical notations is visualized in~\cref{fig:linesearch}.
 After the user successively solves this line search problem, the USDG gradually converges towards the best parameter setting \(\vx^{*}\).
 
 \subsection{Learning the Preference of Sonographers with Gaussian Processes}\label{section:gp}
 \subsubsection{Probabilistic Model}
 %\paragraph{Gaussian Process Formulation}
-Given the preferential feedback, we infer the subjective quality metric \(f\) using probabilistic machine learning.
-We mainly leverage a Bayesian learning approach.
-At the \(t\)th iteration, the feedback is fully represented by \(\alpha_t, \vx_t, \vxi_t\) since the 1D line is formed by \(\vx_t, \vxi_t\), and the optimal position on the line is given by \(\alpha_t\).
-The history of the preferential feedback from iteration 1 to \(T\) forms a dataset
+We infer the subjective quality metric \(f\) using probabilistic machine learning given the preferential feedback.
+We take a Bayesian learning approach.
+At the \(t\)th iteration, a single preferential feedback is fully represented by \((\alpha_t, \vx_t, \vxi_t)\) since the 1D line is formed by \(\vx_t, \vxi_t\), and the optimal position on the line is given by \(\alpha_t\).
+The history of preferential feedback from iteration 1 to \(T\) forms a dataset
 %
 \begin{align}
   \mathcal{D}_T = \{\,(\vx_1, \vxi_1, \alpha_1),\, \ldots\,, (\vx_t, \vxi_t, \alpha_t),\,\ldots\,, (\vx_T, \vxi_T, \alpha_T) \,\}
@@ -139,9 +139,9 @@ where \(k\left(\cdot, \cdot; \ell \right)\) is an isotropic Matern 5/2 covarianc
 %The most important component in our model is the likelihood function \(p\left(\alpha \, \vxi + \vx \succ \beta^{(i)} \, \vxi + \vx \mid \sigma, \vf \right)\).
 %Since our 1D line \(\mathcal{I}\left(\vx, \vxi\right)\) contains an \textit{infinite} number of duels between each \(\beta\) and \(\alpha\), it is difficult to formulate a proper likelihood function.
 When only a discrete set of choices are compared, the Bradley-Terry-Luce (BTL) model~\cite{10.1145/3072959.3073598} can be used.
-However, setting a likelihood for the infinite comparisons \(\alpha\) v.s. \(\beta\) has shown to be challenging.
+However, in our case, the infinite number of comparisons \(\alpha\) v.s. \(\beta\) complicates the design of a likelihood function.
 The original work by Koyama \textit{et al.}~\cite{koyama_sequential_2020} chooses to discretize the 1D line and apply the BTL model.
-Unfortunately, the theoretical consistency of this scheme is unkown.
+Unfortunately, the theoretical consistency of this scheme is unclear.
 %to the continuous limit.
 
 Instead, Mikkola \textit{et al.}~\cite{pmlr-v119-mikkola20a} proposed a principled approach that does not rely on the BTL model and allows for accurate approximation.
@@ -181,7 +181,8 @@ For the number of Monte Carlo samples, we set \(N_{\beta}=20\).
 Considering the Monte Carlo samples, the dataset is now represented as \(\mathcal{D}_{T} = {\{\,(\,\vx_{t},\, \vxi_{t},\, \alpha_{t},\, \beta^{(1)}_{t},\, \ldots\, \beta^{(N_{\beta})}_{t})\,\}}_{t=1}^{T}\).
 
 \subsubsection{Computational Costs}
-The maximum memory requirement for storing the dataset is \(\mathcal{O}\left( T^2 \, N_{\beta}^2  \right)\) where evaluating the likelihood involves a Cholesky decomposition resulting in a time complexity of \(\mathcal{O}\left( T^3 \, N_{\beta}^3 \, N_{\text{quad.}}^3  \right)\) where \(T\) is the maximum number of BO iterations, \(N\) is the number of Monte Carlo samples of \(\beta\), and \(N_{\text{quad.}}\) is the number of quadrature points for the convolution integral.
+The maximum memory requirement for storing the dataset is \(\mathcal{O}\left( T^2 \, N_{\beta}^2  \right)\).
+Evaluating the likelihood involves a Cholesky decomposition resulting in a time complexity of \(\mathcal{O}\left( T^3 \, N_{\beta}^3 \, N_{\text{quad.}}^3  \right)\) where \(T\) is the maximum number of BO iterations, \(N\) is the number of Monte Carlo samples of \(\beta\), and \(N_{\text{quad.}}\) is the number of quadrature points for the convolution integral.
 While the computational complexity might seem expensive, our efficient C++ implementation allows real-time inference on a laptop.
 
 \begin{figure}[t]
@@ -190,7 +191,6 @@ While the computational complexity might seem expensive, our efficient C++ imple
     \DontPrintSemicolon
     \SetAlgoLined
     \KwIn{Precomputed Cholesky decomposition of \(\mK\),
-      convergence criterion, 
       gradient function of the likelihood \(\nabla_{\vf}\, p(\mathcal{D}\mid\vf)\),
       Hessian function of the joint \(\nabla^2_{\vf}\, p(\mathcal{D},\, \vf)\).
     }
@@ -213,7 +213,7 @@ While the computational complexity might seem expensive, our efficient C++ imple
 \end{figure}
 %
 \subsubsection{Inference with Laplace's Approximation}
-We approximate the posterior of \(f\), \(p\,(\vf\,|\,\vtheta,\, \mathcal{D})\) where \(\vtheta\) denotes the hyperparameters, with Laplace's approximation~\cite{williams_bayesian_1998}, which involves a second order Taylor expansion around the maximum of the posterior such that
+We approximate the posterior of \(f\), \(p\,(\vf\,|\,\vtheta,\, \mathcal{D})\) where \(\vtheta\) denotes the hyperparameters, with Laplace's approximation~\cite{williams_bayesian_1998}, which involves a second-order Taylor expansion around the maximum of the posterior such that
 \begin{align}
 q\,(\vf) = \mathcal{N}\left(\vf;\, \vf^*,\, {(\mK^{-1} + \mW)}^{-1}\right) \approx p\,(\vf \mid \vtheta,\, \mathcal{D})
 \end{align}
@@ -221,9 +221,10 @@ where \(\vf^*\) is the maximum a-posteriori estimate such that \(\nabla_{\vf}\, 
 
 In many GP models, the Hessian \(\mH\) often turns out structured.
 This allows efficient implementations of Newton's method for finding \(\vf^*\).
-For example,~\cite{rasmussen_gaussian_2006} discusses cases where \(\mH\) is diagonal or block-diagonal.
+For example, Rasmussen and Williams~\cite{rasmussen_gaussian_2006} discuss special cases where \(\mH\) is diagonal or block-diagonal.
 Unfortunately, our \(\mH\) is neither.
-We thus provide a different implementation of Newton's iteration that assumes dense a \(\mH\), using 
+We thus provide a different implementation of Newton's iteration that assumes \(\mH\) is dense.
+Our formulation is based on 
 {\small
 \begin{align}
   {\big(\mK^{-1} + \mW\big)}^{-1}
@@ -234,12 +235,12 @@ We thus provide a different implementation of Newton's iteration that assumes de
 \;.
 \end{align}
 }
-where \cref{eq:BinvK} can be computed using the LU decomposition of \(\mB\) and back-substitution.
-The algorithm is provided in~\cref{alg:newton} where \(\vp\) is the Newton direction, the stepsize \(\eta\) is found using backtracking line search with Armijo's condition~\cite{nocedal_numerical_2006}.
+{\noindent}where \cref{eq:BinvK} can be computed using the LU decomposition of \(\mB\) and back-substitution.
+The algorithm is shown in~\cref{alg:newton} where \(\vp\) is the Newton direction and the step size \(\eta\) is found using backtracking line search with Armijo's condition~\cite{nocedal_numerical_2006}.
 
 \subsubsection{Predictive Distribution}
 The predictive variance \(\sigma^2(\vx)\) of the GP involves an inverse quadratic term \(\mK^{\top}(\vx) {\big(\mK^{-1} + \mW\big)}^{-1} \vk(\vx)\).
-To exploit this structure, we use an additional formulation that yields the Cholesky factorization \(\mL_{\mathcal{L}} \, \mL^{-1}_{\mathcal{L}}  = {\big(\mK^{-1} + \mW\big)}\) through 
+To exploit this structure, we use an additional formulation of \({\big(\mK^{-1} + \mW\big)}^{-1}\) that yields its Cholesky factorization \(\mL_{\mathcal{L}} \, \mL^{-1}_{\mathcal{L}}  = {\big(\mK^{-1} + \mW\big)}\) through 
 \begin{align}
   {\big(\mK^{-1} + \mW\big)}^{-1}
   &= { \Big({\big(\mL\,\mL^{\top}\big)}^{-1} + \mW \Big) }^{-1} \label{eq:Kcholid}  \\
@@ -252,7 +253,7 @@ To exploit this structure, we use an additional formulation that yields the Chol
 \end{align}
 where~\cref{eq:Kcholid} uses the precomputed Cholesky of \(\mK\) and~\cref{eq:Ccholid} requires the Cholesky of \(\mC\).
 
-The GP predictions using \(q\,(\vf)\) are finally given as
+The GP predictions using \(q\,(\vf)\) are finally given by
 \begin{align}
   \mu\,(\vx)
   &= {\vk(\vx)}^{\top} \mK^{-1} \, \vf^*  \\
@@ -264,12 +265,12 @@ The GP predictions using \(q\,(\vf)\) are finally given as
 \subsubsection{Hyperparameter Treatment}
 Our model has 3 hyperparameters: the covariance scale \(\ell\), the likelihood noise scale \(\sigma\), and the GP noise scale \(\sigma_\epsilon\).
 We set log-normal hyperpriors such that \(\log \ell \sim \mathcal{N}\left(\text{-}1, 1\right)\), \(\log \sigma \sim \mathcal{N}\left(0, 1\right)\), and \(\log \sigma_{\epsilon} \sim \mathcal{N}\left(0, 1\right)\).
-Inference is performed with type-II maximum a-posteriori (MAP-II) with the Nelder-Mead method~\cite{nelder_simplex_1965}.
+The inference is performed with type-II maximum a-posteriori (MAP-II) with the Nelder-Mead method~\cite{nelder_simplex_1965}.
 Although gradient descent is often used for MAP-II of GP hyperparameters, we found that dealing with Cholesky failures is more elegant with Nelder-Mead.
 
-While previous works observed that the full Bayesian approach improves performance~\cite{henrandez-lobato_predictive_2014, snoek_practical_2012}, recent experimental results suggest that such performance improvement may not be significant~\cite{ath_bayesian_2021}.
-In our case, the exact marginal likelihood is not available, and full Bayesian inference is therefore done using pseudo-marginal MCMC~\cite{filippone_pseudomarginal_2014, pmlr-v51-murray16}, which suffers in high-dimensions.
-Also, pseudo-marignal MCMC is both computational expensive and less robust compared to MAP-II.
+While previous works observed that the fully Bayesian approach improves performance~\cite{henrandez-lobato_predictive_2014, snoek_practical_2012}, recent experimental results suggest that such performance improvement may not be significant~\cite{ath_bayesian_2021}.
+In our case, the exact marginal likelihood is not available, and full Bayesian inference is therefore done using pseudo-marginal MCMC~\cite{filippone_pseudomarginal_2014, pmlr-v51-murray16}, which suffers in high dimensions.
+Also, pseudo-marginal MCMC is both computationally expensive and less robust compared to MAP-II.
 Indeed, we experimented with pseudo-marginal slice-sampling~\cite{pmlr-v51-murray16} and concluded that it was not worth the computational cost.
 
 %Some theoretical~\cite{berkenkamp_noregret_2019} and practical~\cite{wang_adaptive_2013} works have suggested that expert tuned hyperparameters achieve better performance than full Bayesian treatments.
@@ -294,17 +295,17 @@ Indeed, we experimented with pseudo-marginal slice-sampling~\cite{pmlr-v51-murra
 %% This manifests as low acceptance rates in MCMC procedures~\cite{filippone_pseudomarginal_2014}.
 
 \subsection{Optimizing Preference with Bayesian Optimization}\label{section:bo}
-Now that we have inferred the preference function \(f\) of the sonographer, we use Bayesian Optimization (BO) to find its optimum.
+Now that we have inferred the sonographer's preference function \(f\), we use Bayesian Optimization (BO) to find its optimum.
 The key step of BO is the \textit{inner optimization problem} where the next 1D line formed by \(\vx_{t+1}, \vxi_{t+1}\) is determined.
 The inner optimization problem is described as
 %
 \begin{align}
  &\maximize_{\vx,\, \vxi}\;\; a\,(\vx, \vxi \mid \mathcal{D}_t) \\
- &\text{subject to}\;\; \vx \in \mathcal{X},\; \norm{\vxi}_{\infty} = 1.
+ &\text{subject to}\;\; \vx \in \mathcal{X},\; \norm{\vxi}_{\infty} = 1.\nonumber
 \end{align}
 where \(a\,(\vx, \vxi \mid \mathcal{D}_t)\) is known as the acquisition function.
 Given a GP trained on \(\mathcal{D}_t\), the acquisition function quantifies the utility of choosing \(\vx, \vxi\) next.
-Naturally, choosing the right acquisition function is crucial to the convergence of BO.
+Naturally, choosing the proper acquisition function is crucial to the convergence of BO.
 
 \subsubsection{Approximate Expected Improvement}
 Mikkola \textit{et al.}~\cite{10.1145/3072959.3073598} proposed to reformulate the popular expected improvement (EI,~\cite{jones_efficient_1998}) acquisition as
@@ -320,9 +321,9 @@ which they approximated using discrete thompson sampling (DTS) such as
   y_i \sim \mathcal{N}\big( \mu\,(\,\beta_i \vxi + \vx \,),\, \sigma^2\,(\, \beta_i \vxi + \vx \,) \big).\nonumber
 \end{align}
 The outer expectation is approximated using a Monte Carlo average of \(N_{\text{mc}}\) samples of \(y_i\).
-Analytically computing the stochastic gradients of~\cref{eq:aei} is quite tricky and the original implementation thus used finite-difference.
-Also, to reduce variance, a large \(N_{\text{mc}}\) need to bse used, which significantly impacts the computational performance.
-We therefore use an alternative acquisition function.
+Analytically computing the stochastic gradients of~\cref{eq:aei} is quite tricky, and the original implementation thus used finite difference.
+Also, to reduce variance, a large \(N_{\text{mc}}\) needs to be used, which significantly impacts the computational performance.
+We, therefore, use an alternative acquisition function.
 
 \subsubsection{Expected Improvement with Koyama's Scheme}
 The original work by Koyama \textit{et al.}~\cite{koyama_sequential_2020} proposed a heuristic acquisition strategy where the slider \(\mathcal{I}\) is determined using
@@ -338,7 +339,7 @@ We adapt Koyama's scheme to our setup by finding the 1D line that contains both 
   \vxi_{t+1} = \frac{\vx_{\mathrm{EI}} - \vx^*}{\norm{ \vx_{\mathrm{EI}} - \vx^* }_{\infty}}.\label{eq:xi_proj}
 \end{align}
 
-Koyama's scheme is neat in that both~\cref{eq:koyama_ei} and~\cref{eq:koyama_opt} have closed form deterministic gradients, enabling the use of the popular L-BFGS~\cite{liu_limited_1989} optimizer.
+Koyama's scheme is neat in that both~\cref{eq:koyama_ei} and~\cref{eq:koyama_opt} have closed-form deterministic gradients, enabling the use of the popular L-BFGS~\cite{liu_limited_1989} optimizer.
 Also, the 1D slider chosen by the Koyama scheme contains the duel \(\vx^*\) v.s. \(\vx_{\mathrm{EI}}\), which naturally draws connections with preferential BO methods with binary discrete comparisons~\cite{NIPS2007_b6a1085a}.
 
 
@@ -347,16 +348,16 @@ Also, the 1D slider chosen by the Koyama scheme contains the duel \(\vx^*\) v.s.
   \centering
   \begin{minipage}[c]{0.43\textwidth}
     \centering
-    \includegraphics[scale=0.6]{figures/conventional_laplacian_pyramid.pdf}
+    \includegraphics[scale=0.7]{figures/conventional_laplacian_pyramid.pdf}
     \subcaption{Laplacian Pyramid in Parallel Form \\ (conventional)}\label{fig:lpnd}
   \end{minipage}
   \begin{minipage}[c]{0.53\textwidth}
     \centering
-    \includegraphics[scale=0.6]{figures/multiscale_filter.pdf}
+    \includegraphics[scale=0.7]{figures/multiscale_filter.pdf}
     \subcaption{Laplacian Pyramid in Cascaded Form \\ (proposed)}\label{fig:clpd}
   \end{minipage}
   \caption{Block diagrams of Laplacian pyramids in parallel and cascaded form.
-    Coherent diffusion denotes the NCD while complex diffusion denotes the RPNCD.
+    Coherent diffusion denotes the NCD, while complex diffusion denotes the RPNCD.
   }\label{fig:filters}
   \vspace{-0.15in}
 \end{figure*}
@@ -369,9 +370,9 @@ Instead of using an existing algorithm, we contribute our own, which is primaril
 \subsection{Background}
 \subsubsection{Anisotropic Diffusion}\label{section:diffusion}
 %
-Anisotropic diffusion equation based methods are popular for enhancing the quality of medical ultrasound images~\cite{perona_scalespace_1990, weickert_anisotropic_1998, yongjianyu_speckle_2002, contrerasortiz_ultrasound_2012}.
-They have shown strong speckle noise reduction capabilities~\cite{duarte-salazar_speckle_2020}, strenghten image edges~\cite{zhang_multiscale_2006}, and enhance image structures~\cite{abd-elmoniem_realtime_2002, kang_new_2016} with low computational cost (see~\cite{finn_echocardiographic_2011} for a comparative evaluation of some classic anisotropic diffusions).
-However, they are also known to be highly sensitive to their parameters~\cite{duarte-salazar_speckle_2020}, making them a perfect candidates for this study.
+Anisotropic diffusion equation-based methods are popular for enhancing the quality of medical ultrasound images~\cite{perona_scalespace_1990, weickert_anisotropic_1998, yongjianyu_speckle_2002, contrerasortiz_ultrasound_2012}.
+They have shown strong speckle-noise reduction capabilities~\cite{duarte-salazar_speckle_2020}, strengthening of image edges~\cite{zhang_multiscale_2006}, and enhancement of image structures~\cite{abd-elmoniem_realtime_2002, kang_new_2016} with low computational cost (see~\cite{finn_echocardiographic_2011} for a comparative evaluation of some classic anisotropic diffusions).
+However, they are also highly sensitive to their parameters~\cite{duarte-salazar_speckle_2020}, making them perfect candidates for this study.
 
 A generic form of anisotropic diffusion is
 \begin{align}
@@ -458,32 +459,32 @@ From this, each level \({\boldsymbol\ell}_i\) of the Laplacian pyramid \(\{{\bol
 \end{equation}
 %
 where the last level is defined as \({\boldsymbol\ell}_{L} = \vg_{L}\).
-The Laplacian images \({\boldsymbol\ell_i}\)s are overlapping band-pass representations, where each level contain different features in the scale space.
-Higher levels (large \(i\)) contain lower frequency components such as image structures while the lower levels (small \(i\)) contain higher frequency components such as textures.
+The Laplacian images \({\boldsymbol\ell_i}\)s are overlapping band-pass representations, where each level contains different features in the scale space.
+Higher levels (large \(i\)) contain lower frequency components such as image structures, while the lower levels (small \(i\)) contain higher frequency components such as textures.
 The original image \(I\) can be reconstructed by reducing all the levels such that \(I = \sum_{i=0}^L {\boldsymbol\ell}_{i} \).
 
 Conventionally, image enhancement filters \(F_1, \ldots, F_L\) are applied to each Laplacian image such that the enhanced image is formed as \(\widehat{I} = \sum_{i=0}^L F_i\left({\boldsymbol\ell}_{i}\right) \)
 A block diagram of a 4-level conventional Laplacian pyramid with filters is shown in~\cref{fig:lpnd}.
 Previously, Zhang \textit{et al.} applied anisotropic diffusion~\cite{perona_scalespace_1990} and shock filters~\cite{zhang_multiscale_2006} to Laplacian pyramids.
-More recently, Kang \textit{et al.}~\cite{kang_new_2016} combined different anisotropic diffusion filters so that each \(F_i\) is taylored to the features of corresponding level.
-However, these previous approaches have been ignoring some issues that should be raised when combining conventional filters with Laplacian pyramids.
+More recently, Kang \textit{et al.}~\cite{kang_new_2016} combined different anisotropic diffusion filters so that each \(F_i\) is tailored to the features of the corresponding level.
+However, these previous approaches have ignored some issues that should be raised when combining conventional filters with Laplacian pyramids.
 
 \subsubsection{Limitations of Conventional Laplacian Pyramids}\label{section:limitations}
 Conventional image enhancement algorithms, especially anisotropic diffusion methods, are designed to work on low-pass or full bandwidth images.
 Therefore, it is questionable whether applying these algorithms to the Laplacian band-pass images is appropriate.
 In particular, most anisotropic diffusion methods perform some sort of edge-detection, which is not straightforward with band-pass images.
 Zhang \textit{et al.} circumvented this issue by first denoising the low-pass image \(\vg_{i}\), detect the edges on \(\vg_{i}\), and then use these for diffusing on \({\boldsymbol\ell}_{i}\)~\cite{zhang_multiscale_2006}.
-Still, it would be ideal if we could avoid operating on the band-pass image in the first place.
+Still, it would be ideal to avoid operating on the band-pass image in the first place.
 
-Moreover, conventional Laplacian pyramid approaches fail to share information across the pyramid levels, since the filters are applied to each level in \textit{parallel}.
+Moreover, conventional Laplacian pyramid approaches fail to share information across the pyramid levels since the filters are applied to each level in parllel.
 This is wasteful since different levels in the pyramid contain different features that could improve the overall filtering.
 
 \subsection{Cascaded Laplacian Pyramid Diffusion}
 \subsubsection{Laplacian Pyramids in Cascaded Mode}
 We now present the \textsc{Cascaded Laplacian Pyramid Diffusion} (CLPD).
 The CLPD utilizes Laplacian pyramids in \textit{cascaded form}, which does not have the limitations of the conventional \textit{parallel form} discussed in~\cref{section:limitations}.
-Filtering is performed top level first, and bottom level last, where the enhanced results from higher levels are used for filtering in the lower levels.
-Also, our approach feeds low-pass image to the enhancement filters, which makes it fully compatible with conventional anisotropic diffusion filters.
+Filtering is performed top-level first and bottom-level last, where the enhanced results from higher levels are used for filtering in the lower levels.
+Also, our approach feeds a low-pass image to the enhancement filters, which makes it fully compatible with conventional anisotropic diffusion filters.
 
 Recall that, at the top level, \({\boldsymbol\ell}_L = \vg_L\).
 By applying an image enhancement filter \(F_L\left(\cdot\right)\), we obtain the filtered result \( \widehat{\vg}_L = F_L \left( \vg_L \right) \).
@@ -528,21 +529,21 @@ We make the following remarks:
 \end{enumerate}
 %
 \(F_i\) is now able to utilize the enhanced features from the upper levels.
-Also, notice that the enhancement filters \(F_0,\, \ldots\, F_L\) are \textit{cascaded} over and over, hence the name \textit{cascaded form}.
-A full block-diagram of a 4-level CLPD is shown in~\cref{fig:clpd}.
+Also, notice that the enhancement filters \(F_0,\, \ldots\, F_L\) are \textit{cascaded} repeatedly; hence the name \textit{cascaded form}.
+A complete block diagram of a 4-level CLPD is shown in~\cref{fig:clpd}.
 
 \subsubsection{Edge-Enhancement with Laplacian Pyramids}\label{section:edge_enhance}
 %
 Anisotropic diffusion itself is known to have edge-enhancing effects~\cite{weickert_anisotropic_1998}.
-However, employing additional edge-enhancement filters often drastically improve the perceived quality of medical images.
+However, employing additional edge-enhancement filters often drastically improves the perceived quality of medical images.
 Meanwhile, in medical ultrasound images, edge-enhancement filters have seen less interest apart from shock filters~\cite{zhang_multiscale_2006, kang_new_2016}.
 A potential reason for this is that detecting the edges to be enhanced on noisy ultrasound images is particularly challenging.
 
 Laplacian pyramids provide a convenient way to boost edges and contrast~\cite{vuylsteke_multiscale_1994, stahl_noiseresistant_1999, dippel_multiscale_2002}, by amplifying \({\boldsymbol\ell}_{i}\) with a nonlinear amplifier \(g\).
-The MUSICA algorithm~\cite{vuylsteke_multiscale_1994}, which has shown great success in radiographies and mammographies, uses a power law for \(g\).
+The MUSICA algorithm~\cite{vuylsteke_multiscale_1994}, which has shown great success in radiography and mammographies, uses a power law for \(g\).
 However, this tends to strongly amplify noise in small contrast regions.
 While Stahl \textit{et al.} relaxed this issue by only linearly amplifying small contrasts~\cite{stahl_noiseresistant_1999}, this is still insufficient for ultrasound images.
-Therefore, we use an amplifier inspired by~\cite{10.1145/2010324.1964963} that suppresses weak contrast such that
+Therefore, we use an amplifier that suppresses weak contrast such that
 \begin{align}
   g\left(x; \sigma, \beta \right) =
   \begin{cases}
@@ -580,7 +581,7 @@ where \(\sigma\) is the threshold for small contrast.
 \end{figure}
 %
 The amplifier response curve is shown in~\cref{fig:amp}.
-We can see that the low contrast values close to \(x=0\) are suppressed and large contrasts are linearly amplified with a gain \(\beta=2\).
+We can see that the low contrast values close to \(x=0\) are suppressed, and large contrasts are linearly amplified with a gain \(\beta=2\).
 
 In the CLPD, we amplify the Laplacian image \({\boldsymbol\ell}_i\) using \(g\) before adding \(\widehat{\vg}_{i+1}\).
 Therefore, both edges and noise are amplified before entering the filter \(F_i\), and the appropriate gain \(\beta\) thus depends on the characteristics of \(F_i\).
@@ -589,11 +590,10 @@ Therefore, both edges and noise are amplified before entering the filter \(F_i\)
 For the filters \(F_0,\,\ldots\,, F_L\) used in the CLPD, we follow the approach of~\cite{kang_new_2016} and use a different filter for each level.
 In particular, we use the nonlinear coherent diffusion (NCD,~\cite{abd-elmoniem_realtime_2002}) and ramp-preserving nonlinear complex diffusion (RPNCD,~\cite{gilboa_image_2004}) filters.
 Both NCD and RPNCD can be efficiently implemented on GPUs and have desirable properties for our purpose.
-In comparison, recently introduced diffusion filters based on probabilistic tissue segmentation~\cite{vegas-sanchez-ferrero_probabilisticdriven_2010, ramos-llorden_anisotropic_2015} require accurately estimating a probabilistic mixture model during execution, which is both computationally expensive and difficult to take advantage of GPUs.
+In comparison, recently introduced diffusion filters based on probabilistic tissue segmentation~\cite{vegas-sanchez-ferrero_probabilisticdriven_2010, ramos-llorden_anisotropic_2015} require accurately estimating a probabilistic mixture model during execution, which is computationally expensive and difficult to take advantage of GPUs.
 Also, the recent method proposed by Mishra et al.~\cite{mishra_edge_2018} involves computing histogram of oriented gradients in the superpixel domain, which also cannot take advantage of GPUs.
 %
 \begin{figure}[H]
-  \vspace{-0.15in}
   \centering
   \subfloat[Original]{
     \includegraphics[trim={10cm, 10cm, 12cm, 5cm}, clip, scale=0.3]{figures/ncd_liver1.png}
@@ -605,29 +605,28 @@ Also, the recent method proposed by Mishra et al.~\cite{mishra_edge_2018} involv
     \includegraphics[trim={10cm, 10cm, 12cm, 5cm}, clip, scale=0.3]{figures/rpncd_liver.png}\label{fig:rpncd}
   }
   \caption{Liver image processed with NCD and RPNCD.}\label{fig:ncd_liver}
-  \vspace{-0.15in}
 \end{figure}
 %
 
-Upper levels of the Laplacian pyramid contain image structures such the myocardium in echocardiographic images, or the portal veins in the liver.
-In these levels, it is important to recognize and enhance these structures.
+Upper levels of the Laplacian pyramid contain image structures such as the myocardium in echocardiographic images or the portal veins in the liver.
+In these levels, it is essential to recognize and enhance these structures.
 Also, since upper levels focus on low frequencies, they contain less noise, allowing aggressive filtering.
-For this we leverage NCD, which is capable of enhancing spatial coherence.
+For this, we leverage NCD, which is capable of enhancing spatial coherence.
 When naively applied to ultrasound images, coherence enhancement tends to interact badly with speckle noise, resulting in artistic flow-like artifacts as shown in~\cref{fig:ncd}.
-In contrast, since the upper levels of the CLPD have less noise, NCD is able to aggressively enhance strcutres by coherence-enhancement.
+In contrast, since the upper levels of the CLPD have less noise, NCD can aggressively enhance structures by coherence-enhancement.
 
-On the other hand, lower levels contain lots of speckle noise, and less structural information.
+On the other hand, lower levels contain lots of speckle noise and less structural information.
 %Here, we shall use filters good at reducing speckle while preserving edges.
 To perform speckle reduction, most anisotropic diffusion filters have to perform some sort of edge-detection.
-This leaves us with a chicken-and-egg problem since the edge are obsfucated by speckle noise.
-Meanwhile, diffusions based on Kuan and Lee's coefficients~\cite{yongjianyu_speckle_2002, aja-fernandez_estimation_2006, krissian_oriented_2007} do not perform explicit edge-detection, but tend to result in blurry images.
-To circumvent these issues, we propose to use RPNCD, which does not perform explicit edge-detection, and does not rely on Kuan and Lee's coefficients.
+This leaves us with a chicken-and-egg problem since the edge are obfuscated by speckle noise.
+Meanwhile, diffusions based on Kuan and Lee's coefficients~\cite{yongjianyu_speckle_2002, aja-fernandez_estimation_2006, krissian_oriented_2007} do not perform explicit edge-detection but tend to result in blurry images.
+To circumvent these issues, we propose to use RPNCD, which does not perform explicit edge-detection and does not rely on Kuan and Lee's coefficients.
 RPNCD is based on a complex formulation of the anisotropic diffusion equation.
-Gilboa \textit{et al.} showed that the phase evolution of the RPNCD acts as a smoothed Laplacian edge-detector, which is robust against noise.
+Gilboa \textit{et al.} showed that the phase evolution of the RPNCD acts like a smoothed Laplacian edge-detector, which is robust against noise.
 We found that it shows excellent speckle reduction properties, as demonstrated in~\cref{fig:rpncd}.
 
 The overall CLPD with edge-enhancement discussed in~\cref{section:edge_enhance} and the enhancement filters discussed in~\cref{section:edge_enhance} is shown in~\cref{fig:clpd}.
-We use the NCD for the top two levels while the RPNCD is used in the bottom.
+We use the NCD for the top two levels, while the RPNCD is used in the bottom.
 Edge-enhancement is only performed on the bottom two levels.
 We operate on log-compressed images where the pixels intensities are normalized to \([0, 1]\).
 But, when using the NCD, we rescale the input to \([0, 255]\) and the output back to \([0, 1]\).
@@ -643,15 +642,14 @@ The RPNCD has 4 parameters: the edge threshold \(k\), the phase angle \(\theta\)
 We set \(\theta = 5^{\circ}\) as proposed in~\cite{gilboa_image_2004}, \(\Delta t = 0.3\), and \(N_{\text{iter.}} = 20\).
 The edge threshold \(k\) is tuned by the~\usdg.
 
-While ideally we would tune all the parameters using the~\usdg, BO takes longer to converge in high-dimensions.
+While ideally, we would tune all the parameters using the~\usdg, BO takes longer to converge in high-dimensions.
 Therefore, it is desirable to reduce the number of parameters as much as possible.
-Also, nonlinearity between parameters make the optimization problem fundamentally more challenging.
-This happens when different parameters strongly depend on each other, or have a similar effect.
+Also, nonlinearity between parameters makes the optimization problem fundamentally more challenging.
+This happens when different parameters strongly depend on each other or have a similar effect.
 For example, the effect of the diffusion step size \(\Delta t\) and iteration number \(N_{\text{iter.}}\) is determined by the product (diffusion time) \(\Delta t \cdot N_{\text{iter.}}\).
-It important to break up the nonlinearities by either leaving out some parameters or reparameterizing.
+It is crucial to break up the nonlinearities by either leaving out some parameters or reparameterizing them.
 
 \begin{table}
-  \vspace{-0.15in}
   \centering
   \caption{Parameters Tuned by the~\usdg}\label{table:params}
   \begin{threeparttable}
@@ -669,12 +667,11 @@ It important to break up the nonlinearities by either leaving out some parameter
     \(k_{\text{RPNCD}}\)                                & RPNCD        & [\(10^{\text{-}4}\), \(10^{\text{-}2}\)] & Exp. \\\bottomrule
   \end{tabular}
   \end{threeparttable}
-  \vspace{-0.15in}
 \end{table}
 %
 The ranges and scales of the parameters to be tuned by the~\usdg~are organized in~\cref{table:params}.
 A total of 9 parameters are tuned, resulting in a 9-dimensional optimization problem.
-The number in the subscript denote the level they are used within the pyramid (also refer to~\cref{fig:clpd}).
+The number in the subscript denotes the level they are used within the pyramid (also refer to~\cref{fig:clpd}).
 The range \([0, 1]\) used by the~\usdg~is transformed either linearly (Lin.) or exponentially (Exp.) to the range of the parameter.
 
 %% \begin{align}

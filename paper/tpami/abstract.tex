@@ -1,12 +1,16 @@
 
 \begin{abstract}
-Image enhancements methods are an important tool for improving the clinical performance of medical B-mode ultrasound imaging systems.
-However, the power of these image enhancements algorithms can only be obtained after tedious tuning of their many parameters.
-Unfortunately, tuning these parameters is challenging because the clinical quality of a processed image is difficult to quantify, and the parameters often form a high-dimensional space.
-In this paper, an efficient graphical tool for tuning medical ultrasound image enhancements methods: the Ultrasound Design Gallery.
-The Ultrasound Design Gallery uses preferential Gaussian processes for automatically analyzing the subjective image quality metric of sonographers.
-Then, using Bayesian optimization, it automatically optimizes the learned quality metric.
-We demonstrate the Ultrasound Design Gallery by tuning cascaded Laplacian pyramid diffusion, a novel image enhancement algorithms for medical ultrasound images
+Image enhancements methods are an essential tool for improving the clinical performance of medical ultrasound imaging systems.
+However, the power of these algorithms can only be obtained after tedious tuning of their many parameters.
+Unfortunately, tuning these parameters is challenging because the clinical performance of image enhancement methods is difficult to quantify, and the parameters often form a high-dimensional space.
+We present a graphical tool for tuning medical ultrasound image enhancements methods: the Ultrasound Design Gallery (USDG).
+The USDG uses probabilistic machine learning to infer sonographers' subjective image quality metric and optimizes it using Bayesian optimization.
+By interacting with the USDG, a sonographer can perform task-specific, personalized tuning of image enhancement algorithms without any knowledge of the algorithm.
+Furthermore, we present the cascaded Laplacian pyramid diffusion (CLPD), a novel ultrasound image enhancement algorithm.
+By using Laplacian pyramids in a cascaded configuration, the CLPD resolves multiple limitations of conventional Laplacian pyramid-based filters.   
+%The CLPD enhances image structures and reduces speckle noise without resulting in blurry images.
+Practicing sonographers were recruited for this study, who used the USDG to tune the parameters of the CLPD on liver and echocardiographic ultrasound images.
+Based on our results, we suggest the use of blurriness metrics for evaluating medical ultrasound images.
 \end{abstract}
 
 

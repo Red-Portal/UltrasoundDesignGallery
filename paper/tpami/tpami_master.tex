@@ -273,7 +273,8 @@
 \usepackage{microtype}
 \usepackage{subcaption}
 \usepackage{multirow}
-\usepackage{threeparttable, booktabs}
+\usepackage{threeparttable, booktabs, arydshln}
+\usepackage{tabu}
 \usepackage{wrapfig}
 \usepackage{xcolor}
 \usepackage{cite}
@@ -282,6 +283,21 @@
 
 \let\labelindent\relax
 \usepackage[inline]{enumitem}
+
+\makeatletter
+\def\adl@drawiv#1#2#3{%
+        \hskip.5\tabcolsep
+        \xleaders#3{#2.5\@tempdimb #1{1}#2.5\@tempdimb}%
+                #2\z@ plus1fil minus1fil\relax
+        \hskip.5\tabcolsep}
+\newcommand{\cdashlinelr}[1]{%
+  \noalign{\vskip\aboverulesep
+           \global\let\@dashdrawstore\adl@draw
+           \global\let\adl@draw\adl@drawiv}
+  \cdashline{#1}
+  \noalign{\global\let\adl@draw\@dashdrawstore
+           \vskip\belowrulesep}}
+\makeatother
 
 % tikz corner
 \usepackage{tikz}

@@ -441,12 +441,12 @@ J.~Gonz{\'a}lez, Z.~Dai, A.~Damianou, and N.~D. Lawrence, ``Preferential
 \bibitem{streijl_mean_2016}
 R.~C. Streijl, S.~Winkler, and D.~S. Hands, ``\BIBforeignlanguage{en}{Mean
   opinion score ({{MOS}}) revisited: Methods and applications, limitations and
-  alternatives},'' \emph{\BIBforeignlanguage{en}{Multimedia Systems}}, vol.~22,
+  alternatives},'' \emph{\BIBforeignlanguage{en}{Multimedia Syst.}}, vol.~22,
   no.~2, pp. 213--227, Mar. 2016.
 
 \bibitem{NIPS2013_f33ba15e}
 K.~Swersky, J.~Snoek, and R.~P. Adams, ``Multi-task bayesian optimization,'' in
-  \emph{Advances in Neural Information Processing Systems}, vol.~26.\hskip 1em
-  plus 0.5em minus 0.4em\relax {Curran Associates, Inc.}, 2013.
+  \emph{Adv. {{Neural Inf}}. {{Process}}. {{Syst}}.}, vol.~26.\hskip 1em plus
+  0.5em minus 0.4em\relax {Curran Associates, Inc.}, 2013.
 
 \end{thebibliography}

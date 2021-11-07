@@ -3,8 +3,14 @@
 %
 
 \section{Experiments}\label{section:eval}
+We evaluate the USDG by tuning the parameters of the CLPD.
+Practicing sonographers were asked to tune the CLPD on \textit{in vivo} images.
+We analyze the resulting CLPD configurations and compare them against multiple baseline image enhancement algrotithms.
+%The experimental setup and protocols are described in~\cref{section:experiment_design}, while the ultrasound image data are discussed in~\cref{section:data}.
+%The baseline image enhancement algorithms to be compared against the CLPD are discussed in~\cref{section:baseline}.
+
 \subsection{Experimental Setup}
-\subsubsection{Experiment Design}
+\subsubsection{Experiment Design}\label{section:experiment_design}
 %\paragraph{Sonographer Subjects}
 We recruited five sonographers and a cardiologist (also referred to as ``a sonographer'') from the Kangbuk Samsung Hospital Total Healthcare Center (Seoul, South Korea, Republic of).
 All five sonographers are Registered Diagnostic Cardiac Sonographers (RDCS) certified by the American Registry for Diagnostic Medical Sonography (ARDMS) with at least three years of practicing experience.
@@ -41,24 +47,39 @@ In such a case, we instructed the sonographers to choose a random position.
 For evaluating the final results, we computed the setting maximizing the mean utility function of each sonographer such that \( \vx^* = \argmax_{\vx} \mu\left(\vx \mid \mathcal{D}_{15} \right) \).
 The CLPD setting acquired from each sonographer is denoted as CLPD-A to CLPD-F, where the trailing letter is the sonographer code.
 
-\subsubsection{Ultrasound Image Data}
+\subsubsection{Ultrasound Image Data}\label{section:data}
 We present results on three \textit{in vivo} ultrasound image sequences.
-One with a liver subcostal view, an echocardiographic 4-chamber view, and an echocardiographic parasternal long-axis view.
-The liver subcostal and echocardiographic 4-chamber views were scanned at Sogang University, Seoul, South Korea, from a volunteer under an IRB-approved protocol using a Samsung Accuvix V10 scanner with a Samsung C2--5EL convex probe. At the same time, the echocardiographic parasternal long-axis sequence was acquired using a GE Vivid E90 scanner with a GE M5Sc-D phased probe.
-The echocardiographic 4-chamber view data was extracted from the CAMUS challenge dataset~\cite{leclerc_deep_2019}, which used a GE Vivid E95 scanner with a GE M5S probe.
+One with a liver subcostal view, an echocardiographic apical 4-chamber view, and an echocardiographic parasternal long-axis view.
+The liver subcostal and echocardiographic apical 4-chamber views were scanned at Sogang University, Seoul, South Korea, from a volunteer under an IRB-approved protocol using a Samsung Accuvix V10 scanner with a Samsung C2--5EL convex probe. At the same time, the echocardiographic parasternal long-axis sequence was acquired using a GE Vivid E90 scanner with a GE M5Sc-D phased probe.
+The echocardiographic apical 4-chamber view data was extracted from the CAMUS challenge dataset~\cite{leclerc_deep_2019}, which used a GE Vivid E95 scanner with a GE M5S probe.
 
 Since the Samsung Accuvix V10 scanner research package only returns beamformed radio-frequency (RF) data, we locally performed DC rejection, envelope detection, and scan conversion.
 The RF data had 128 scanlines, which we laterally interpolated by a factor of 8.
 A pre-alias filter was used before scan conversion.
 For the GE Vivid E90 scanner, we extracted the quantized unprocessed images from the raw DICOM files and performed scan conversion.
 
-\subsubsection{Image Enhancement Baselines}
+%
+\begin{figure}[t]
+  \centering
+  \subfloat[Liver Subcostal]{
+    \includegraphics[height=3cm]{figures/liver_roi.png}\label{fig:liver_roi}
+  }
+  \subfloat[Echocardio. Apical 4-Chamber]{
+    \includegraphics[height=3cm]{figures/cardiac_roi.png}\label{fig:cardiac_roi}
+  }
+  \caption{Regions-of-interests used for using the objective performance metrics.
+    (a) The \textcolor{orange}{orange} region is used for computing the SSNR.
+    (b) The \textcolor{red}{red} region (endocardium of the left ventricle) and \textcolor{blue}{blue} region (blood of the left ventricle) are used for computing the gCNR and CNR.
+    The red region is also used for computing the SNR.
+  }\label{fig:roi}
+\end{figure}
+% 
+\subsubsection{Baseline Image Enhancement Algorithms}\label{section:baseline}
 We evaluate the USDG-tuned CLPDs against a diverse range of speckle reduction algorithms.
 Among diffusions, we compare against oriented speckle reducing anisotropic diffusion (OSRAD,~\cite{krissian_oriented_2007}), anisotropic diffusion filter with memory based on speckle statistics (ADMSS,~\cite{ramos-llorden_anisotropic_2015}), and multiscale nonlinear diffusion and shock filter (LPNDSF,~\cite{zhang_multiscale_2006}).
 Among non-local means-based methods, we compare against multiscale non-local means (MNLM,~\cite{breivik_realtime_2017}) and the non-local low-rank patch recovery (NLLR,~\cite{zhu_nonlocal_2017}).
 Lastly, we compare against phase asymmetry ultrasound despeckling with fractional anisotropic diffusion and total variation (PFDTV,~\cite{mei_phase_2020}).
 
-\subsubsection{Implementations and Tuning of the Baselines}
 To ensure a fair comparison, we used the official implementations whenever available.
 The implementations and parameter settings of the considered baselines are organized in~\cref{table:baselines}.
 For the case of OSRAD, MNLM, LPNDSF, and PFDTV, we reimplemented them according to the descriptions in the original papers.
@@ -75,6 +96,8 @@ OSRAD requires the input to be in natural scale rather than logarithmic scale.
 Therefore, for OSRAD, we decompress the log-compressed images as recommended by~\cite{yongjianyu_generalized_2004} and then recompress the output.
 Other than OSRAD, we unanimously use log-compressed images with pixel intensities in the range of \([0, 255]\).
 
+\input{liver1_figure}
+%
 \subsubsection{Metrics}
 For objective quality assessment, we apply image quality metrics to the resulting images \textit{without} dynamic range adjustment.
 All results are presented up to three significant digits.
@@ -90,8 +113,6 @@ When computed against a fully-formed speckle region, the SNR is called the \text
 In this case, \(\sigma\) corresponds to the noise standard deviation.
 We present the SNR on a decibel scale.
 
-\input{liver1_figure}
-%
 \paragraph{Contrast-to-Noise Ratio (CNR)}
 The CNR first introduced by Patterson and Foster~\cite{patterson_improvement_1983} measures the mean response difference of two regions-of-interests relative to their standard deviations, such as
 \begin{align}
@@ -132,6 +153,8 @@ The SSIM is taken as an average over all the patches taken by a \(11 \times 11\)
 The coefficients are chosen as \(C_1 = 1 \times 10^{-4}, C_2 = 9 \times 10^{-4} \).
 We use the implementation of the \texttt{ImageQualityIndexes.jl} library\footnote{\url{https://github.com/JuliaImages/ImageQualityIndexes.jl}}
 
+\input{cardiac3_figure}
+%
 \paragraph{\(S_3\) Index}
 Finally, we use a metric for evaluating the blurriness of the images.
 Blurriness metrics have not been traditionally used for evaluating the quality of medical ultrasound images.
@@ -145,28 +168,10 @@ The \(S_3\) value of the \(k\)th patch is defined as a harmonic mean such that
 The final \(S_3\) index of an image is given as the average of the top 1\% \(S_3\) values.
 We use the official implementation\footnote{\url{https://sites.google.com/site/cuongvt101/research/Sharpness-measure}}.
 
-%
-\begin{figure}[h]
-  \centering
-  \subfloat[Liver image]{
-    \includegraphics[height=3cm]{figures/liver_roi.png}\label{fig:liver_roi}
-  }
-  \subfloat[Cardiac image]{
-    \includegraphics[height=3cm]{figures/cardiac_roi.png}\label{fig:cardiac_roi}
-  }
-  \caption{Regions-of-interests used for using the objective performance metrics.
-    (a) The \textcolor{orange}{orange} region is used for computing the SSNR.
-    (b) The \textcolor{red}{red} region (endocardium of the left ventricle) and \textcolor{blue}{blue} region (blood of the left ventricle) are used for computing the gCNR and CNR.
-    The red region is also used for computing the SNR.
-  }\label{fig:roi}
-\end{figure}
-% 
 %\paragraph{Regions-of-Interests}
 The regions-of-interests used for computing the performance metrics are shown in~\cref{fig:roi}.
-For the liver subcostal view, we compute the metrics over multiple frames, while for the echocardiographic 4-chamber view, we compute them only on one representative frame.
+For the liver subcostal view, we compute the metrics over multiple frames, while for the echocardiographic apical 4-chamber view, we compute them only on one representative frame.
 
-\input{cardiac3_figure}
-%
 \begin{table}
   \centering
   \caption{Quantitative Results on a Liver Subcostal View}\label{table:liver1}
@@ -240,7 +245,7 @@ For this reason, the clinical value of NLLR is limited even though it is very go
 
 \begin{table}
   \centering
-  \caption{Quantatitive Results on Echocardiographic 4-Chamber View}\label{table:cardiac3}
+  \caption{Quantatitive Results on Echocardiographic Apical 4-Chamber View}\label{table:cardiac3}
   \setlength{\tabcolsep}{3pt}
   \begin{threeparttable}
   \begin{tabular}{llrrrrr}
@@ -277,7 +282,7 @@ For this reason, the clinical value of NLLR is limited even though it is very go
   \vspace{-0.15in}
 \end{table}
 %
-\subsection{Results on Echocardiographic 4-Chamber View}
+\subsection{Results on Echocardiographic Apical 4-Chamber View}\label{section:fourchamber}
 %We now present results on a sequence of echocardiographic 4-chamber view images.
 
 \subsubsection{Qualitative Results}
@@ -298,7 +303,7 @@ On the other hand, sonographers stated that they focused on improving the contra
 %Thus, some of the preferential variation in this case comes from the difference between the clinical focus of sonographers and cardiologists.
 This clearly shows the preferential variation between experts on the same task.
 
-Overall, we can see that the CLPD configurations tuned on the echocardiographic 4-chamber view are qualitatively different from those tuned on the liver costal view.
+Overall, we can see that the CLPD configurations tuned on the echocardiographic apical 4-chamber view are qualitatively different from those tuned on the liver costal view.
 Our results points to the fact that image enhancement methods need to be tuned, not only to each clinical task but also to each individual.
 
 \subsubsection{Quantitative Results}
@@ -324,7 +329,7 @@ The parasternal long-axis view has many clinically relevant fine details, such a
 These fine details, however, are difficult to differentiate from speckle and clutter.
 
 The results are shown in~\cref{fig:cardiac3}.
-Unlike the echocardiographic 4-chamber view, all CLPDs amplify fine details regardless of speckle and clutter.
+Unlike the echocardiographic apical 4-chamber view, all CLPDs amplify fine details regardless of speckle and clutter.
 Flow-like artifacts resulting from aggressive coherence enhancement are clearly visible near the aortic valve.
 As a result, the edges of the interventricular septum are enhanced.
 

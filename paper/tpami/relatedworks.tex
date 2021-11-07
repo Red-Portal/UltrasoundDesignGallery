@@ -1,27 +1,91 @@
 
-%% \section{Related Works}\label{section:relatedworks}
-%% \subsection{Subjective Quality Assessment}
-%% Subjective quality assessment of medical ultrasound images have been is important topic for accurate evaluations of ultrasound imaging techniques.
-%% Hemmsen \textit{et al.} propose a software for comparing medical images using the double-stimulus continuous-quality scale~\cite{hemmsen_ultrasound_2010}.
-%% Our USDG not only infers the subjective quality metric, but also attempts to optimize it.
+\section{Related Works}\label{section:relatedworks}
+\subsection{Automatic Tuning of Ultrasound Imaging Systems}
+Automatic tuning of the various system parameters in medical ultrasound imaging systems is an important task.
+The two fundamental tasks of automatic tuning is to set up an objective function, and to choose an optimization procedure.
+For example, the weighted sum of edge contrast and soft tissue roughness has been used for tuning the time-gain compensation curve~\cite{lee_automatic_2006} and dynamic range~\cite{lee_automatic_2015}.
+For tuning image enhancement algorithms, Tay \textit{et al.} propose the \(\widehat{Q}\)-index metric~\cite{tay_ultrasound_2006} (later used in~\cite{coupe_nonlocal_2009, ramos-llorden_anisotropic_2015}), while Mishra \textit{et al.} used the classic SSNR metric~\cite{mishra_edge_2018}.
+Unfortunately, parameters optimal according to these metrics often turn out to be poor on \textit{in vivo} images~\cite{ramos-llorden_anisotropic_2015}.
+Therefore, automatic tuning approaches based on objective quality metrics are fundamentally limited.
+
+El-Zehiry \textit{et al.}~\cite{el-zehiry_learning_2013} took a fundamentally different approach of learning the subjective quality metrics of sonographers, and using it as an objective function.
+They gathered a dataset of ultrasound images with their corresponding subjective quality assessment by sonographers, and trained a low-dimensional manifold.
+The manifold provides geometrical information about the subjective quality metric.
+Automatic tuning is done by receiving preferential feedback from a sonographer.
+While conceptually similar with ours, the approach of El-Zehiry \textit{et al.} requires a large dataset of subjective assessment.
+This dataset need to be reconstructed from scratch for each ultrasound imaging systems, which limits applicability.
+
+\subsection{Subjective Image Quality Assessment}
+Subjective quality assessment is an important tool for evaluating ultrasound imaging techniques.
+For example, ultrasound image enhancements algorithms have used subjective quality assessment for accurately evaluating their performance~\cite{loizou_quality_2006, hemmsen_ultrasound_2010, wong_monte_2012, kang_new_2016, mishra_edge_2018}.
+However, obtaining reliable subjective quality assessment is challenging both in terms of time and human resource.
+Even worse, accurately quantifying subjective quality is a fundamental challenge on its own~\cite{streijl_mean_2016}.
+To solve this problem, Hemmsen \textit{et al.} have proposed a software for estimating subjective quality~\cite{hemmsen_ultrasound_2010}.
+
+To enable automatic tuning, some works have attempted to learn the subjective quality metrics of sonographers.
+As previously discussed, El-Zehiry \textit{et al.} learned the relationship between system parameters and quality assessment, and use it for interactive optimization.
+More recently, some works trained deep learning models to predict the subjective quality assessment of sonographers~\cite{abdi_automatic_2017, annangi_ai_2020}.
+These approaches are limited in that they require a large dataset of assessments.
+To train sonographer or task specific models, they need to create a new dataset from scratch.
+
+Our method for inferring subjective quality assessments is based on the Design Gallery~\cite{10.1145/258734.258887}.
+So far, we are the first work proposing the use of the Design Gallery 
+Design Galleries have been successfully applied to various visual design tasks such as graphics design~\cite{10.1145/258734.258887}, procedural animation generation~\cite{brochu_bayesian_2010}, and color design~\cite{phan_color_2018}.
+To enable better interaction between the user and the Design Gallery, alternative user interfaces have been proposed~\cite{phan_color_2018, 10.1145/3072959.3073598, koyama_sequential_2020}, which these were mainly designed for still images.
+Since medical ultrasound images are normally presented in continuous video sequences, we use the 1D sequential line search interface~\cite{10.1145/3072959.3073598}.
+
+While the original Design Gallery used evolutionary strategies for generating choices, Brochu \textit{et al.}~\cite{NIPS2007_b6a1085a, brochu_bayesian_2010} popularized the use of BO. 
+
+%The works of Brochu \textit{et al.} has later lead to the development of preferential BO~\cite{pmlr-v70-gonzalez17a, pmlr-v119-mikkola20a}, which specifically aim to infer and optimize human preference.
+%In this work, we combine projective preferential BO~\cite{pmlr-v119-mikkola20a} with the sequential line search interface, which provide a probabilistic model for Design Galleries with continuously embedded choices.
 
 %% An important issue is that speckle reduction filter tend to generate blurry results.
 
 %% tend to generate blurry images regardless of the speckle reduction performance.
 %% Especially, despite the superior performance of the hybrid filter~\cite{singh_hybrid_2017}.
 
-%% \subsection{Ultrasound Image Enhancement Algorithms}
-%% Applying image enhancement algorithms is an effective way to drastically improve the perceived quality of medical ultrasound images.
-%% Among the vast literature of ultrasound image enhancement, our work is most related to methods based on multiscale analysis.
-%% In particular, jour CLPD builds upon Laplacian pyramids~\cite{burt_laplacian_1983, zhang_nonlinear_2007}.
-%% The multiscale nature of Laplacian pyramids have shown good speckle reduction capabilities~\cite{zhang_nonlinear_2007}.
-%% Latter extension~\cite{zhang_multiscale_2006, kang_new_2016} have shown that they are also flexible, enabling the mixing of different image filters within the pyramid.
+Recently, Annangi~\textit{et al.} trained deep learning models to predict the subjective quality assessments of sonographers~\cite{annangi_ai_2020}.
+The subjective quality metrics were recorded in a 1 to 5 Lickert scale.
+Deep learning based approach require a large amount of labeled data (their dataset has 320 subjects).
+Therefore, compared to our approach, task and sonographer specific learning of quality metrics is difficult.
 
-%% \subsection{Tuning of Medical Ultrasound Imaging Systems}
+
+Recently,
+machine learning based a
+
+
+\subsection{Ultrasound Image Enhancement Algorithms}
+Applying image enhancement algorithms is an effective way to drastically improve the perceived quality of medical ultrasound images.
+In particular, anisotropic diffusion methods~\cite{perona_scalespace_1990, weickert_anisotropic_1998} have shown excellent performance for ultrasound images~\cite{yongjianyu_speckle_2002, abd-elmoniem_realtime_2002, aja-fernandez_estimation_2006, krissian_oriented_2007, vegas-sanchez-ferrero_probabilisticdriven_2010, ramos-llorden_anisotropic_2015, mishra_edge_2018}.
+Combined with the multiscale analysis of Laplacian pyramids~\cite{burt_laplacian_1983}, diffusion methods have demonstrated advanced feautre enhancing capabilities~\cite{zhang_multiscale_2006, zhang_nonlinear_2007, kang_new_2016}.
+While wavelet decomposition approaches also provide a way to perform multiscale analysis~\cite{xulizong_speckle_1998, xiaohuihao_novel_1999, pizurica_versatile_2003, yongyue_nonlinear_2006}, compared to Laplacian pyramids, they are difficult to combine with other image filters.
+Our work demonstrated how to use the Laplacian pyramids in the \textit{cascaded} configuration, which further enhances their flexibility.
+
+Enhancing image structures is a crucial task for ultrasound images.
+However, compared to speckle and contrast enhancement, structural enhancement has not received much attention.
+Some exceptions include the NCD~\cite{abd-elmoniem_realtime_2002}, which is capable of spatial coherence-enhancement~\cite{weickert_coherenceenhancing_1999}, and shock filters~\cite{zhang_multiscale_2006, kang_new_2016}.
+We experimented with different types of shock filters and experienced that the results look too artificial.
+This has also been noted by Kang \textit{et al.}~\cite{kang_new_2016} when discussing the works of Zhang \textit{et al.}~\cite{zhang_multiscale_2006}.
+NCD on the other hand, is a powerful tool for enhancing iamge strucutres when used in the upper levels in the Laplacian pyramid.
+
+Most anisotropic diffusion filters perform a edge-detection as an intermediate step.
+The low SNR of ultrasound images make edge detection challenging, harming the performance of conventional diffusion filters.
+Although diffusion filters based on Kuan and Lee's coeffcient avoid edge-detection~\cite{yongjianyu_speckle_2002, aja-fernandez_estimation_2006, krissian_oriented_2007}, they result in blurry, over-smoothed images~\cite{ramos-llorden_anisotropic_2015, mishra_edge_2018}.
+Recently, approaches that avoid edge-detection by probabilistic segmentation~\cite{vegas-sanchez-ferrero_probabilisticdriven_2010, ramos-llorden_anisotropic_2015}, and histogram of oriented gradients in the superpixel domain~\cite{mishra_edge_2018}.
+These methods are computationally expensive and difficult to parallelize, impeding their real-time implementation.
+Our Laplacian pyramid based approach however, provides a noise-robust way of applying conventional diffusion filters to ultrasound images.
+Also, we have demonstrated the utility of RPNCD~\cite{gilboa_image_2004}, which have not been used for ultrasound images, despite being strongly robust against speckle noise.
+
+Meanwhile, some diffusion algorithms have proposed to selectively avoid smoothing pixels belonging to tissues~\cite{ramos-llorden_anisotropic_2015, mishra_edge_2018}.
+In our experiments, conventional tissue selective diffusion turned out to be sensitive to pepper noice.
+Also, as discussed in~\cref{section:fourchamber}, tissue selectivity is not always desirable depending on the clinical task.
+Therefore, further investigation on tissue slsectivity will need to be done.
+
+
 %% Various approaches for tuning medical ultrasound imaging systems have been proposed.
 %% However, most of these approaches were based on optimizing objective quality metrics, which are known to deliver good results.
 %% For example, specifically for image enhancement algorithms, Tay \textit{et al.} propose to maximize the \(\widehat{Q}\)-index metric~\cite{tay_ultrasound_2006}.
-%% However, the \(\widehat{Q}\)-index can only be evaluated on phantoms with ground truth segmentations.
+%% 
 %% This significantly restricts its practicality (see~\cite{ramos-llorden_anisotropic_2015}).
 %% Unfortuan
 

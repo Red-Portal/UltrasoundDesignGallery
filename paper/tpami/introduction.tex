@@ -27,13 +27,15 @@ Unfortunately, for medical ultrasound B-mode images, such an approach is limited
 \end{enumerate}
 For example, Outtas \textit{et al.}~found that ``\ldots the contrast perceived by radiologists is far from the one assessed by the three objective metrics used'' in their experiments~\cite{outtas_subjective_2018}.
 Perhaps an extreme example of this discrepancy between objective quality metrics and clinical performance is in the task of speckle reduction.
-Loizou \textit{et al.}~noted that speckle ``\ldots is not truly noise in the typical engineering sense because its texture often carries useful information about the image being viewed.''~\cite{loizou_comparative_2005}.
-However, most objective quality metrics used in speckle reduction simply focus on \textit{entirely removing} speckle.
+Loizou \textit{et al.}~noted that speckle ``\ldots is not truly noise in the typical engineering sense because its texture often carries useful information about the image.''~\cite{loizou_comparative_2005}.
+However, objective quality metrics used in speckle reduction simply focus on \textit{entirely removing} speckle.
 
 Such a mismatch between objective quality metrics and actual clinical performance has resulted in some works in ultrasound image enhancement to rely on \textit{subjective} quality assessments~\cite{loizou_quality_2006, hemmsen_ultrasound_2010, wong_monte_2012, kang_new_2016, mishra_edge_2018}.
 (For a review on subjective quality metrics in medical imaging, not restricted to ultrasound, see~\cite{chow_review_2016}.)
 While subjective metrics enable clinically-calibrated comparison of individual image enhancement methods, they are still challenging to use for \textit{tuning} system parameters.
-Also, even if we have access to reliable quality assessments, the large number of parameters in image enhancements methods complicates tuning.
+Previous approaches that learn subjective metrics~\cite{el-zehiry_learning_2013, abdi_automatic_2017, annangi_ai_2020} require a large dataset of quality assessments.
+Tuning a new system on a new task involves gathering a whole new dataset from scratch.
+Also, even if we have access to a dataset of quality assessments, the large number of parameters in image enhancements methods complicates tuning.
 (See~\cite[Table 5]{finn_echocardiographic_2011} for an incomplete list of examples.)
 This number multiplies as we combine multiple image enhancement methods.
 %Therefore, a crucial problem in medical ultrasound image enhancement is to automate the navigation of these high-dimensional parameter spaces. 
@@ -49,7 +51,9 @@ In this paper, we propose the~\textsc{Ultrasound Design Gallery} (USDG), a machi
   \item[\ding{228}] The inferred quality metric is optimized using Bayesian optimization (BO,~\cite{shahriari_taking_2016}), a black-box global optimization algorithm (\textbf{\cref{section:bo}}).
 \end{itemize}
 The~\usdg~enables personalization of image enhancement algorithms to individual sonographers and clinical tasks.
-Even better, the sonographer does not need to have any knowledge about the image enhancement algorithm being tuned and its parameters while interacting with the USDG.
+The sonographer does not need to have any knowledge about the image enhancement algorithm being tuned and its parameters while interacting with the USDG.
+Unlike the autotuning approach of El-Zehiry \textit{et al.}~\cite{el-zehiry_learning_2013}, the USDG does not require a large dataset of subjective quality assessments.
+Tuning a system from scratch on an entirely new task can be done in a matter of tens of minutes.
 
 %% Overall, the advantages of the \usdg~are summarized as follows:
 %% \begin{itemize}
@@ -79,7 +83,7 @@ Moreover, we show that all of the involved sonographers strongly preferred less 
   \item[\ding{228}] \textsc{\textbf{Cascaded Laplacian Pyramid Diffusion}}:  We propose a novel ultrasound image enhancement algorithm that incorporates anisotropic diffusion algorithms into Laplacian pyramid in cascaded form (\textbf{\cref{section:filter}}).
   \item[\ding{228}] We analyze the visual preference of practicing sonographers by letting them tune the CLPD on \textit{in vivo} ultrasound images using the USDG (\textbf{\cref{section:eval}}).
 \end{itemize}
-All the code used in our work, including the USDG and the CLPD (CUDA and Julia implementations), are openly available online\footnote{\url{https://github.com/Red-Portal/UltrasoundDesignGallery.git}}.
+All the code used in our work is openly available online\footnote{\url{https://github.com/Red-Portal/UltrasoundDesignGallery.git}}.
 
 %% The interface of the \usdg~is primarily inspired by 
 %% Among many different types of design galleries, \usdg~utilizes the \textit{sequential line search} interface designed by~\cite{10.1145/3072959.3073598}.

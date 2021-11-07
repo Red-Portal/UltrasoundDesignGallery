@@ -37,7 +37,7 @@ Embedding multiple videos on a 2D plane can be visually confusing, which is why 
 
 \subsubsection{Overview of the Ultrasound Design Gallery Interface}
 %
-\begin{figure}[h]
+\begin{figure}[t]
   \centering
   \includegraphics[scale=0.30]{figures/ui.png}
   \caption{User interface of the Ultrasound Design Gallery. We can see the \textbf{video (preview) window} (left), the \textbf{line search window} (top right), and the \textbf{video control window} (bottom right) }\label{fig:ui}
@@ -60,7 +60,7 @@ This process is illustrated in~\cref{fig:interaction}
 
 \subsubsection{Interacting with the Ultrasound Design Gallery}
 %
-\begin{figure}[h]
+\begin{figure}[t]
   \centering
   \includegraphics[scale=0.27]{figures/ui_interaction.pdf}
   \caption{Visualization of the interaction with the USDG}\label{fig:interaction}
@@ -76,7 +76,7 @@ The basic workflow of using the USDG is as follows:
 \item[\ding{187}] Go back to step~\ding{184} until convergence.
 \end{enumerate}
 
-\begin{figure}[h]
+\begin{figure}[t]
   \centering
   \includegraphics[scale=0.35]{figures/linesearch.pdf}
   \caption{Visualization of the relationship between the slider interface and the parameter space \(\mathcal{X}\).
@@ -124,7 +124,7 @@ Our probabilistic model is stated as
 \vf           \;&\sim \; \mathcal{GP}(0, \mK_{\ell} + \epsilon_{\vf}^2\mI) \nonumber\\
 \begin{matrix}
 \; f(\alpha_t\,\vxi + \vx_t) > f(\beta\,\vxi_t + \vx_t), \; \\
-\; \forall\beta \in \mathcal{I}\left(\vx, \vxi\right) \setminus \alpha \;
+\; \forall\beta \in \mathcal{I}\left(\vx_t, \vxi_t\right) \setminus \alpha \;
 \end{matrix}\; &\sim \; p\left(\cdot \mid\, \vf,\, \sigma,\, \alpha_t,\, \vx_t,\, \vxi_t\,\right) \nonumber 
 \end{align}
 %
@@ -231,10 +231,9 @@ Our formulation is based on
   %&= {\Big(\mK^{-1} \big(\mI + \mK \mW \big)\Big)}^{-1} \\
   \,=\, {{\big(\mI + \mK \mW \big)}^{-1} \mK} 
   \,=\, \mB^{-1} \mK 
-  \,=\, \mU_{\mB}^{-1} \, \mL_{\mB}^{-1} \, \mK \label{eq:BinvK}
-\;.
+  \,=\, \mU_{\mB}^{-1} \, \mL_{\mB}^{-1} \, \mK\label{eq:BinvK}
 \end{align}
-}
+}%
 {\noindent}where \cref{eq:BinvK} can be computed using the LU decomposition of \(\mB\) and back-substitution.
 The algorithm is shown in~\cref{alg:newton} where \(\vp\) is the Newton direction and the step size \(\eta\) is found using backtracking line search with Armijo's condition~\cite{nocedal_numerical_2006}.
 
@@ -487,7 +486,7 @@ Filtering is performed top-level first and bottom-level last, where the enhanced
 Also, our approach feeds a low-pass image to the enhancement filters, which makes it fully compatible with conventional anisotropic diffusion filters.
 
 Recall that, at the top level, \({\boldsymbol\ell}_L = \vg_L\).
-By applying an image enhancement filter \(F_L\left(\cdot\right)\), we obtain the filtered result \( \widehat{\vg}_L = F_L \left( \vg_L \right) \).
+By applying an image enhancement filter \(F_L\left(\cdot\right)\), we obtain the filtered result \( \widehat{\vg}_L = F_L \left( \overline{\vg}_L \right) \).
 Now, at each level, filtering is performed as
 %
 \begin{equation}
@@ -501,7 +500,7 @@ Now, at each level, filtering is performed as
     \node[dspnodeopen, dsp/label=left]  (g3) {\({\boldsymbol\ell}_{i}\)}; &
     \node[coordinate]                   (g4) {};        &
     \node[dspadder]                     (g5) {};        &
-    \node[dspnodefull, dsp/label=above] (g6) {\(\vg_{i}\)};        &
+    \node[dspnodefull, dsp/label=above] (g6) {\(\overline{\vg}_{i}\)};        &
     \node[dspsquare]                    (g7) {\(F_i\)}; &
     \node[dspnodeopen, dsp/label=right] (g8) {\(\widehat{\vg}_{i}\)}; \\
   };
@@ -523,7 +522,7 @@ where \(\widehat{\vg}_{0}\) is the final output image.
 %
 We make the following remarks:
 \begin{enumerate}
-  \item[\ding{220}] \(\vg_{i}\) is a proper low-pass image.
+  \item[\ding{220}] \(\overline{\vg_{i}}\) is a proper low-pass image.
   \item[\ding{220}] \(\widehat{\vg}_{i+1}\) contains the full low frequency band and the enhancements from the upper levels.
 %  \item[\ding{220}] \({\boldsymbol\ell}_{i}\) contains both noise and high frequency features (higher compared to that of \(\widehat{\vg}_{i+1}\))
 \end{enumerate}
@@ -553,7 +552,7 @@ Therefore, we use an amplifier that suppresses weak contrast such that
 \end{align}
 where \(\sigma\) is the threshold for small contrast.
 %
-\begin{figure}[H]
+\begin{figure}[t]
   \centering
   \begin{tikzpicture}[
       declare function={
@@ -576,7 +575,7 @@ where \(\sigma\) is the threshold for small contrast.
       \addplot [domain=-1:1, smooth, dotted, very thick, black] { x };
     \end{axis}
   \end{tikzpicture}
-  \caption{Plot of the amplifier function \(g\) (\textcolor{blue}{blue line}) with \(\sigma=0.5\), \(\beta=2\).
+  \caption{Response of the amplifier function \(g\) (\textcolor{blue}{blue line}) with \(\sigma=0.5\), \(\beta=2\).
   The dotted line shows a unity amplifier.}\label{fig:amp}
 \end{figure}
 %
@@ -593,7 +592,7 @@ Both NCD and RPNCD can be efficiently implemented on GPUs and have desirable pro
 In comparison, recently introduced diffusion filters based on probabilistic tissue segmentation~\cite{vegas-sanchez-ferrero_probabilisticdriven_2010, ramos-llorden_anisotropic_2015} require accurately estimating a probabilistic mixture model during execution, which is computationally expensive and difficult to take advantage of GPUs.
 Also, the recent method proposed by Mishra et al.~\cite{mishra_edge_2018} involves computing histogram of oriented gradients in the superpixel domain, which also cannot take advantage of GPUs.
 %
-\begin{figure}[H]
+\begin{figure}[t]
   \centering
   \subfloat[Original]{
     \includegraphics[trim={10cm, 10cm, 12cm, 5cm}, clip, scale=0.3]{figures/ncd_liver1.png}
@@ -611,7 +610,7 @@ Also, the recent method proposed by Mishra et al.~\cite{mishra_edge_2018} involv
 Upper levels of the Laplacian pyramid contain image structures such as the myocardium in echocardiographic images or the portal veins in the liver.
 In these levels, it is essential to recognize and enhance these structures.
 Also, since upper levels focus on low frequencies, they contain less noise, allowing aggressive filtering.
-For this, we leverage NCD, which is capable of enhancing spatial coherence.
+For this, we leverage NCD, which is capable of enhancing spatial coherence~\cite{weickert_coherenceenhancing_1999}.
 When naively applied to ultrasound images, coherence enhancement tends to interact badly with speckle noise, resulting in artistic flow-like artifacts as shown in~\cref{fig:ncd}.
 In contrast, since the upper levels of the CLPD have less noise, NCD can aggressively enhance structures by coherence-enhancement.
 

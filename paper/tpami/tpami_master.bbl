@@ -95,6 +95,25 @@ L.~S. Chow and R.~Paramesran, ``\BIBforeignlanguage{en}{Review of medical image
   quality assessment},'' \emph{\BIBforeignlanguage{en}{Biomed. Signal Process.
   Control}}, vol.~27, pp. 145--154, May 2016.
 
+\bibitem{el-zehiry_learning_2013}
+N.~{El-Zehiry} \emph{et~al.}, ``Learning the manifold of quality ultrasound
+  acquisition,'' in \emph{Med. {{Image Comput}}. {{Comput}}.-{{Assisted
+  Intervention}}}, ser. {{MICCAI}}'13.\hskip 1em plus 0.5em minus 0.4em\relax
+  {Berlin, Heidelberg}: {Springer Berlin Heidelberg}, 2013, vol. 7908, pp.
+  122--130.
+
+\bibitem{abdi_automatic_2017}
+A.~H. Abdi \emph{et~al.}, ``Automatic quality assessment of echocardiograms
+  using convolutional neural networks: Feasibility on the apical four-chamber
+  view,'' \emph{IEEE Trans. Med. Imaging}, vol.~36, no.~6, pp. 1221--1230, Jun.
+  2017.
+
+\bibitem{annangi_ai_2020}
+P.~Annangi \emph{et~al.}, ``{{AI}} assisted feedback system for transmit
+  parameter optimization in {{Cardiac Ultrasound}},'' in \emph{{{IEEE Int}}.
+  {{Ultraso}}. {{Symp}}.}, ser. {{IUS}}'20.\hskip 1em plus 0.5em minus
+  0.4em\relax {Las Vegas, NV, USA}: {IEEE}, Sep. 2020, pp. 1--4.
+
 \bibitem{brochu_bayesian_2010}
 E.~Brochu, T.~Brochu, and N.~{de Freitas}, ``A {{Bayesian Interactive
   Optimization Approach}} to {{Procedural Animation Design}},'' in \emph{Proc.
@@ -313,6 +332,11 @@ G.~{Vegas-Sanchez-Ferrero}, S.~{Aja-Fernandez}, M.~{Martin-Fernandez}, A.~F.
   0.4em\relax {Berlin, Heidelberg}: {Springer Berlin Heidelberg}, 2010, pp.
   518--525.
 
+\bibitem{weickert_coherenceenhancing_1999}
+J.~Weickert, ``\BIBforeignlanguage{Int. J. Comput. Vision}{{Coherence-enhancing
+  diffusion filtering}},'' \emph{\BIBforeignlanguage{Int. J. Comput.
+  Vision}{Int. J. Comput. Vis.}}, vol.~31, no. 2/3, pp. 111--127, 1999.
+
 \bibitem{aja-fernandez_estimation_2006}
 S.~{Aja-Fernandez} and C.~{Alberola-Lopez}, ``On the estimation of the
   coefficient of variation for anisotropic diffusion speckle filtering,''
@@ -380,11 +404,27 @@ Z.~Wang, A.~Bovik, H.~Sheikh, and E.~Simoncelli,
   structural similarity},'' \emph{\BIBforeignlanguage{en}{IEEE Trans. Image
   Process.}}, vol.~13, no.~4, pp. 600--612, Apr. 2004.
 
-\bibitem{singh_hybrid_2017}
-K.~Singh, S.~K. Ranade, and C.~Singh, ``\BIBforeignlanguage{en}{A hybrid
-  algorithm for speckle noise reduction of ultrasound images},''
-  \emph{\BIBforeignlanguage{en}{Comput. Methods Programs Biomed.}}, vol. 148,
-  pp. 55--69, Sep. 2017.
+\bibitem{lee_automatic_2006}
+D.~Lee, Y.~S. Kim, and J.~B. Ra, ``Automatic time gain compensation and dynamic
+  range control in ultrasound imaging systems,'' in \emph{Proc. {{SPIE Med}}.
+  {{Imag}}.}, {San Diego, CA}, Mar. 2006, p. 614708.
+
+\bibitem{lee_automatic_2015}
+Y.~Lee, J.~Kang, and Y.~Yoo, ``\BIBforeignlanguage{en}{Automatic dynamic range
+  adjustment for ultrasound {{B}}-mode imaging},''
+  \emph{\BIBforeignlanguage{en}{Ultrasonics}}, vol.~56, pp. 435--443, Feb.
+  2015.
+
+\bibitem{coupe_nonlocal_2009}
+P.~Coupe, P.~Hellier, C.~Kervrann, and C.~Barillot, ``Nonlocal means-based
+  speckle filtering for ultrasound images,'' \emph{IEEE Trans. Image Process.},
+  vol.~18, no.~10, pp. 2221--2229, Oct. 2009.
+
+\bibitem{streijl_mean_2016}
+R.~C. Streijl, S.~Winkler, and D.~S. Hands, ``\BIBforeignlanguage{en}{Mean
+  opinion score ({{MOS}}) revisited: Methods and applications, limitations and
+  alternatives},'' \emph{\BIBforeignlanguage{en}{Multimedia Systems}}, vol.~22,
+  no.~2, pp. 213--227, Mar. 2016.
 
 \bibitem{NIPS2013_f33ba15e}
 K.~Swersky, J.~Snoek, and R.~P. Adams, ``Multi-task bayesian optimization,'' in

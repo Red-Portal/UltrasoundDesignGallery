@@ -10,11 +10,16 @@ The CLPD enables sharing of information between different image scales and seaml
 Our experimental results have shown that individual sonographers exhibit different visual preferences.
 In addition, their preference changes greatly depending on the clinical task and scanning view.
 Therefore, personalized and task-specific tuning of ultrasound image enhancement algorithms, possibly using the USDG, is crucial for optimal clinical performance.
-
 While image sharpness/blurriness has not been a focus in medical ultrasound images, we have shown that sonographers prioritize natural and sharp-looking images.
 Unfortunately, most conventional blurriness metrics are calibrated to natural images.
 Therefore, we point out that quantifying the blurriness of medical ultrasound images is an interesting open problem.
-In addition, for understanding and optimizing the preference of sonographers and radiologists, methods developed in psychology such as~\cite{NIPS2007_89d4402d} could be interesting to explore.
+
+Lastly, while we emphasized the importance of subjective quality metrics, it is needless to say that objective quality metrics are still important.
+An important direction for future research would be to further create metrics that are properly aligned with actual clinical performance.
+Also, machine learning has introduced many tools that could further advance automatic tuning of medical imaging systems.
+For example, multi-task Bayesian optimization~\cite{NIPS2013_f33ba15e} could be used for finding settings that optimize many objective characteristics such as sharpness, noise, and contrast all at once.
+
+%In addition, for understanding and optimizing the preference of sonographers and radiologists, methods developed in psychology such as~\cite{NIPS2007_89d4402d} could be interesting to explore.
 
 %%% Local Variables:
 %%% TeX-master: "master"

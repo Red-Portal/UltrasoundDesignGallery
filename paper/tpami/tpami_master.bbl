@@ -100,7 +100,7 @@ E.~Brochu, T.~Brochu, and N.~{de Freitas}, ``A {{Bayesian Interactive
   Optimization Approach}} to {{Procedural Animation Design}},'' in \emph{Proc.
   {{ACM SIGGRAPH}}/{{Eurographics Symp}}. {{Comput}}. {{Animation}}}, ser.
   {{SCA}} '10.\hskip 1em plus 0.5em minus 0.4em\relax {Goslar, DEU}:
-  {Eurographics Association}, 2010, pp. 103--112.
+  {Eurographics Assoc.}, 2010, pp. 103--112.
 
 \bibitem{10.1145/3072959.3073598}
 Y.~Koyama, I.~Sato, D.~Sakamoto, and T.~Igarashi, ``Sequential line search for
@@ -121,9 +121,9 @@ H.~Q. Phan, H.~Fu, and A.~B. Chan, ``Color orchestra: {{Ordering}} color
 \bibitem{pmlr-v119-mikkola20a}
 P.~Mikkola, M.~Todorovi{\'c}, J.~J{\"a}rvi, P.~Rinke, and S.~Kaski,
   ``Projective preferential {{Bayesian}} optimization,'' in \emph{Proc.
-  {{Int}}. {{Conf}}. {{Mach}}. {{Learn}}.}, ser. Proceedings of Machine
-  Learning Research, vol. 119.\hskip 1em plus 0.5em minus 0.4em\relax {ML
-  Research Press}, Jul. 2020, pp. 6884--6892.
+  {{Int}}. {{Conf}}. {{Mach}}. {{Learn}}.}, ser. Proc. {{Mach}}. {{Learn}}.
+  {{Res}}., vol. 119.\hskip 1em plus 0.5em minus 0.4em\relax {ML Research
+  Press}, Jul. 2020, pp. 6884--6892.
 
 \bibitem{rasmussen_gaussian_2006}
 C.~E. Rasmussen and C.~K.~I. Williams, \emph{Gaussian Processes for Machine
@@ -298,11 +298,6 @@ S.~Dippel, M.~Stahl, R.~Wiemker, and T.~Blaffert,
   \emph{\BIBforeignlanguage{en}{IEEE Trans. Med. Imaging}}, vol.~21, no.~4, pp.
   343--353, Apr. 2002.
 
-\bibitem{10.1145/2010324.1964963}
-S.~Paris, S.~W. Hasinoff, and J.~Kautz, ``Local {{Laplacian}} filters:
-  {{Edge}}-aware image processing with a {{Laplacian}} pyramid,'' \emph{ACM
-  Trans. Graph.}, vol.~30, no.~4, Jul. 2011.
-
 \bibitem{gilboa_image_2004}
 G.~Gilboa, N.~Sochen, and Y.~Zeevi, ``\BIBforeignlanguage{en}{Image enhancement
   and denoising by complex diffusion processes},''
@@ -384,5 +379,16 @@ Z.~Wang, A.~Bovik, H.~Sheikh, and E.~Simoncelli,
   ``\BIBforeignlanguage{en}{Image quality assessment: From error visibility to
   structural similarity},'' \emph{\BIBforeignlanguage{en}{IEEE Trans. Image
   Process.}}, vol.~13, no.~4, pp. 600--612, Apr. 2004.
+
+\bibitem{singh_hybrid_2017}
+K.~Singh, S.~K. Ranade, and C.~Singh, ``\BIBforeignlanguage{en}{A hybrid
+  algorithm for speckle noise reduction of ultrasound images},''
+  \emph{\BIBforeignlanguage{en}{Comput. Methods Programs Biomed.}}, vol. 148,
+  pp. 55--69, Sep. 2017.
+
+\bibitem{NIPS2013_f33ba15e}
+K.~Swersky, J.~Snoek, and R.~P. Adams, ``Multi-task bayesian optimization,'' in
+  \emph{Advances in Neural Information Processing Systems}, vol.~26.\hskip 1em
+  plus 0.5em minus 0.4em\relax {Curran Associates, Inc.}, 2013.
 
 \end{thebibliography}

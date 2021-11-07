@@ -15,6 +15,14 @@ Automatic tuning is done by receiving preferential feedback from a sonographer.
 While conceptually similar with ours, the approach of El-Zehiry \textit{et al.} requires a large dataset of subjective assessment.
 This dataset need to be reconstructed from scratch for each ultrasound imaging systems, which limits applicability.
 
+For tuning the learned subjective quality metric, we use Bayesian Optimization~\cite{shahriari_taking_2016} (BO), a black-box gradient-free optimization algorithm.
+BO have been successfully applied to tuning systems that are difficult to model mathematically.
+Also, BO requires only a small number of objective function evaluations to converge, which sets it apart from metaheuristic approaches.
+It has therefore been successfully applied to problems where evaluating the objective is expensive such as analog circuit design~\cite{lyu_multiobjective_2018} and drug discovery~\cite{sano_application_2020}.
+The use of BO within Design Galleries have been popularized by Brochu \textit{et al.}~\cite{NIPS2007_b6a1085a, brochu_bayesian_2010}.
+Connections between Design Galleries and BO can be found in preferential BO~\cite{pmlr-v70-gonzalez17a}, where the objective function is specifically assumed to be human preference.
+In this work, we used the projective preferential BO~\cite{pmlr-v119-mikkola20a}, which provides a probabilistic model perfectly suited for our design gallery.
+
 \subsection{Subjective Image Quality Assessment}
 Subjective quality assessment is an important tool for evaluating ultrasound imaging techniques.
 For example, ultrasound image enhancements algorithms have used subjective quality assessment for accurately evaluating their performance~\cite{loizou_quality_2006, hemmsen_ultrasound_2010, wong_monte_2012, kang_new_2016, mishra_edge_2018}.
@@ -34,7 +42,6 @@ Design Galleries have been successfully applied to various visual design tasks s
 To enable better interaction between the user and the Design Gallery, alternative user interfaces have been proposed~\cite{phan_color_2018, 10.1145/3072959.3073598, koyama_sequential_2020}, which these were mainly designed for still images.
 Since medical ultrasound images are normally presented in continuous video sequences, we use the 1D sequential line search interface~\cite{10.1145/3072959.3073598}.
 
-While the original Design Gallery used evolutionary strategies for generating choices, Brochu \textit{et al.}~\cite{NIPS2007_b6a1085a, brochu_bayesian_2010} popularized the use of BO. 
 
 %The works of Brochu \textit{et al.} has later lead to the development of preferential BO~\cite{pmlr-v70-gonzalez17a, pmlr-v119-mikkola20a}, which specifically aim to infer and optimize human preference.
 %In this work, we combine projective preferential BO~\cite{pmlr-v119-mikkola20a} with the sequential line search interface, which provide a probabilistic model for Design Galleries with continuously embedded choices.
@@ -44,14 +51,14 @@ While the original Design Gallery used evolutionary strategies for generating ch
 %% tend to generate blurry images regardless of the speckle reduction performance.
 %% Especially, despite the superior performance of the hybrid filter~\cite{singh_hybrid_2017}.
 
-Recently, Annangi~\textit{et al.} trained deep learning models to predict the subjective quality assessments of sonographers~\cite{annangi_ai_2020}.
-The subjective quality metrics were recorded in a 1 to 5 Lickert scale.
-Deep learning based approach require a large amount of labeled data (their dataset has 320 subjects).
-Therefore, compared to our approach, task and sonographer specific learning of quality metrics is difficult.
+%% Recently, Annangi~\textit{et al.} trained deep learning models to predict the subjective quality assessments of sonographers~\cite{annangi_ai_2020}.
+%% The subjective quality metrics were recorded in a 1 to 5 Lickert scale.
+%% Deep learning based approach require a large amount of labeled data (their dataset has 320 subjects).
+%% Therefore, compared to our approach, task and sonographer specific learning of quality metrics is difficult.
 
 
-Recently,
-machine learning based a
+%% Recently,
+%% machine learning based a
 
 
 \subsection{Ultrasound Image Enhancement Algorithms}

@@ -420,6 +420,24 @@ P.~Coupe, P.~Hellier, C.~Kervrann, and C.~Barillot, ``Nonlocal means-based
   speckle filtering for ultrasound images,'' \emph{IEEE Trans. Image Process.},
   vol.~18, no.~10, pp. 2221--2229, Oct. 2009.
 
+\bibitem{lyu_multiobjective_2018}
+W.~Lyu, F.~Yang, C.~Yan, D.~Zhou, and X.~Zeng, ``Multi-objective {{Bayesian}}
+  optimization for analog/{{RF}} circuit synthesis,'' in \emph{Proc.
+  {{ACM}}/{{ESDA}}/{{IEEE Des}}. {{Automat}}. {{Conf}}.}\hskip 1em plus 0.5em
+  minus 0.4em\relax {San Francisco, CA}: {IEEE}, Jun. 2018, pp. 1--6.
+
+\bibitem{sano_application_2020}
+S.~Sano, T.~Kadowaki, K.~Tsuda, and S.~Kimura,
+  ``\BIBforeignlanguage{en}{Application of {{Bayesian}} optimization for
+  pharmaceutical product development},'' \emph{\BIBforeignlanguage{en}{J.
+  Pharmaceutical Innov.}}, vol.~15, no.~3, pp. 333--343, Sep. 2020.
+
+\bibitem{pmlr-v70-gonzalez17a}
+J.~Gonz{\'a}lez, Z.~Dai, A.~Damianou, and N.~D. Lawrence, ``Preferential
+  {{Bayesian}} optimization,'' in \emph{Proc. {{Int}}. {{Conf}}. {{Mach}}.
+  {{Learn}}.}, ser. Proc. {{Mach}}. {{Learn}}. {{Res}}., vol.~70.\hskip 1em
+  plus 0.5em minus 0.4em\relax {ML Research Press}, Aug. 2017, pp. 1282--1291.
+
 \bibitem{streijl_mean_2016}
 R.~C. Streijl, S.~Winkler, and D.~S. Hands, ``\BIBforeignlanguage{en}{Mean
   opinion score ({{MOS}}) revisited: Methods and applications, limitations and

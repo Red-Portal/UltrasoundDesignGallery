@@ -55,7 +55,7 @@ The directory must contain a *single* png file containing the roi mask and multi
 Each pfm file is used as a single frame of the sequence, and its intensity is assumed to be in [0, 1].
 The pfm files are sorted in natural order before being played.
 
-![](resource/screenshots/ui_interaction.pdf)
+![](resource/screenshots/ui_interaction.png)
 
 After opening a sequence, you can freely interact with the UI as shown in the illustration above.
 

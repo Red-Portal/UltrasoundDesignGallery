@@ -48,6 +48,13 @@ cmake -DCMAKE_CUDA_HOST_COMPILER=clang++-11 \
 make
 ```
 
+## Usage
+
+Select a directory in [File] -> [Open].
+The directory must contain a *single* png file containing the roi mask and multiple PFM (Portable FloatMap) files.
+Each pfm file is used as a single frame of the sequence, and its intensity is assumed to be in [0, 1].
+The pfm files are sorted in natural order before being played.
+
 ## License
 
 ```

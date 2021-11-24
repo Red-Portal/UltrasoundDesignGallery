@@ -1,17 +1,52 @@
 
 # Ultrasound Design Gallery
 
+![](resource/screenshots/ui.png)
+
+The Ultrasound Design Gallery is a graphical tool for tuning medical ultrasound image enhancement algorithms.
+
+## Dependencies
+* C++-20 compatible compiler
+* CUDA-enabled GPU
+* CUDA toolkit with nvcc
+* OpenCV with CUDA enabled
+* [Imgui](https://github.com/ocornut/imgui)
+* [sfml](https://www.sfml-dev.org/)
+* [Imgui-sfml](https://github.com/eliasdaler/imgui-sfml)
+* [Blaze](https://bitbucket.org/blaze-lib/blaze)
+* (optionally for tests) [Catch2](https://github.com/catchorg/Catch2)
+
 ## Installation
+
+First, install all the dependencies above.
+Then, run the following commands.
 
 ```sh
 git clone --recursive https://github.com/Red-Portal/UltrasoundDesignGallery.git
 mkdir build && cd build 
-cmake -G "Unix Makefile"
-make 
+cmake -DCMAKE_CXX_FLAGS="-std=c++20" \
+	-DCMAKE_CUDA_ARCHITECTURES=<CUDA Architecture> \
+	-DSFML_DIR=<SFML Directory> \
+	-G "Unix Makefile" ..
+make
 ```
 
-## Dependencies
+In some unfortunate cases, the compiler supporting C++-20 isn't compatible the CUDA toolkit.
+Then, use a different compiler for the CUDA compiled parts.
+For example, on Ubuntu 20.04 with a GTX 2080 ti GPU, the following combination of clang and gcc works.
 
+```sh
+git clone --recursive https://github.com/Red-Portal/UltrasoundDesignGallery.git
+mkdir build && cd build 
+cmake -DCMAKE_CUDA_HOST_COMPILER=clang++-11 \
+	-DCMAKE_CXX_COMPILER=g++-11 \
+	-DCMAKE_CXX_FLAGS="-std=c++20" \
+	-DCUDA_NVCC_FLAGS="-allow-unsupported-compiler" \
+	-DCMAKE_CUDA_ARCHITECTURES=7.5 \
+	-DSFML_DIR=<SFML Directory> \
+	-G "Unix Makefile" ..
+make
+```
 
 ## License
 
@@ -31,5 +66,4 @@ make
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ```
-
 

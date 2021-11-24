@@ -1,5 +1,5 @@
 
-
+\vspace{-0.05in}
 \section{Disscusions}\label{section:conclusion}
 Understanding and optimizing the subjective quality metrics of sonographers is a crucial task for improving the clinical performance of medical ultrasound imaging systems.
 In this work, we have presented the \textsc{Ultrasound Design Gallery}, a graphical tool for inferring and optimizing the subjective metrics of sonographers.
@@ -10,9 +10,12 @@ The CLPD enables sharing of information between different image scales and seaml
 Our experimental results have shown that individual sonographers exhibit different visual preferences.
 In addition, their preference changes greatly depending on the clinical task and scanning view.
 Therefore, personalized and task-specific tuning of ultrasound image enhancement algorithms, possibly using the USDG, is crucial for optimal clinical performance.
-While image sharpness/blurriness has not been a focus in medical ultrasound images, we have shown that sonographers prioritize natural and sharp-looking images.
-Unfortunately, most conventional blurriness metrics are calibrated to natural images.
-Therefore, we point out that quantifying the blurriness of medical ultrasound images is an interesting open problem.
+  To quote one of the participating sonographer, ``in clinical settings, sonographers often use a single fixed setting for multiple patients.
+  The USDG enables patient specific tuning with only a few clicks.'' 
+
+While quantifying image sharpness/blurriness has not been a focus in medical ultrasound images, we have shown that sonographers prioritize sharp-looking images.
+Conventional blurriness metrics, such as \(S_3\) that we employed, are calibrated to natural images.
+Therefore, principled quantification of the blurriness of medical ultrasound images remains to be an interesting open problem.
 
 Lastly, while we emphasized the importance of subjective quality metrics, it is needless to say that objective quality metrics are still important.
 An important direction for future research would be to further create metrics that are properly aligned with actual clinical performance.

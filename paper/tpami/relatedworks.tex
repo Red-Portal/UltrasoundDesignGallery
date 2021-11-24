@@ -1,24 +1,26 @@
 
 \section{Related Works}\label{section:relatedworks}
 \subsection{Automatic Tuning of Ultrasound Imaging Systems}
-Automatic tuning of the various system parameters in medical ultrasound imaging systems is an important task.
-The two fundamental tasks of automatic tuning are to set up an objective function and to choose an optimization procedure.
+Automatic tuning of system parameters in medical ultrasound imaging systems is an important problem.
+The two fundamental tasks in automatic tuning are to set up an objective function and to choose an optimization procedure.
 For example, the weighted sum of edge contrast and soft tissue roughness has been used for tuning the time-gain compensation curve~\cite{lee_automatic_2006} and dynamic range~\cite{lee_automatic_2015}.
-For tuning image enhancement algorithms, Tay \textit{et al.} propose the \(\widehat{Q}\)-index metric~\cite{tay_ultrasound_2006} (later used in~\cite{coupe_nonlocal_2009, ramos-llorden_anisotropic_2015}), while Mishra \textit{et al.} used the classic SSNR metric~\cite{mishra_edge_2018}.
+For tuning image enhancement algorithms, Tay \textit{et al.} proposed the \(\widehat{Q}\)-index metric~\cite{tay_ultrasound_2006} (later used in~\cite{coupe_nonlocal_2009, ramos-llorden_anisotropic_2015}), while Mishra \textit{et al.} used the classic SSNR metric~\cite{mishra_edge_2018}.
 Unfortunately, parameters optimal according to these metrics often turn out to be poor on \textit{in vivo} images~\cite{ramos-llorden_anisotropic_2015}.
 Therefore, automatic tuning approaches based on objective quality metrics are fundamentally limited.
 
 El-Zehiry \textit{et al.}~\cite{el-zehiry_learning_2013} took a fundamentally different approach.
-They first train a machine learning model on the sonographers' subjective quality metrics.
-Then, the model guides the tuning process of the system parameters, where a sonographer provides  preferential feedback from a sonographer, where the model guides optimization.
-While conceptually similar to ours, the approach of El-Zehiry \textit{et al.} requires a large dataset of subjective assessment.
-This dataset needs to be reconstructed from scratch for each ultrasound imaging system, which limits applicability.
+They first trained a machine learning model on the sonographers' subjective quality metrics.
+Then, the model is used to guide tuning where a sonographer provides preferential feedback.
+While conceptually similar to ours, this approach requires a large dataset of subjective assessment.
+For each ultrasound imaging system, the dataset needs to be reconstructed from scratch, limiting the method's applicability.
 
+\subsection{Preferential Bayesian Optimization}
 For optimization, we leverage Bayesian Optimization~\cite{shahriari_taking_2016} (BO), a black-box gradient-free optimization algorithm.
 BO has been successfully applied to tuning systems that are difficult to model mathematically.
 Also, BO requires only a small number of objective function evaluations to converge, which sets it apart from metaheuristic approaches.
 Therefore, it has been applied to problems where evaluating the objective is expensive, including analog circuit design~\cite{lyu_multiobjective_2018} and drug discovery~\cite{sano_application_2020}.
-The use of BO within Design Galleries has been popularized by Brochu \textit{et al.}~\cite{NIPS2007_b6a1085a, brochu_bayesian_2010}.
+
+The use of BO within design galleries has been popularized by Brochu \textit{et al.}~\cite{NIPS2007_b6a1085a, brochu_bayesian_2010}.
 Connections between Design Galleries and BO can be found in preferential BO~\cite{pmlr-v70-gonzalez17a}, where the objective function is specifically assumed to be human preference.
 In this work, we used the projective preferential BO~\cite{pmlr-v119-mikkola20a}, which provides a probabilistic model ideally suited for our design gallery.
 
@@ -36,8 +38,8 @@ These approaches are limited in that they require a large dataset of assessments
 To train personalized or task-specific models, they need to create a new dataset from scratch.
 
 Our method for inferring subjective quality assessments is based on the Design Gallery~\cite{10.1145/258734.258887}.
-So far, we are the first work proposing the use of the Design Gallery 
-Design Galleries have been successfully applied to various visual design tasks such as graphics design~\cite{10.1145/258734.258887}, procedural animation generation~\cite{brochu_bayesian_2010}, and color design~\cite{phan_color_2018}.
+%So far, we are the first work proposing the use of the Design Gallery 
+Design galleries have been successfully applied to various visual design tasks such as graphics design~\cite{10.1145/258734.258887}, procedural animation generation~\cite{brochu_bayesian_2010}, and color design~\cite{phan_color_2018}.
 Alternative user interfaces have been proposed~\cite{phan_color_2018, 10.1145/3072959.3073598, koyama_sequential_2020}; these were mainly designed to be used with still images.
 Since medical ultrasound images are typically presented in continuous video sequences, we use the 1D sequential line search interface~\cite{10.1145/3072959.3073598}.
 
@@ -77,15 +79,17 @@ On the other hand, NCD is a powerful tool for enhancing image structures when us
 Most anisotropic diffusion filters perform edge detection as an intermediate step.
 The low SNR of ultrasound images makes edge detection challenging, harming the performance of conventional diffusion filters.
 Although diffusion filters based on Kuan and Lee's coefficient avoid edge-detection~\cite{yongjianyu_speckle_2002, aja-fernandez_estimation_2006, krissian_oriented_2007}, they result in blurry, over-smoothed images~\cite{ramos-llorden_anisotropic_2015, mishra_edge_2018}.
-Recently, approaches that avoid edge-detection by probabilistic segmentation~\cite{vegas-sanchez-ferrero_probabilisticdriven_2010, ramos-llorden_anisotropic_2015}, and histogram of oriented gradients in the superpixel domain~\cite{mishra_edge_2018}.
+Previous works that avoid edge-detection used probabilistic segmentation~\cite{vegas-sanchez-ferrero_probabilisticdriven_2010, ramos-llorden_anisotropic_2015}, and histogram of oriented gradients in the superpixel domain~\cite{mishra_edge_2018}.
 These methods are computationally expensive and challenging to parallelize, impeding their real-time implementation.
 However, our Laplacian pyramid-based approach provides a noise-robust way of applying conventional diffusion filters to ultrasound images.
-Also, we have demonstrated the utility of RPNCD~\cite{gilboa_image_2004}, which has not been used for ultrasound images, despite being robust against speckle noise.
+Also, we have demonstrated the utility of RPNCD~\cite{gilboa_image_2004} for ultrasound images.
+%despite being robust against speckle noise.
 
-Meanwhile, some diffusion algorithms have proposed to selectively avoid smoothing pixels belonging to tissues~\cite{ramos-llorden_anisotropic_2015, mishra_edge_2018}.
-In our experiments, conventional tissue-selective diffusion turned out to be sensitive to pepper noise.
+Meanwhile, ``tissue selectivity'' has emerged as a recent trend~\cite{ramos-llorden_anisotropic_2015, mishra_edge_2018}.
+Anisotropic diffusions with tissue selectivity avoid smoothing pixels with high intensity, as they are likely to belong to tissues.
+In our experiments, tissue selectivity turned out to be undesirably sensitive to pepper noise.
 Also, as discussed in~\cref{section:fourchamber}, tissue selectivity is not always desirable depending on the clinical task.
-Therefore, further investigation on tissue selectivity will need to be done.
+Therefore, further investigation on the utility of tissue selectivity is needed.
 
 
 %% Various approaches for tuning medical ultrasound imaging systems have been proposed.

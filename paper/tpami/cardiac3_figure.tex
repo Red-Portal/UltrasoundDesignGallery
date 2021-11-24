@@ -1,6 +1,6 @@
 
 \begin{figure*}
-  \vspace{-0.1in}
+  \vspace{-0.2in}
   \centering
   \begin{subfigure}[b]{0.15\textwidth}
     \begin{tikzpicture}[
@@ -117,7 +117,7 @@
           every spy on node/.append style={transparentwindow}
         }
       ]
-      \node (figA) at (0.0,0.0) {\includegraphics[width=\textwidth]{figures/cardiac3_clpdc.png}};
+      \node (figA) at (0.0,0.0) {\includegraphics[width=\textwidth]{figures/cardiac3_clpde.png}};
       \spy on (0.1, 0.2) in node [redwindow, anchor=north] at ($(figA.south)$);
     \end{tikzpicture}
     \caption{CLPD-E}
@@ -129,7 +129,7 @@
           every spy on node/.append style={transparentwindow}
         }
       ]
-      \node (figA) at (0.0,0.0) {\includegraphics[width=\textwidth]{figures/cardiac3_clpdd.png}};
+      \node (figA) at (0.0,0.0) {\includegraphics[width=\textwidth]{figures/cardiac3_clpdf.png}};
       \spy on (0.1, 0.2) in node [redwindow, anchor=north] at ($(figA.south)$);
     \end{tikzpicture}
     \caption{CLPD-F}
@@ -146,6 +146,9 @@
     \end{tikzpicture}
     \caption{Original}\label{fig:cardiac3_original}
   \end{subfigure}
-  \caption{Results on echocardiographic 4-chamber image.}\label{fig:cardiac3}
-  \vspace{-0.1in}
+  \caption{
+    Results on echocardiographic 4-chamber view.
+    The red squares are zooming on the left-ventricle.
+  }\label{fig:cardiac3}
+  \vspace{-0.15in}
 \end{figure*}

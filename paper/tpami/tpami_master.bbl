@@ -261,18 +261,6 @@ D.~C. Liu and J.~Nocedal, ``\BIBforeignlanguage{en}{On the limited memory
   \emph{\BIBforeignlanguage{en}{Math. Program.}}, vol.~45, no. 1-3, pp.
   503--528, Aug. 1989.
 
-\bibitem{yongjianyu_speckle_2002}
-{Yongjian Yu} and S.~Acton, ``\BIBforeignlanguage{en}{Speckle reducing
-  anisotropic diffusion},'' \emph{\BIBforeignlanguage{en}{IEEE Trans. Image
-  Process.}}, vol.~11, no.~11, pp. 1260--1270, Nov. 2002.
-
-\bibitem{abd-elmoniem_realtime_2002}
-K.~{Abd-Elmoniem}, A.-B. Youssef, and Y.~Kadah,
-  ``\BIBforeignlanguage{en}{Real-time speckle reduction and coherence
-  enhancement in ultrasound imaging via nonlinear anisotropic diffusion},''
-  \emph{\BIBforeignlanguage{en}{IEEE Trans. Biomed. Eng.}}, vol.~49, no.~9, pp.
-  997--1014, Sep. 2002.
-
 \bibitem{xulizong_speckle_1998}
 {Xuli Zong}, A.~Laine, and E.~Geiser, ``Speckle reduction and contrast
   enhancement of echocardiograms via multiscale nonlinear processing,''
@@ -317,6 +305,13 @@ S.~Dippel, M.~Stahl, R.~Wiemker, and T.~Blaffert,
   \emph{\BIBforeignlanguage{en}{IEEE Trans. Med. Imaging}}, vol.~21, no.~4, pp.
   343--353, Apr. 2002.
 
+\bibitem{abd-elmoniem_realtime_2002}
+K.~{Abd-Elmoniem}, A.-B. Youssef, and Y.~Kadah,
+  ``\BIBforeignlanguage{en}{Real-time speckle reduction and coherence
+  enhancement in ultrasound imaging via nonlinear anisotropic diffusion},''
+  \emph{\BIBforeignlanguage{en}{IEEE Trans. Biomed. Eng.}}, vol.~49, no.~9, pp.
+  997--1014, Sep. 2002.
+
 \bibitem{gilboa_image_2004}
 G.~Gilboa, N.~Sochen, and Y.~Zeevi, ``\BIBforeignlanguage{en}{Image enhancement
   and denoising by complex diffusion processes},''
@@ -336,6 +331,11 @@ G.~{Vegas-Sanchez-Ferrero}, S.~{Aja-Fernandez}, M.~{Martin-Fernandez}, A.~F.
 J.~Weickert, ``\BIBforeignlanguage{Int. J. Comput. Vision}{{Coherence-enhancing
   diffusion filtering}},'' \emph{\BIBforeignlanguage{Int. J. Comput.
   Vision}{Int. J. Comput. Vis.}}, vol.~31, no. 2/3, pp. 111--127, 1999.
+
+\bibitem{yongjianyu_speckle_2002}
+{Yongjian Yu} and S.~Acton, ``\BIBforeignlanguage{en}{Speckle reducing
+  anisotropic diffusion},'' \emph{\BIBforeignlanguage{en}{IEEE Trans. Image
+  Process.}}, vol.~11, no.~11, pp. 1260--1270, Nov. 2002.
 
 \bibitem{aja-fernandez_estimation_2006}
 S.~{Aja-Fernandez} and C.~{Alberola-Lopez}, ``On the estimation of the
@@ -374,6 +374,10 @@ S.~Leclerc \emph{et~al.}, ``Deep learning for segmentation using an open
   {{Comput}}.-{{Based Med}}. {{Syst}}.}, ser. {{CBMS}}'04.\hskip 1em plus 0.5em
   minus 0.4em\relax {Bethesda, MD, USA}: {IEEE}, 2004, pp. 279--284.
 
+\bibitem{burckhardt_speckle_1978}
+C.~B. Burckhardt, ``Speckle in ultrasound {{B}}-mode scans,'' \emph{IEEE Trans.
+  Son. Ultrason.}, vol.~25, no.~1, pp. 1--6, Jan. 1978.
+
 \bibitem{patterson_improvement_1983}
 M.~S. Patterson and F.~S. Foster, ``\BIBforeignlanguage{en}{The improvement and
   quantitative assessment of {{B}}-mode images produced by an annular
@@ -403,6 +407,11 @@ Z.~Wang, A.~Bovik, H.~Sheikh, and E.~Simoncelli,
   ``\BIBforeignlanguage{en}{Image quality assessment: From error visibility to
   structural similarity},'' \emph{\BIBforeignlanguage{en}{IEEE Trans. Image
   Process.}}, vol.~13, no.~4, pp. 600--612, Apr. 2004.
+
+\bibitem{bottenus_resolution_2021}
+N.~Bottenus, M.~LeFevre, J.~Cleve, A.~L. Crowley, and G.~Trahey, ``Resolution
+  and speckle reduction in cardiac imaging,'' \emph{IEEE Trans. Ultrason.
+  Ferroelect. Freq. Contr.}, vol.~68, no.~4, pp. 1131--1143, Apr. 2021.
 
 \bibitem{lee_automatic_2006}
 D.~Lee, Y.~S. Kim, and J.~B. Ra, ``Automatic time gain compensation and dynamic

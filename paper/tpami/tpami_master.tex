@@ -281,6 +281,14 @@
 \usepackage{pifont}
 \usepackage{nicefrac}
 
+%% \newenvironment{absolutelynopagebreak}
+%%   {\par\nobreak\vfil\penalty0\vfilneg
+%%    \vtop\bgroup}
+%%   {\par\xdef\tpd{\the\prevdepth}\egroup
+%%    \prevdepth=\tpd}
+
+%% \allowdisplaybreaks
+
 \let\labelindent\relax
 \usepackage[inline]{enumitem}
 
@@ -513,18 +521,19 @@ E-mail: drxmin@hansono.com
 \input{relatedworks}
 \input{conclusion}
 
-%% % use section* for acknowledgment
-%% \ifCLASSOPTIONcompsoc
-%%   % The Computer Society usually uses the plural form
-%%   \section*{Acknowledgments}
-%% \else
-%%   % regular IEEE prefers the singular form
-%%   \section*{Acknowledgment}
-%% \fi
+% use section* for acknowledgment
+\ifCLASSOPTIONcompsoc
+  % The Computer Society usually uses the plural form
+  \section*{Acknowledgments}
+\else
+  % regular IEEE prefers the singular form
+  \section*{Acknowledgment}
+\fi
 
-%% This work was only made possible by the support and voluntary contribution of the sonographers at Kangbuk Samsung Hospital.
-%% The authors are also ever so greatful to Jungkyu Kang and Yangmo Yoo for their feedback on our image enhancement algorithm, Petrus Mikkola for discussions about projective preferential Bayesian optimization, and Aki Vehtari for discussions about Gaussian processes.
+This work was only made possible by the support and voluntary contribution of the sonographers at Kangbuk Samsung Hospital.
+The authors are also grateful to Jungkyu Kang and Yangmo Yoo for their feedback on our image enhancement algorithm, Petrus Mikkola for discussions about projective preferential Bayesian optimization, and Aki Vehtari for discussions about Gaussian processes.
 
+This work was supported by the Korea Medical Device Development Fund grant funded by the Korea government (the Ministry of Science and ICT, the Ministry of Trade, Industry and Energy, the Ministry of Health \& Welfare, the Ministry of Food and Drug Safety) (Project Number: 1711137879, KMDF\_PR\_20200901\_0009)
 
 % Can use something like this to put references on a page
 % by themselves when using endfloat and the captionsoff option.
@@ -555,6 +564,7 @@ E-mail: drxmin@hansono.com
 % <OR> manually copy in the resultant .bbl file
 % set second argument of \begin to the number of references
 % (used to reserve space for the reference number labels box)
+%\vspace{-0.15in}
 \bibliographystyle{IEEEtran}
 \bibliography{bstcontrol,references}
 

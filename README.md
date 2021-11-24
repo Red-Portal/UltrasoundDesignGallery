@@ -48,6 +48,25 @@ cmake -DCMAKE_CUDA_HOST_COMPILER=clang++-11 \
 make
 ```
 
+## Project Structure
+| Path  | Description  |
+|:--|:--|
+| scripts/ | Julia implementations of various diffusion algorithms |
+| paper/ | Latex source for the Ultrasound Design Gallery paper |
+| src/bo | Bayesian optimization |
+| src/gp | Latent Gaussian process |
+| src/imaging | Image processing algorithms |
+| src/inference | Bayesian inference algorithms |
+| src/math | Various mathematical primitives |
+| src/system | Debugging and profiling primitives |
+| src/ui | User interface and main routine |
+| resource/ | Resources including fonts, icons, screenshots |
+| test/ | Unit tests |
+| third_party/ | Submodule dependencies |
+
+Gaussian process hyperparmeters are set in `src/bo/fit_gp.hpp` [link](https://github.com/Red-Portal/UltrasoundDesignGallery/blob/8a2e83cc3cc7a1db3f00cce266bc7832d05ac0e4/src/bo/fit_gp.hpp#L32).
+Bayesian optimization hyperparmeters and computational budgets are set in `src/ui/optimization_manager.hpp` [link](https://github.com/Red-Portal/UltrasoundDesignGallery/blob/8a2e83cc3cc7a1db3f00cce266bc7832d05ac0e4/src/ui/optimization_manager.cpp#L34).
+
 ## Usage
 
 Select a directory in [File] -> [Open].

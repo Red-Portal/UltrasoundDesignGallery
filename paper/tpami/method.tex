@@ -5,14 +5,14 @@
 %The USDG is primarily based on two components: a user interface (\cref{section:ui}) and an algorithm for learning (\cref{section:gp}) and optimizing the sonographer's subjective image quality metric (\cref{section:bo}).
 
 \subsection{Problem Statement}
-Let us denote a setting (or parameters) of an image enhancement algorithm as \(\vx \in \mathcal{X}\).
+Let us denote a set of parameters of an image enhancement algorithm as \(\vx \in \mathcal{X}\).
 Given a specific clinical task \(t\), we assume an individual sonographer \(s\) has a subjective image quality function \(f\), which is possibly noisy.
-For a setting \(\vx\), the sonographer rates the images processed by the algorithm as \(f\left(\vx\right)\).
+For a set of parameters \(\vx\), the sonographer rates the images processed by the algorithm as \(f\left(\vx\right)\).
 Our goal is to solve the problem
 %
-\begin{align*}
+\begin{align}
   \maximize_{\vx \in \mathcal{X}} \mathbb{E}\left[\,f\left(\vx; t, s \right)\,\right]
-\end{align*}
+\end{align}
 %
 and find the optimal setting \(\vx^*\) that maximizes \(f\).
 
@@ -33,7 +33,7 @@ Naturally, proposing a large number of candidates increases the informativeness 
 By extrapolating this intuition, Koyama \textit{et al.}~proposed design galleries that suggest a continuous set of choices embedded on a 1D line~\cite{10.1145/3072959.3073598} and a 2D plane~\cite{koyama_sequential_2020}.
 
 Medical ultrasound images are best presented in a sequence of images rather than still images.
-In this case, embedding multiple videos on a 2D plane can be visually confusing, which is why we base our USDG on the 1D sequential line search scheme proposed by Koyama \textit{et al.}~\cite{10.1145/3072959.3073598}.
+In this case, embedding multiple videos on a 2D plane can be visually confusing, which is why we base our USDG on the 1D embedding scheme proposed by Koyama \textit{et al.}~\cite{10.1145/3072959.3073598}.
 
 \subsubsection{Overview of the Ultrasound Design Gallery Interface}
 %
@@ -90,7 +90,7 @@ The basic workflow of using the USDG is as follows:
   \vspace{-0.15in}
 \end{figure}
 %
-Formally, at each BO iteration \(t\), the user conceptually solves the line search problem
+Formally, at each Bayesian optimization (BO) iteration \(t\), the user conceptually solves the line search problem
 \begin{align}
  \alpha_t = &\argmax_{ \beta }\; f\,(\beta\,\vxi_t + \vx_t) \label{eq:line_search}\\
  &\text{subject to}\;\; \beta \in \mathcal{I}\left(\vx_t, \vxi_t\right) \nonumber
@@ -108,14 +108,14 @@ We take a Bayesian learning approach.
 At the \(t\)th iteration, a single preferential feedback is fully represented by \((\alpha_t, \vx_t, \vxi_t)\) since the 1D line is formed by \(\vx_t, \vxi_t\), and the optimal position on the line is given by \(\alpha_t\).
 The history of preferential feedback from iteration 1 to \(T\) forms a dataset
 %
-\begin{align*}
+\begin{align}
   \mathcal{D}_T = \{\,(\vx_1, \vxi_1, \alpha_1),\, \ldots\,, (\vx_t, \vxi_t, \alpha_t),\,\ldots\,, (\vx_T, \vxi_T, \alpha_T) \,\}
-\end{align*}
+\end{align}
 %
 where the ordering
-\begin{align*}
+\begin{align}
 f(\alpha_t\,\vx_t + \vxi_t ) > f(\beta^{(i)}\,\vx_t + \vxi_t) \;\;\text{for all}\;\; \beta^{(i)} \in \mathcal{I}\left(\vx, \vxi\right) \setminus \alpha_t
-\end{align*}
+\end{align}
 is satisfied.
 Each datapoint forms an infinite number of orderings since \(\mathcal{I}\left(\vx, \vxi\right)\) contains an infinite number of \(\beta\)s.
 
@@ -152,32 +152,32 @@ Unfortunately, the theoretical consistency of this scheme is unclear.
 
 Instead, Mikkola \textit{et al.}~\cite{pmlr-v119-mikkola20a} proposed a principled approach that does not rely on the BTL model and allows for accurate approximation.
 By assuming the noise of the comparisons follows a white Gaussian process, they show that the probability of a single comparison is
-\begin{align*}
-  &p\left(\alpha \, \vxi + \vx \succ \beta^{(i)} \, \vxi + \vx \mid \sigma, \vf \right) \\
+\begin{align}
+  &p\left(\alpha \, \vxi + \vx \succ \beta^{(i)} \, \vxi + \vx \mid \vf, \sigma, \alpha, \beta^{(i)}, \vx, \vxi \right) \nonumber \\
   &= 1 - \left(\Phi * \phi \right)\left( \frac{ f\left(\beta^{(i)} \, \vxi + \vx \right) - f\left(\alpha \, \vxi + \vx \right) }{\sigma} \right)
-\end{align*}
+\end{align}
 {\noindent}where \(\left(\Phi*\phi\right)\left(\cdot\right)\) is the convolution between the cummulative density and probability density of the standard Gaussian. 
 
 At the limit of infinitely many \(\beta\)s, the likelihood of the discrete comparisons converges to a type-I Volterra integral such that
 {\small
-\begin{align*}
-  &p\left(\alpha \vxi + \vx \succ \beta \vxi + \vx,\; \forall \beta \in \mathcal{I}\left(\vx, \vxi\right) \mid\, \vf,\, \sigma,\, \alpha,\, \vx,\, \vxi\,\right)  \\
-  &= \lim_{N \rightarrow \infty} \prod^{N}_{i=1} p\left(\alpha \, \vxi + \vx \succ \beta^{(i)} \, \vxi + \vx \mid \sigma,\, \vf \right) \\
-  &= \lim_{N \rightarrow \infty} \prod^{N}_{i=1} \left(  1 - \left(\Phi * \phi \right)\left( \frac{ f\left(\beta^{(i)} \, \vxi + \vx \right) - f\left(\alpha \, \vxi + \vx \right) }{\sigma} \right) \right) \\
+\begin{align}
+  &p\left(\alpha \vxi + \vx \succ \beta \vxi + \vx,\; \forall \beta \in \mathcal{I}\left(\vx, \vxi\right) \mid\, \vf,\, \sigma,\, \alpha,\, \vx,\, \vxi\,\right)  \nonumber \\
+  &= \lim_{N \rightarrow \infty} \prod^{N}_{i=1} p\left(\alpha \, \vxi + \vx \succ \beta^{(i)} \, \vxi + \vx \mid \vf, \sigma, \alpha, \beta^{(i)}, \vx, \vxi \right) \nonumber\\
+  &= \lim_{N \rightarrow \infty} \prod^{N}_{i=1} \left(  1 - \left(\Phi * \phi \right)\left( \frac{ f\left(\beta^{(i)} \, \vxi + \vx \right) - f\left(\alpha \, \vxi + \vx \right) }{\sigma} \right) \right) \nonumber\\
   &\rightarrow \exp\left(  - \int_{\mathcal{I}\left(\vx, \vxi\right)} \left(\Phi * \phi \right) \left( \frac{ f\left(\beta \, \vxi + \vx \right) - f\left(\alpha \, \vxi + \vx \right) }{\sigma} \right) d\beta \right)
-\end{align*}
+\end{align}
 }%
 %
 {\noindent}where \(\beta^{(1)}, \ldots, \beta^{(N)}\) is taken to be an increasing sequence partitioning \(\mathcal{I\left(\vx, \vxi\right)}\).
 
 Now, the log-likelihood of the dataset is given as
 {\small
-\begin{align*}
-  &\log p\left(\mathcal{D}_T \mid \sigma,\, \vf \right)  \\
-  &= \sum_{t=1}^{T} p\left(\alpha_t \vxi_t + \vx_t \succ \beta \vxi_t + \vx_t,\; \forall \beta \in \mathcal{I}\left(\vx_t, \vxi_t\right) \mid \vf,\, \sigma,\, \alpha_t,\, \vx_t,\, \vxi_t\right) \\
-  &= -\sum_{t=1}^{T} \int_{\mathcal{I}\left(\vx_{t}, \vxi_{t}\right)} \left(\Phi * \phi \right) \left( \frac{ f\left(\beta \, \vxi_{t} + \vx_{t} \right) - f\left(\alpha_{t} \, \vxi_{t} + \vx_{t} \right) }{\sigma} \right) d\beta \\
+\begin{align}
+  &\log p\left(\mathcal{D}_T \mid \sigma,\, \vf \right)  \nonumber\\
+  &= \sum_{t=1}^{T} p\left(\alpha_t \vxi_t + \vx_t \succ \beta \vxi_t + \vx_t,\; \forall \beta \in \mathcal{I}\left(\vx_t, \vxi_t\right) \mid \vf,\, \sigma,\, \alpha_t,\, \vx_t,\, \vxi_t\right) \nonumber\\
+  &= -\sum_{t=1}^{T} \int_{\mathcal{I}\left(\vx_{t}, \vxi_{t}\right)} \left(\Phi * \phi \right) \left( \frac{ f\left(\beta \, \vxi_{t} + \vx_{t} \right) - f\left(\alpha_{t} \, \vxi_{t} + \vx_{t} \right) }{\sigma} \right) d\beta \nonumber\\
   &\approx -\frac{1}{N}  \sum_{t=1}^{T} \sum_{i=1}^{N_{\beta}} \left(\Phi * \phi \right) \left( \frac{ f\left(\beta^{(i)} \, \vxi_{t} + \vx_{t} \right) - f\left(\alpha_{t} \, \vxi_{t} + \vx_{t} \right) }{\sigma} \right) d\beta
-\end{align*}
+\end{align}
 }%
 {\noindent}where the convolution can be accurately approximated with numerical quadrature.
 In our case, we use the Gauss-Hermite quadrature with 16 evaluation points.
@@ -222,9 +222,9 @@ While the computational complexity might seem expensive, our efficient C++ imple
 %
 \subsubsection{Inference with Laplace's Approximation}
 We approximate the posterior of \(f\), \(p\,(\vf\,|\,\vtheta,\, \mathcal{D})\) where \(\vtheta\) denotes the hyperparameters, with Laplace's approximation~\cite{williams_bayesian_1998}, which involves a second-order Taylor expansion around the maximum of the posterior such that
-\begin{align*}
-q\,(\vf) = \mathcal{N}\left(\vf;\, \vf^*,\, {(\mK^{-1} + \mW)}^{-1}\right) \approx p\,(\vf \mid \vtheta,\, \mathcal{D})
-\end{align*}
+\begin{align}
+q\,(\vf) = \mathcal{N}\left(\vf;\, \vf^*,\, {(\mK^{-1} + \mW)}^{-1}\right) \approx p\,(\vf \mid \vtheta,\, \mathcal{D}) 
+\end{align}
 where \(\vf^*\) is the maximum a-posteriori estimate such that \(\nabla_{\vf}\, p\,(\vf, \, \vtheta,\, \mathcal{D})|_{\vf = \vf^*} = 0\), \(\mW = -\nabla^2_{\vf}\, p\,(\vf,\,\vtheta,\, \mathcal{D})|_{\vf=\vf^*} \) is the negative Hessian of the likelihood at \(\vf^*\).
 
 In many GP models, the Hessian \(\mH\) often turns out structured.
@@ -234,44 +234,44 @@ Unfortunately, our \(\mH\) is neither.
 We thus provide a different implementation of Newton's iteration that assumes \(\mH\) is dense.
 Our formulation is based on 
 {\small
-\begin{align*}
+\begin{align}
   {\big(\mK^{-1} + \mW\big)}^{-1}
   %&= {\Big(\mK^{-1} \big(\mI + \mK \mW \big)\Big)}^{-1} \\
   \,=\, {{\big(\mI + \mK \mW \big)}^{-1} \mK}
   \,=\, \mB^{-1} \mK 
   \,=\, \mU_{\mB}^{-1} \, \mL_{\mB}^{-1} \, \mK
-\end{align*}
+\end{align}
 }%
-{\noindent}where \({\mL_{\mB}}^{-1}\) can be obtained using the LU decomposition of \(\mB\) and back-substitution.
+{\noindent}where we have used the LU decomposition of \(\mB\) and back-substitution.
 The algorithm is shown in~\cref{alg:newton} where \(\vp\) is the Newton direction and the step size \(\eta\) is found using backtracking line search with Armijo's condition~\cite{nocedal_numerical_2006}.
 
+%\vspace{-0.1in}
 \subsubsection{Predictive Distribution}
-The predictive variance \(\sigma^2(\vx)\) of the GP involves an inverse quadratic term \(\mK^{\top}(\vx) {\big(\mK^{-1} + \mW\big)}^{-1} \vk(\vx)\).
-To exploit this structure, we use an additional formulation of \({\big(\mK^{-1} + \mW\big)}^{-1}\) that yields its Cholesky factorization \(\mL_{\mathcal{L}} \, \mL^{-1}_{\mathcal{L}}  = {\big(\mK^{-1} + \mW\big)}\) through 
-{
-\begin{align*}
+The predictive variance \(\sigma^2(\vx)\) of the GP involves an inverse quadratic term \(\vk^{\top}(\vx) {\big(\mK^{-1} + \mW\big)}^{-1} \vk(\vx)\).
+To exploit this structure, we use an additional formulation of \({\big(\mK^{-1} + \mW\big)}^{-1}\) that yields its Cholesky factorization through 
+{\small
+\begin{align}
   {\big(\mK^{-1} + \mW\big)}^{-1}
-  &= { \Big({\big(\mL\,\mL^{\top}\big)}^{-1} + \mW \Big) }^{-1} %\label{eq:Kcholid}  %\\
+  &= { \Big({\big(\mL\,\mL^{\top}\big)}^{-1} + \mW \Big) }^{-1} \nonumber\\
   %&= { \big(\mL^{-\top}\,\mL^{-1} + \mW \big) }^{-1}  \\
   %&= { \Big( \mL^{-\top}\,\big(\mI + \mL^{\top}\,\mW\,\mL \big)\,\mL^{-1} \Big) }^{-1}  \\
-  = \mL\,{\big(\mI + \mL^{\top}\,\mW\,\mL \big)}^{-1}\,\mL^{\top}    \\
-  %&= \mL\, \mC^{-1} \,\mL^{\top} \nonumber  \\
-  %&= \big( \mL\, \mL_{\mC}^{-1} \big)\, {\big( \mL\, \mL_{\mC}^{-1} \big)}^{\top} \label{eq:Ccholid} \\
-  &= \mL_{\mathcal{L}} \, { \mL_{\mathcal{L}} }^{\top} 
-\end{align*}
-}
-where \(\mL_{\mC}\,\mL_{\mC}^{\top} = \mI + \mL^{\top}\,\mW\,\mL\), \(\mL_{\mathcal{L}} = \mL\,\mL_{\mC}^{-1}\), and \(\mK = \mL\,\mL^{\top} \).
-\(\mL\), the Cholesky factor of \(\mK\) can be precomputed.
-
-The GP predictions using \(q\,(\vf)\) are finally given by
-\begin{align*}
+  &= \mL\,{\big(\mI + \mL^{\top}\,\mW\,\mL \big)}^{-1}\,\mL^{\top} \nonumber
+  = \mL\, \mC^{-1} \,\mL^{\top} \\
+  &= \big( \mL\, \mL_{\mC}^{-1} \big)\, {\big( \mL\, \mL_{\mC}^{-1} \big)}^{\top} 
+  = \mL_{\mathcal{L}} \, { \mL_{\mathcal{L}} }^{\top}
+\end{align}
+}%
+Note that \(\mL\), the Cholesky factor of \(\mK\), can be precomputed.
+The GP predictions using \(q\,(\vf)\) are now given as
+\begin{align}
   \mu\,(\vx)
   &= {\vk(\vx)}^{\top} \mK^{-1} \, \vf^*  \\
   \sigma^2\,(\vx)
-  &= k(\vx, \vx) - \vk^{\top}(\vx) \, {(\mK^{-1} + \mW)}^{-1} \, \vk(\vx) \\
+  &= k(\vx, \vx) - \vk^{\top}(\vx) \, {(\mK^{-1} + \mW)}^{-1} \, \vk(\vx) \nonumber \\
   &= k(\vx, \vx) - {\big( \mL_{\mathcal{L}} \vk(\vx) \big)}^2
-\end{align*}
+\end{align}
 
+\vspace{-0.1in}
 \subsubsection{Hyperparameter Treatment}
 Our model has 3 hyperparameters: the covariance scale \(\ell\), the likelihood noise scale \(\sigma\), and the GP noise scale \(\sigma_\epsilon\).
 We set log-normal hyperpriors such that \(\log \ell \sim \mathcal{N}\left(\text{-}1, 1\right)\), \(\log \sigma \sim \mathcal{N}\left(0, 1\right)\), and \(\log \sigma_{\epsilon} \sim \mathcal{N}\left(0, 1\right)\).
@@ -348,7 +348,7 @@ In our case, we choose the 1D line \(\mathcal{I}\) formed by \((\vx_{t+1}, \vxi_
 We adapt Koyama's scheme to our setup by finding the 1D line that contains both \(\vx_{\mathrm{EI}}\) and \(\vx^*\) such that
 \begin{align}
   \vx_{t+1}   = \vx_{\mathrm{EI}}\;\; \text{and} \;\;
-  \vxi_{t+1} = \frac{\vx_{\mathrm{EI}} - \vx^*}{\norm{ \vx_{\mathrm{EI}} - \vx^* }_{\infty}}.\label{eq:xi_proj}
+  \vxi_{t+1} = \frac{\vx_{\mathrm{EI}} - \vx^*}{\norm{ \vx_{\mathrm{EI}} - \vx^* }_{\infty}}.
 \end{align}
 
 Koyama's scheme is neat in that both~\cref{eq:koyama_ei} and~\cref{eq:koyama_opt} have closed-form deterministic gradients, enabling the use of the popular L-BFGS~\cite{liu_limited_1989} optimizer.
@@ -427,7 +427,7 @@ Therefore, multiscale approaches based on the Wavelet~\cite{xulizong_speckle_199
 
 A \(L\)-level Laplacian pyramid~\cite{burt_laplacian_1983} starts from a Gaussian pyramid \(\{\vg_0,\, \ldots\, \vg_L \}\) where each level \(\vg_{i}\) is defined as
 %
-\begin{equation*}
+\begin{equation}
 \begin{tikzpicture}[baseline=(current  bounding  box.center)]
 	% Place nodes using a matrix
   \node[dspnodeopen, dsp/label=left]                (c0) {\(\vg_{i-1}\)};
@@ -438,12 +438,12 @@ A \(L\)-level Laplacian pyramid~\cite{burt_laplacian_1983} starts from a Gaussia
   \foreach \i [evaluate = \i as \j using int(\i+1)] in {0,1,2}
   \draw[dspconn] (c\i) -- (c\j);
 \end{tikzpicture}
-\end{equation*}
+\end{equation}
 %
 where \(\vg_0\) is the original image, \(G_{\sigma}\) is a Gaussian low-pass filter with standard deviation \(\sigma\).
 From this, each level \({\boldsymbol\ell}_i\) of the Laplacian pyramid \(\{{\boldsymbol\ell}_0,\, \ldots\, {\boldsymbol\ell}_L \}\) is defined as
 %
-\begin{equation*}
+\begin{equation}
 \begin{tikzpicture}[baseline=(current  bounding  box.center)]
   \matrix (m1) [row sep=2.5mm, column sep=5mm]
   {
@@ -468,17 +468,17 @@ From this, each level \({\boldsymbol\ell}_i\) of the Laplacian pyramid \(\{{\bol
   \draw[dspconn] (g6) -- (g7);
 %
 \end{tikzpicture}
-\end{equation*}
+\end{equation}
 %
 where the last level is defined as \({\boldsymbol\ell}_{L} = \vg_{L}\).
 The Laplacian images \({\boldsymbol\ell_i}\)s are overlapping band-pass representations, where each level contains different features in the scale space.
 Higher levels (large \(i\)) contain lower frequency components such as image structures, while the lower levels (small \(i\)) contain higher frequency components such as textures.
 
-Conventionally, image enhancement with Laplacian pyramids is done by applying filters \(F_1, \ldots, F_L\) to each Laplacian image such that \(\widehat{\ell} = F_i\left(\ell_i\right)\).
+Conventionally, image enhancement with Laplacian pyramids is done by applying filters \(F_1, \ldots, F_L\) to each Laplacian image such that \(\widehat{\ell}_i = F_i\left(\ell_i\right)\).
 Reconstruction follows by reducing over the filtered Laplacian images.
 More concretely,
 %
-\begin{equation*}
+\begin{equation}
 \begin{tikzpicture}[baseline=(current  bounding  box.center)]
   \matrix (m1) [row sep=2.5mm, column sep=5mm]
   {
@@ -507,7 +507,7 @@ More concretely,
   \draw[dspconn] (g8) -- (g9);
 %
 \end{tikzpicture}
-\end{equation*}
+\end{equation}
 %
 where \(\widehat{g}_0\) is the final reconstructed image.
 A block diagram of a 4-level conventional Laplacian pyramid with filters is shown in~\cref{fig:lpnd}.
@@ -535,7 +535,7 @@ Recall that, at the top level, \({\boldsymbol\ell}_L = \vg_L\).
 By applying an image enhancement filter \(F_L\left(\cdot\right)\), we obtain the filtered result \( \widehat{\vg}_L = F_L \left( \overline{\vg}_L \right) \).
 Now, at each level, filtering is performed as
 %
-\begin{equation*}
+\begin{equation}
 \begin{tikzpicture}[baseline=(current  bounding  box.center)]
   \matrix (m1) [row sep=2.5mm, column sep=5mm]
   {
@@ -562,7 +562,7 @@ Now, at each level, filtering is performed as
   \draw[dspconn] (g7) -- (g8);
 %
 \end{tikzpicture}
-\end{equation*}
+\end{equation}
 %
 where \(\widehat{\vg}_{0}\) is the final output image.
 %
@@ -581,7 +581,7 @@ A complete block diagram of a 4-level CLPD is shown in~\cref{fig:clpd}.
 %
 Anisotropic diffusion itself is known to have edge-enhancing effects~\cite{weickert_anisotropic_1998}.
 However, employing additional edge-enhancement filters often drastically improves the perceived quality of medical images.
-Meanwhile, in medical ultrasound images, edge-enhancement filters have seen less interest apart from shock filters~\cite{zhang_multiscale_2006, kang_new_2016}.
+Despite this fact, edge-enhancement filters have seen less interest in medical ultrasound apart from shock filters~\cite{zhang_multiscale_2006, kang_new_2016}.
 A potential reason for this is that detecting the edges to be enhanced on noisy ultrasound images is particularly challenging.
 
 Laplacian pyramids provide a convenient way to boost edges and contrast~\cite{vuylsteke_multiscale_1994, stahl_noiseresistant_1999, dippel_multiscale_2002}, by amplifying \({\boldsymbol\ell}_{i}\) with a nonlinear amplifier \(g\).
@@ -589,13 +589,13 @@ The MUSICA algorithm~\cite{vuylsteke_multiscale_1994}, which has shown great suc
 However, this tends to strongly amplify noise in small contrast regions.
 While Stahl \textit{et al.} relaxed this issue by only linearly amplifying small contrasts~\cite{stahl_noiseresistant_1999}, this is still insufficient for ultrasound images.
 Therefore, we use an amplifier that suppresses weak contrast such that
-\begin{align*}
+\begin{align}
   g\left(x; \sigma, \beta \right) =
   \begin{cases}
     \;\mathrm{sign}\left( x \right) \, \sigma \, {\left( |x|/\sigma \right)}^2, & \text{if}\; |x| \leq \sigma \\
     \;\mathrm{sign}\left( x \right) \left( \beta \left(|x| - \sigma \right) + \sigma \right), & \text{otherwise}
   \end{cases}
-\end{align*}
+\end{align}
 where \(\sigma\) is the threshold for small contrast.
 %
 \begin{figure}[t]
@@ -639,8 +639,8 @@ For the filters \(F_0,\,\ldots\,, F_L\) used in the CLPD, we leverage anisotropi
 These have shown strong speckle-noise reduction capabilities~\cite{duarte-salazar_speckle_2020}, strengthening of image edges~\cite{zhang_multiscale_2006}, and enhancement of image structures~\cite{abd-elmoniem_realtime_2002, kang_new_2016} with low computational cost (see~\cite{finn_echocardiographic_2011} for a comparative evaluation of some classic anisotropic diffusions).
 However, they are also highly sensitive to their parameters~\cite{duarte-salazar_speckle_2020}, making them a perfect candidate for this study.
 
-we follow the concept of~\cite{kang_new_2016} and use a different filter for each level.
-We use the nonlinear coherent diffusion (NCD,~\cite{abd-elmoniem_realtime_2002}) and ramp-preserving nonlinear complex diffusion (RPNCD,~\cite{gilboa_image_2004}) filters.
+We follow the concept of~\cite{kang_new_2016} and use a different filter for each level.
+We mainly use the nonlinear coherent diffusion (NCD,~\cite{abd-elmoniem_realtime_2002}) and ramp-preserving nonlinear complex diffusion (RPNCD,~\cite{gilboa_image_2004}) filters.
 Both NCD and RPNCD can be efficiently implemented on GPUs and have desirable properties for our purpose.
 In comparison, recently introduced diffusion filters based on probabilistic tissue segmentation~\cite{vegas-sanchez-ferrero_probabilisticdriven_2010, ramos-llorden_anisotropic_2015} require accurately estimating a probabilistic mixture model during execution, which is computationally expensive and difficult to take advantage of GPUs.
 Also, the recent method proposed by Mishra et al.~\cite{mishra_edge_2018} involves computing histogram of oriented gradients in the superpixel domain, which also cannot take advantage of GPUs.
@@ -671,7 +671,7 @@ In contrast, since the upper levels of the CLPD have less noise, NCD can aggress
 On the other hand, lower levels contain lots of speckle noise and less structural information.
 %Here, we shall use filters good at reducing speckle while preserving edges.
 To perform speckle reduction, most anisotropic diffusion filters have to perform some sort of edge-detection.
-This leaves us with a chicken-and-egg problem since the edge are obfuscated by speckle noise.
+This leaves us with a chicken-and-egg problem since the edges are obfuscated by speckle noise.
 Meanwhile, diffusions based on Kuan and Lee's coefficients~\cite{yongjianyu_speckle_2002, aja-fernandez_estimation_2006, krissian_oriented_2007} do not perform explicit edge-detection but tend to result in blurry images.
 To circumvent these issues, we propose to use RPNCD, which does not perform explicit edge-detection and does not rely on Kuan and Lee's coefficients.
 RPNCD is based on a complex formulation of the anisotropic diffusion equation.

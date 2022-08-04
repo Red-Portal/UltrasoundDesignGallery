@@ -117,9 +117,9 @@ All results are presented up to three significant digits.
 The SNR measures the amount of speckle-noise relative to the mean response of a region of interest.
 It is given as
 {\small
-\begin{align*}
+\begin{align}
   \mathrm{SNR} \texttt{[dB]} = 10 \log_{10} \left({\mu}/{\sigma}\right)
-\end{align*}
+\end{align}
 }
 {\noindent}where \(\mu\) is the mean response and \(\sigma\) is the standard deviation of the region-of-interest.
 When computed against a fully-formed speckle region, the SNR is called the \textit{speckle} SNR (SSNR,~\cite{burckhardt_speckle_1978}).
@@ -128,9 +128,9 @@ In this case, \(\sigma\) corresponds to the noise standard deviation.
 
 \paragraph{Contrast-to-Noise Ratio (CNR)}
 The CNR first introduced by Patterson and Foster~\cite{patterson_improvement_1983} measures the mean response difference of two regions-of-interests relative to their standard deviations, such as
-\begin{align*}
+\begin{align}
   \mathrm{CNR} \texttt{[dB]} = 10 \log_{10} \left(\,| \mu_{1} - \mu_{2} | \,/\, \sqrt{\sigma^2_1 + \sigma^2_2}\, \right)
-\end{align*}
+\end{align}
 {\noindent}where \(\mu_1, \mu_2\) are the mean responses of the regions-of-interests, and \(\sigma_1, \sigma_2\) are their standard deviations, respectively.
 While the CNR is loosely related to the lesions detectibility~\cite{smith_ultrasound_1984}, Rindal \textit{et al.} has shown that it is less reliable when the dynamic range is altered~\cite{rindal_effect_2019}.
 %We present the CNR on a decibel scale.
@@ -145,9 +145,9 @@ As a remedy to the limitations of the CNR, Rodriguez-Molares \textit{et al.}~\ci
 They showed that it is less affected by dynamic range alternations, making it a better general performance metric.
 The gCNR is defined as
 {\small
-\begin{align*}
+\begin{align}
   \text{gCNR} = 1 - \int_{-\infty}^{\infty} \min\big(p_1\left(x\right), p_2\left(x\right)\big) \, dx
-\end{align*}
+\end{align}
 }
 {\noindent}where \(p_1\left(x\right)\) and \(p_2\left(x\right)\) are the probability densities of \(x\) subject to the pixel intensity distributions of the regions-of-interests 1 and 2.
 
@@ -156,13 +156,13 @@ The SSIM is a metric for measuring the \textit{structural} similarity of images,
 Wang \textit{et al.} have shown that the SSIM is aligned with the perception of humans and is sensitive to distortions such as blur and blockiness.
 Mathematically, the SSIM between images 1 and 2 is computed such that
 {
-\begin{align*}
+\begin{align}
   \mathrm{SSIM} = \frac{1}{N} \sum_k^N \frac{
     (2 \mu_{1,k} \, \mu_{2, k} + C_1)\,(2 \sigma_{12, k} + C_2)
   }{
     (\mu_{1,k}^2 + \mu_{2,k}^2 + C_1)\,( \sigma_{1,k}^2 + \sigma_{2,k}^2 + C_2)
   }
-\end{align*}
+\end{align}
 }
 {\noindent}where \(\mu_{1,k}\), \(\mu_{2,k}\), are the mean of the \(k\)th patch on each images, \(\sigma_{1,k}^2\), \(\sigma_{2,k}^2\) are their respective variances, and \(\sigma_{12, k}\) is the covariance of the two.
 The SSIM is taken as an average over all the patches taken by a \(11 \times 11\) Gaussian window of standard deviation 1.5.
@@ -175,16 +175,17 @@ Blurriness metrics have not been traditionally used for evaluating the quality o
 But, we will later show that blurriness is a critical quality factor for sonographers.
 In this work, we use the \(S_3\) metric proposed in~\cite{vu_bf_2012}.
 The \(S_3\) value of the \(k\)th patch is defined as a harmonic mean such that
-\begin{align*}
+\begin{align}
   S_3\left(k\right) = \sqrt{S_1\left(k\right)} \sqrt{S_2\left(k\right)}
-\end{align*}
+\end{align}
 {\noindent}where \(S_1\left(k\right)\) and \(S_2\left(k\right)\) are its spatial and spectral measures of sharpness.
 The final \(S_3\) index of an image is given as the average of the top 1\% \(S_3\) values.
 We use the official implementation\footnote{\url{https://sites.google.com/site/cuongvt101/research/Sharpness-measure}}.
 
 %\paragraph{Regions-of-Interests}
-The regions-of-interests used for computing the performance metrics are shown in~\cref{fig:roi}.
+The regions-of-interests (ROI) used for computing the performance metrics are shown in~\cref{fig:roi}.
 For the liver subcostal view, we compute the metrics over multiple frames, while for the echocardiographic apical 4-chamber view, we compute them only on one representative frame.
+The ROI of the apical 4-chamber view was drawn by a board-certified cardiologist with 10 years of clinical experience.
 
 \begin{table}
   \centering

@@ -1,11 +1,11 @@
 
 \section{Introduction}\label{section:introduction}
 \IEEEPARstart{M}{edical} ultrasound B-mode (brightness mode) images require various stages of image processing in order to be clinically effective.
-Without proper image postprocessing treatment, they suffer from low signal-to-noise response and low contrast compared to other medical image modalities such as magnetic resonance imaging (MRI).
-Therefore, various image enhancement techniques have been pioneered~\cite{contrerasortiz_ultrasound_2012}.
+Without proper image postprocessing treatment, ultrasound images suffer from low signal-to-noise response and low contrast.
+Therefore, various image enhancement techniques have been developed~\cite{contrerasortiz_ultrasound_2012}.
 %
-Purely image processing-based enhancement approaches such as \textit{speckle reduction}~\cite{finn_echocardiographic_2011, duarte-salazar_speckle_2020} have shown to drastically improve the quality of ultrasound images without significantly increasing the hardware complexity of ultrasound devices. 
-Image enhancement methods, however, introduce various system parameters that strongly affect the resulting image~\cite{duarte-salazar_speckle_2020}.
+Classical image enhancement approaches such as \textit{speckle reduction}~\cite{finn_echocardiographic_2011, duarte-salazar_speckle_2020} have shown to drastically improve the quality of ultrasound images without significantly increasing the hardware complexity of ultrasound devices. 
+However, these often require sophisticated management of many parameters that strongly affect the resulting image~\cite{duarte-salazar_speckle_2020}.
 Appropriately tuning these parameters is a crucial step for obtaining the best clinical performance.% and proper performance assessment.
 
 While we will focus on the parameters of image enhancement algorithms in this work, tuning ultrasound imaging systems is an important, but nontrivial task both in industry and clinics.
@@ -16,28 +16,28 @@ For high-end ultrasound scanners, companies invest 20\% to 40\% of the total dev
 
 A typical procedure for parameter tuning is to select a target quality metric and optimize it manually or automatically using numerical optimization.
 For instance, Ramos-Llord\'en \textit{et al.}~\cite{ramos-llorden_anisotropic_2015} maximized the~\(\widehat{Q}\) index~\cite{tay_ultrasound_2006} while Mishra \textit{et al.}~\cite{mishra_edge_2018} maximized the signal-to-speckle noise ratio (SSNR).
-Unfortunately, for medical ultrasound B-mode images, this seemingly natural approach is limited for several reasons.
+Unfortunately, for medical ultrasound B-mode images, this seemingly natural approach is limited by the following reasons.
 \vspace{0.05in}
 \begin{enumerate}
-  \item[\ding{228}] Objective quality metrics such as \(\widehat{Q}\) and the SSNR are not aligned with human perception.
+  \item[\ding{228}] Objective quality metrics such as \(\widehat{Q}\) and the SSNR often fail to correlate with human perception.
     \vspace{0.05in}
   \item[\ding{228}] Subjective quality assessments differ greatly across sonographers and radiologists.
     \vspace{0.05in}
-  \item[\ding{228}] Subjective quality metrics are likely to adapt to the clinical objective and environment.
+  \item[\ding{228}] Quality metrics need to adapt to the clinical objective and environment, which is difficult with objective metrics.
 \end{enumerate}
 For example, Outtas \textit{et al.}~\cite{outtas_subjective_2018} found that ``\ldots the contrast perceived by radiologists is far from the one assessed by the three objective metrics used'' in their experiments.
 Perhaps an extreme example of this discrepancy between objective quality metrics and clinical performance is in the task of speckle reduction.
 Loizou \textit{et al.}~\cite{loizou_comparative_2005} noted that speckle ``\ldots is not truly noise in the typical engineering sense because its texture often carries useful information about the image.''.
-However, objective quality metrics used in speckle reduction simply focus on \textit{entirely removing} speckle.
+However, speckle reduction assessed under objective quality metrics generally pursues to \textit{entirely remove} speckle patterns.
 
-Such a mismatch between objective quality metrics and actual clinical performance has resulted in some works in ultrasound image enhancement to rely on \textit{subjective} quality assessments~\cite{loizou_quality_2006, hemmsen_ultrasound_2010, wong_monte_2012, kang_new_2016, mishra_edge_2018}.
+To resolve the discrepancy between objective quality metrics and actual clinical performance, some works in ultrasound image enhancement have reported \textit{subjective} quality assessment results~\cite{loizou_quality_2006, hemmsen_ultrasound_2010, wong_monte_2012, kang_new_2016, mishra_edge_2018}.
 (For a review on subjective quality metrics in medical imaging, not restricted to ultrasound, see~\cite{chow_review_2016}.)
 While subjective metrics enable clinically-calibrated comparison of individual image enhancement methods, they are still difficult to use for tuning.
 Previous approaches have attempted to \textit{learn} the subjective metrics~\cite{el-zehiry_learning_2013, abdi_automatic_2017, annangi_ai_2020}, requiring a large dataset of quality assessments.
 That is, tuning a new system on a new task involves gathering a whole new dataset from scratch.
 Also, even if we have access to a dataset of quality assessments, the large number of parameters in ultrasound image enhancement algorithms complicates tuning.
 (See~\cite[Table 5]{finn_echocardiographic_2011} for an incomplete list of examples.)
-This number multiplies as we combine multiple image processing algorithms.
+%This number multiplies as we combine multiple image processing algorithms.
 %Therefore, a crucial problem in medical ultrasound image enhancement is to automate the navigation of these high-dimensional parameter spaces. 
 
 In this paper, we propose the~\textsc{Ultrasound Design Gallery} (USDG), a machine learning-based tool for tuning ultrasound image enhancement algorithms.
@@ -53,7 +53,7 @@ In this paper, we propose the~\textsc{Ultrasound Design Gallery} (USDG), a machi
 The~\usdg~enables personalization of image enhancement algorithms to individual sonographers and clinical tasks.
 The sonographer does not need to have any knowledge about the image enhancement algorithm being tuned and its parameters while interacting with the USDG.
 Unlike the autotuning approach of El-Zehiry \textit{et al.}~\cite{el-zehiry_learning_2013}, the USDG does not require a large dataset of subjective quality assessments.
-Tuning a system from scratch on an entirely new task can be done in a matter of few tens of minutes.
+Tuning a system from scratch takes a mere few tens of minutes.
 
 %% Overall, the advantages of the \usdg~are summarized as follows:
 %% \begin{itemize}
@@ -67,14 +67,17 @@ Tuning a system from scratch on an entirely new task can be done in a matter of 
 To evaluate the effectiveness of the \usdg, we use it for tuning the parameters of a novel ultrasound image enhancement algorithm, the \textsc{cascaded Laplacian pyramid diffusion} (CLPD).
 The CLPD is based on Laplacian pyramids~\cite{burt_laplacian_1983} and anisotropic diffusion~\cite{perona_scalespace_1990, weickert_anisotropic_1998}.
 Previous methods~\cite{zhang_multiscale_2006, zhang_nonlinear_2007, kang_new_2016} combined the two methods by applying anisotropic diffusion to each Laplacian band-pass image in \textit{parallel form}.
-However, anisotropic diffusion filters are not compatible with band-pass images.
+However, anisotropic diffusion filters were not devised to be applied to band-pass images, raising concerns on compatibility.
+%have not been developed to be 
+%expected to be applied to 
+%are not compatible with .
 Also, the parallel form does not allow information to be shared between different image scales.
 We instead propose to use Laplacian pyramids in \textit{cascaded form}.
 This allows anisotropic diffusion filters to no longer be applied to band-pass images.
 Also, feature information can naturally flow from higher scales to lower scales.
 The cascaded Laplacian pyramid diffusion enables both structural enhancements and noise reduction without over-smoothing~\cite{ramos-llorden_anisotropic_2015, mishra_edge_2018} the ultrasound images.
 
-We recruited five practicing sonographers and a cardiologist for tuning the CLPD using the~\usdg~on abdominal and echocardiographic ultrasound images.
+We recruited five sonographers and a cardiologist for tuning the CLPD using the~\usdg~on abdominal and echocardiographic ultrasound images.
 Our results afirm that commonly used objective performance metrics for ultrasound images (such as the SSNR) are not aligned with sonographers' preferences.
 Instead, we show that all of the involved sonographers strongly preferred less blurry, sharp-looking images according to \(S_3\)~\cite{vu_bf_2012}, an image blurriness metric.
 

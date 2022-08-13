@@ -1,5 +1,5 @@
 
-# Copyright (C) 2021  Ray Kim
+# Copyright (C) 2021-2022 Kyurae Kim
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -140,21 +140,24 @@ add_library(ipcore
     src/imaging/ncd.cu
     src/imaging/rpncd.cu
     src/imaging/pipeline.cpp
-    src/imaging/pyramid.cpp
+    src/imaging/laplacian_pyramid.cpp
+    src/imaging/gaussian_pyramid.cpp
+    src/imaging/local_laplacian_pyramid.cu
+    src/imaging/local_laplacian_pyramid.cpp
+    src/imaging/laplacian_pyramid.cpp
     src/imaging/edge_enhance.cu
     src/image_processing_api.cpp
     )
 
 target_link_libraries(ipcore
-    INTERFACE
+    PUBLIC
     project_options
     project_warnings
-
-    PUBLIC
     OpenMP::OpenMP_CXX
     opencv_core
     opencv_quality
     opencv_cudafilters
+    opencv_cudawarping
     )
 
 set_target_properties(ipcore
@@ -166,11 +169,9 @@ add_executable(image_processing_demo
         src/image_processing_demo.cpp)
 
 target_link_libraries(image_processing_demo
-    INTERFACE
+    PUBLIC
     project_options
     project_warnings
-
-    PUBLIC
     opencv_tracking
     opencv_highgui
     opencv_quality

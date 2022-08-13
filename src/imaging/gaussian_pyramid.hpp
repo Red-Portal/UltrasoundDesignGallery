@@ -16,8 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __US_GALLERY_PYRAMID_HPP__
-#define __US_GALLERY_PYRAMID_HPP__
+#ifndef __US_GALLERY_GAUSSIAN_PYRAMID_HPP__
+#define __US_GALLERY_GAUSSIAN_PYRAMID_HPP__
 
 #include <opencv4/opencv2/core/core.hpp>
 #include <opencv4/opencv2/core/cuda.hpp>
@@ -28,41 +28,37 @@
 
 namespace usdg
 {
-  class LaplacianPyramid
+  class GaussianPyramid
   {
   private:
-    std::vector<cv::Mat> _L;
-    std::vector<cv::Mat> _G;
-    std::vector<cv::Mat> _masks;
-    cv::Mat _blur_buffer;
-  
+    std::vector<cv::cuda::GpuMat> _G;
+    float _decimation_ratio;
+    cv::cuda::GpuMat _img_buffer;
+
   public:
-    LaplacianPyramid(size_t n_scales);
+    GaussianPyramid(size_t n_levels,
+		    float decimation_ratio);
+
+    void preallocate(size_t n_rows, size_t n_cols);
 
     void apply(cv::Mat const& img,
-	       cv::Mat const& mask,
-	       float decimation_ratio,
-	       float sigma);
+	       float dec_sigma);
 
-    inline cv::Mat&
-    L(size_t idx)
-    {
-      return _L[idx];
-    }
+    void apply(cv::cuda::GpuMat const& img,
+	       float dec_sigma);
 
-    inline cv::Mat&
+    inline cv::cuda::GpuMat&
     G(size_t idx)
     {
       return _G[idx];
     }
 
-    inline cv::Mat&
-    mask(size_t idx)
+    inline size_t
+    levels()
     {
-      return _masks[idx];
+      return _G.size();
     }
   };
 }
-
 
 #endif

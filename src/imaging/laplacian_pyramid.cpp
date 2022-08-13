@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2021  Ray Kim
+ * Copyright (C) 2021-2022 Kyurae Kim
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "pyramid.hpp"
+#include "laplacian_pyramid.hpp"
 
 #include <opencv2/imgproc/imgproc.hpp>
 

@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2021  Ray Kim
+ * Copyright (C) 2021-2022 Kyurae Kim
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -200,7 +200,8 @@ namespace usdg
 
 	auto current_time   = std::chrono::steady_clock::now();
 	auto frame_interval = std::chrono::milliseconds(
-	  static_cast<int>(round(1000.0 / _frame_rate.load())));
+	  static_cast<int>(
+	    round(1000.0 / static_cast<double>(_frame_rate.load()))));
 	if (_play_video.load() &&
 	    current_time - frame_start_time > frame_interval)
 	{
@@ -357,8 +358,8 @@ namespace usdg
 	       blaze::DynamicVector<double> const& best_param)
   {
     auto parameter_local = blaze::DynamicVector<double>();
-    size_t env_rows      = _envelopes[0].rows;
-    size_t env_cols      = _envelopes[0].cols;
+    auto env_rows        = _envelopes[0].rows;
+    auto env_cols        = _envelopes[0].cols;
     auto output_image    = cv::Mat(env_rows, env_cols, CV_32F);
 
     auto output_sequence = std::vector<cv::Mat>(_envelopes.size());

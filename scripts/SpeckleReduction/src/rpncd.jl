@@ -15,7 +15,8 @@ function rpncd(img, Δt, n_iters, k, θ;
     img_dst = zeros(Complex{Float32}, M, N)
     coeff   = zeros(Complex{Float32}, M, N)
 
-    ProgressMeter.@showprogress for t = 1:n_iters
+    #ProgressMeter.@showprogress
+    for t = 1:n_iters
         for j = 1:N
             for i = 1:M
                 if !mask[i,j]
@@ -25,12 +26,6 @@ function rpncd(img, Δt, n_iters, k, θ;
                 coeff[i,j] = exp(im*θ) / (1 + (imag.(I) / (k*θ)).^2)
             end
         end
-
-        #if (t > 3)
-        #display(Plots.plot(real.(img_src[256,:])))
-        #display(Plots.plot!(real.(coeff[256,:])))
-        #return
-        #end
 
         for j = 1:N
             for i = 1:M

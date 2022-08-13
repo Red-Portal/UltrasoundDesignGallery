@@ -9,9 +9,9 @@ function pmad_filtered(img, Δt, mse_threshold, k; mask=trues(size(img)...))
     N = size(img, 2)
 
     img_src = deepcopy(img)
-    img_dst = Array{Float32}(undef, M, N)
-    G_x     = Array{Float32}(undef, M, N)
-    G_y     = Array{Float32}(undef, M, N)
+    img_dst = zeros(Float32, M, N)
+    G_x     = zeros(Float32, M, N)
+    G_y     = zeros(Float32, M, N)
 
     σ   = 1.0
     k_σ = 7
@@ -88,19 +88,19 @@ function pmad_shock(img, guide, Δt, mse_threshold, r, k; mask=trues(size(img)..
     N = size(img, 2)
 
     img_src = deepcopy(img)
-    img_dst = Array{Float32}(undef, M, N)
+    img_dst = zeros(Float32, M, N)
 
-    I_ηη    = Array{Float32}(undef, M, N)
-    G_x     = Array{Float32}(undef, M, N)
-    G_y     = Array{Float32}(undef, M, N)
-    G_w     = Array{Float32}(undef, M, N)
-    G_e     = Array{Float32}(undef, M, N)
-    G_s     = Array{Float32}(undef, M, N)
-    G_n     = Array{Float32}(undef, M, N)
-    G_xx    = Array{Float32}(undef, M, N)
-    G_yy    = Array{Float32}(undef, M, N)
-    G_xy    = Array{Float32}(undef, M, N)
-    G_mag   = Array{Float32}(undef, M, N)
+    I_ηη    = zeros(Float32, M, N)
+    G_x     = zeros(Float32, M, N)
+    G_y     = zeros(Float32, M, N)
+    G_w     = zeros(Float32, M, N)
+    G_e     = zeros(Float32, M, N)
+    G_s     = zeros(Float32, M, N)
+    G_n     = zeros(Float32, M, N)
+    G_xx    = zeros(Float32, M, N)
+    G_yy    = zeros(Float32, M, N)
+    G_xy    = zeros(Float32, M, N)
+    G_mag   = zeros(Float32, M, N)
 
     σ   = 1.0
     k_σ = 7

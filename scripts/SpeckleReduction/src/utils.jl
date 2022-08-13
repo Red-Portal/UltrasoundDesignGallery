@@ -62,17 +62,38 @@ function logcompress(img::Array,
                      max_output_intensity::Real,
                      dynamic_range::Real)
     x_max  = max_input_intensity
-    y_max  = max_output_intensity
     x_min  = 10.0.^(-dynamic_range/20)*x_max
+    y_max  = max_output_intensity 
+    coeff  = y_max / log10(x_max / x_min)
 
     map(img) do x
         if (x >= x_min)
-            y_max / log10(x_max / x_min) * log10(x / x_min)
+            coeff*log10(x / x_min)
         else
             0.0
         end
     end
 end
+
+function adjust_dynamic_range(img, reject_level, dynamic_range)
+    max_intensity = min(reject_level + dynamic_range, 1)
+    dynamic_range = max_intensity - reject_level
+    img_out       = deepcopy(img)
+    for x = 1:size(img, 1)
+        for y = 1:size(img, 2)
+            u = img[x,y]
+            img_out[x,y] = if (u < reject_level)
+                0
+            elseif (u > max_intensity)
+                1
+            else
+                (u - reject_level) / dynamic_range
+            end
+        end
+    end
+    img_out
+end
+
 
 @inline function structure_tensor!(J_xx_ρ::Array,
                                    J_xy_ρ::Array,
@@ -150,47 +171,77 @@ end
     end
 end
 
-# @inline function weickert_matrix_diffusion!(img_dst::Array,
-#                                             img_src::Array,
-#                                             Δt::Real,
-#                                             D_xx::Array,
-#                                             D_xy::Array,
-#                                             D_yy::Array;
-#                                             mask=nothing)
-#     M = size(img_dst, 1)
-#     N = size(img_dst, 2)
-#     a = D_xx
-#     b = D_xy
-#     c = D_yy
-#     for j = 1:N
-#         for i = 1:M
-#             nx = max(i - 1, 1)
-#             px = min(i + 1, M)
-#             ny = max(j - 1, 1)
-#             py = min(j + 1, N)
+@inline function rotation_invariant_diffusion!(img_dst::Array,
+                                               img_src::Array,
+                                               Δt::Real,
+                                               D_xx::Array,
+                                               D_xy::Array,
+                                               D_yy::Array,
+                                               j1::Array,
+                                               j2::Array;
+                                               mask=trues(size(img_src)...))
+    # J. Weickert, H. Scharr,
+    # "A scheme for coherence-enhancing diffusion filtering with
+    #  optimized rotation invariance."
+    # Journal of Visual Communication and Image Representation, 2001.
 
-#             A1 = (1/4)*(b[nx, j ] - b[i, py])
-#             A2 = (1/2)*(c[i,  py] + c[i, j ])
-#             A3 = (1/4)*(b[px, j ] + b[i, py])
-#             A4 = (1/2)*(a[nx, j ] + a[i, j ])
-#             A6 = (1/2)*(a[px, j ] + a[i, j ])
-#             A7 = (1/4)*(b[nx, j ] + b[i, ny])
-#             A8 = (1/2)*(c[i,  ny] + c[i, j ])
-#             A9 = (1/4)*(b[px, j ] - b[i, ny])
+    M = size(img_dst, 1)
+    N = size(img_dst, 2)
 
-#             img_dst[i,j] = (img_src[i,j] + Δt*(
-#                 A1*(img_src[nx, py]) + 
-#                     A2*(img_src[i,  py]) + 
-#                     A3*(img_src[px, py]) + 
-#                     A4*(img_src[nx, j])  + 
-#                     A6*(img_src[px, j])  + 
-#                     A7*(img_src[nx, ny]) + 
-#                     A8*(img_src[i,  ny]) + 
-#                     A9*(img_src[px, ny])))  /
-#                     (1 + Δt*(A1 + A2 + A3 + A4 + A6 + A7 + A8 + A9))
-#         end
-#     end
-# end
+    @inbounds for j = 1:N
+        @inbounds for i = 1:M
+            if (!mask[i,j])
+                continue
+            end
+            I_n  = img_src[max(i-1, 1), j]
+            I_ne = img_src[max(i-1, 1), min(j+1, N)]
+            I_nw = img_src[max(i-1, 1), max(j-1, 1)]
+
+            I_s  = img_src[min(i+1, M), j]
+            I_se = img_src[min(i+1, M), min(j+1, N)]
+            I_sw = img_src[min(i+1, M), max(j-1, 1)]
+
+            I_e  = img_src[i, min(j+1, N)]
+            I_w  = img_src[i, max(j-1, 1)]
+
+            G_x = (-3*I_nw +  3*I_ne + -10*I_w  + 10*I_e  +  -3*I_sw +  3*I_se)/32
+            G_y = ( 3*I_nw + 10*I_n  +   3*I_ne + -3*I_sw + -10*I_s  + -3*I_se)/32
+
+            j1[i,j] = D_xx[i,j]*G_x + D_xy[i,j]*G_y
+            j2[i,j] = D_xy[i,j]*G_x + D_yy[i,j]*G_y
+        end
+    end
+
+    for j = 1:N
+        for i = 1:M
+            if (!mask[i,j])
+                continue
+            end
+
+            j1_ne = j1[max(i-1, 1), min(j+1, N)]
+            j1_nw = j1[max(i-1, 1), max(j-1, 1)]
+
+            j1_se = j1[min(i+1, M), min(j+1, N)]
+            j1_sw = j1[min(i+1, M), max(j-1, 1)]
+
+            j1_e  = j1[i, min(j+1, N)]
+            j1_w  = j1[i, max(j-1, 1)]
+
+            j2_n  = j2[max(i-1, 1), j]
+            j2_ne = j2[max(i-1, 1), min(j+1, N)]
+            j2_nw = j2[max(i-1, 1), max(j-1, 1)]
+
+            j2_s  = j2[min(i+1, M), j]
+            j2_se = j2[min(i+1, M), min(j+1, N)]
+            j2_sw = j2[min(i+1, M), max(j-1, 1)]
+
+            ∂xj₁ = (-3*j1_nw +  3*j1_ne + -10*j1_w  + 10*j1_e  +  -3*j1_sw +  3*j1_se)/32
+            ∂yj₂ = ( 3*j2_nw + 10*j2_n  +   3*j2_ne + -3*j2_sw + -10*j2_s  + -3*j2_se)/32
+
+            img_dst[i,j] = img_src[i,j] + Δt*(∂xj₁ + ∂yj₂)
+        end
+    end
+end
 
 @inline function fetch_pixel(img, i, j, mask, pad_val)
     i = clamp(i, 1, size(img,1))

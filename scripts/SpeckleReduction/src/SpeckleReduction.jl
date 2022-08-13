@@ -1,6 +1,5 @@
 
 import Images
-import ImageView
 import FileIO
 import Plots, StatsPlots
 import MosaicViews
@@ -15,6 +14,7 @@ import SpecialFunctions
 import AbstractFFTs
 import FFTW
 import ImagePhaseCongruency
+import ImageContrastAdjustment
 
 using Interpolations
 using Distributions
@@ -33,13 +33,14 @@ include("eppr.jl")
 include("admss.jl")
 include("hybrid.jl")
 include("lpndsf.jl")
-#include("msamd.jl")
+include("clpd.jl")
+include("ils.jl")
 include("pfdtv.jl")
 include("hdcs.jl")
 include("susan_pm.jl")
 include("rpncd.jl")
+include("cshock.jl")
 include("apm.jl")
-#include("ddnd.jl")
 include("ncsf.jl")
 include("shock.jl")
 include("mnml.jl")

@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2021  Ray Kim
+ * Copyright (C) 2021-2022 Kyurae Kim
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <catch2/catch_all.hpp>
+#include "catch.hpp"
 #define BLAZE_USE_DEBUG_MODE 1
 
 #include "../src/bo/find_bounds.hpp"
@@ -59,6 +59,6 @@ TEST_CASE("expected improvement gradient with x", "[bo]")
   auto grad_truth  = finitediff_gradient(func, dx);
   auto [val, grad] = usdg::ei_with_deidx(gp, data_mat, y_opt, dx, true);
 
-  REQUIRE( func(dx) == Catch::Approx(val) );
+  REQUIRE( func(dx) == usdg::Approx(val) );
   REQUIRE( blaze::norm(grad_truth - grad) < 1e-6 );
 }

@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2021  Ray Kim
+ * Copyright (C) 2021-2022 Kyurae Kim
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <catch2/catch_all.hpp>
+#include "catch.hpp"
 #define BLAZE_USE_DEBUG_MODE 1
 
 #include "../src/gp/kernel.hpp"
@@ -48,7 +48,7 @@ TEST_CASE("matern 5/2 kernel value", "[kernel]")
   auto x = blaze::DynamicVector<double>({1.124618098544101, -1.8477787735615157});
   auto y = blaze::DynamicVector<double>({1.0597907259031794, 0.20131396456561368});
 
-  REQUIRE(kernel(x, y) == Catch::Approx(0.0004385141317002246));
+  REQUIRE(kernel(x, y) == usdg::Approx(0.0004385141317002246));
 }
 
 TEST_CASE("squared exponential kernel value", "[kernel]")
@@ -72,7 +72,7 @@ TEST_CASE("squared exponential kernel value", "[kernel]")
   auto x = blaze::DynamicVector<double>({1.124618098544101, -1.8477787735615157});
   auto y = blaze::DynamicVector<double>({1.0597907259031794, 0.20131396456561368});
 
-  REQUIRE(kernel(x, y) == Catch::Approx(0.35480086928576404));
+  REQUIRE(kernel(x, y) == usdg::Approx(0.35480086928576404));
 }
 
 TEST_CASE("gram matrix computation", "[kernel]")

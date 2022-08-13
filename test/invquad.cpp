@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2021  Ray Kim
+ * Copyright (C) 2021-2022 Kyurae Kim
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <catch2/catch_all.hpp>
+#include "catch.hpp"
 #define BLAZE_USE_DEBUG_MODE 1
 
 #include "../src/math/linearalgebra.hpp"
@@ -44,7 +44,7 @@ TEST_CASE("Dense inverse quadratic", "[linear algebra]")
   auto y     = blaze::solve(A, x);
   auto truth = blaze::dot(x, y);
 
-  REQUIRE( usdg::invquad(chol, x) == Catch::Approx(truth) );
+  REQUIRE( usdg::invquad(chol, x) == usdg::Approx(truth) );
 }
 
 TEST_CASE("dense batch inverse quadratic", "[linear algebra]")
@@ -65,7 +65,7 @@ TEST_CASE("dense batch inverse quadratic", "[linear algebra]")
 
   for (size_t i = 0; i < 6; ++i)
   {
-    REQUIRE( ys[i] == Catch::Approx(usdg::invquad(chol, blaze::column(X, i))) );
+    REQUIRE( ys[i] == usdg::Approx(usdg::invquad(chol, blaze::column(X, i))) );
   }
 }
 
@@ -83,7 +83,7 @@ TEST_CASE("diagonal inverse quadratic", "[linear algebra]")
   auto y     = x / A;
   auto truth = blaze::dot(x, y);
   
-  REQUIRE( usdg::invquad(chol, x) == Catch::Approx(truth) );
+  REQUIRE( usdg::invquad(chol, x) == usdg::Approx(truth) );
 }
 
 // TEST_CASE("Laplace approximation inverse quadratic", "[linear algebra]")
@@ -107,5 +107,5 @@ TEST_CASE("diagonal inverse quadratic", "[linear algebra]")
 //   auto WK    = W*K;
 //   auto IpWK  = usvg::lu(blaze::IdentityMatrix<double>(W.rows()) + WK);
 //   auto truth = blaze::dot(x, blaze::solve(Kinv + W, x));
-//   REQUIRE( usvg::invquad(IpWK, K, WK, x) == Catch::Approx(truth) );
+//   REQUIRE( usvg::invquad(IpWK, K, WK, x) == usdg::Approx(truth) );
 // }

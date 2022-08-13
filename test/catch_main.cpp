@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2021  Ray Kim
+ * Copyright (C) 2021-2022 Kyurae Kim
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  */
 
 #define CATCH_CONFIG_RUNNER
-#include <catch2/catch.hpp>
+#include "catch.hpp"
 
 int main( int argc, char* argv[] ) {
   int result = Catch::Session().run( argc, argv );

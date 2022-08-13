@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2021  Ray Kim
+ * Copyright (C) 2021-2022 Kyurae Kim
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <catch2/catch_all.hpp>
+#include "catch.hpp"
 #define BLAZE_USE_DEBUG_MODE 1
 
 #include "../src/math/blaze.hpp"
@@ -47,10 +47,10 @@ TEST_CASE("Dense covariance multivariate normal density", "[mvnormal]")
   REQUIRE_NOTHROW( cov_chol = usdg::cholesky_nothrow(cov).value() );
 
   double truth_p    = 0.0069349873998044214;
-  REQUIRE( usdg::dmvnormal(x, mean, cov_chol) == Catch::Approx(truth_p) );
+  REQUIRE( usdg::dmvnormal(x, mean, cov_chol) == usdg::Approx(truth_p) );
 
   double truth_logp = -4.971176042116139;
-  REQUIRE( usdg::dmvnormal(x, mean, cov_chol, true) == Catch::Approx(truth_logp) );
+  REQUIRE( usdg::dmvnormal(x, mean, cov_chol, true) == usdg::Approx(truth_logp) );
 }
 
 TEST_CASE("Diagonal covariance multivariate normal density", "[mvnormal]")
@@ -69,10 +69,10 @@ TEST_CASE("Diagonal covariance multivariate normal density", "[mvnormal]")
   REQUIRE_NOTHROW( cov_chol = usdg::cholesky_nothrow(cov).value() );
 
   double truth_p    = 0.010371181395210441;
-  REQUIRE( usdg::dmvnormal(x, mean, cov_chol) == Catch::Approx(truth_p) );
+  REQUIRE( usdg::dmvnormal(x, mean, cov_chol) == usdg::Approx(truth_p) );
 
   double truth_logp = -4.568724338908423;
-  REQUIRE( usdg::dmvnormal(x, mean, cov_chol, true) == Catch::Approx(truth_logp) );
+  REQUIRE( usdg::dmvnormal(x, mean, cov_chol, true) == usdg::Approx(truth_logp) );
 }
 
 TEST_CASE("Unift multivariate normal density", "[mvnormal]")
@@ -83,10 +83,10 @@ TEST_CASE("Unift multivariate normal density", "[mvnormal]")
      -1.2570687585683156});
 
   double truth_p    = 0.01831112609097114;
-  REQUIRE( usdg::dmvnormal(x) == Catch::Approx(truth_p) );
+  REQUIRE( usdg::dmvnormal(x) == usdg::Approx(truth_p) );
 
   double truth_logp = -4.000246420768439;
-  REQUIRE( usdg::dmvnormal(x, true) == Catch::Approx(truth_logp) );
+  REQUIRE( usdg::dmvnormal(x, true) == usdg::Approx(truth_logp) );
 }
 
 TEST_CASE("Multivariate unit normal sampling", "[mvnormal]")
@@ -284,7 +284,7 @@ TEST_CASE("Laplace approximated normal density", "[mvnormal]")
   auto true_dist =  usdg::MvNormal<usdg::DenseChol>{mean, cov_chol};
 
   auto x = usdg::rmvnormal(prng, 3);
-  REQUIRE( dist.logpdf(x) == Catch::Approx(true_dist.logpdf(x)) );
+  REQUIRE( dist.logpdf(x) == usdg::Approx(true_dist.logpdf(x)) );
 }
 
 TEST_CASE("Derivative of unit Gaussian", "[dnormal]")

@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2021  Ray Kim
+ * Copyright (C) 2021-2022 Kyurae Kim
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <catch2/catch_all.hpp>
+#include "catch.hpp"
 #define BLAZE_USE_DEBUG_MODE 1
 
 #include <limits>
@@ -112,9 +112,9 @@ TEST_CASE("Latent Gaussian process prediction", "[dataset]")
     k_star[i] = kernel(blaze::column(data, i), x);
   }
   auto mean_truth = blaze::dot(k_star, alpha);
-  REQUIRE( mean == Catch::Approx(mean_truth) );
+  REQUIRE( mean == usdg::Approx(mean_truth) );
 
   blaze::invert(W);
   auto var_truth = kernel(x, x) - blaze::dot(k_star, blaze::solve(K, k_star));
-  REQUIRE( var == Catch::Approx(var_truth).margin(1e-2) );
+  REQUIRE( var == usdg::Approx(var_truth).margin(1e-2) );
 }

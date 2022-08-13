@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2021  Ray Kim
+ * Copyright (C) 2021-2022 Kyurae Kim
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <catch2/catch_all.hpp>
+#include "catch.hpp"
 #define BLAZE_USE_DEBUG_MODE 1
 
 #include "../src/math/blaze.hpp"
@@ -34,7 +34,7 @@ TEST_CASE("Dense log determinant", "[linear algebra]")
   REQUIRE_NOTHROW( chol = usdg::cholesky_nothrow(A).value() );
   auto truth = log(blaze::det(A));
   
-  REQUIRE( usdg::logdet(chol) == Catch::Approx(truth) );
+  REQUIRE( usdg::logdet(chol) == usdg::Approx(truth) );
 }
 
 TEST_CASE("Diagonal log determinant", "[linear algebra]")
@@ -45,7 +45,7 @@ TEST_CASE("Diagonal log determinant", "[linear algebra]")
 
   auto truth = log(prod(A));
   
-  REQUIRE( usdg::logdet(chol) == Catch::Approx(truth) );
+  REQUIRE( usdg::logdet(chol) == usdg::Approx(truth) );
 }
 
 TEST_CASE("LU log determinant", "[linear algebra]")
@@ -59,7 +59,7 @@ TEST_CASE("LU log determinant", "[linear algebra]")
   REQUIRE_NOTHROW( lu = usdg::lu(A) );
   auto truth = log(blaze::det(A));
   
-  REQUIRE( usdg::logdet(lu) == Catch::Approx(truth) );
+  REQUIRE( usdg::logdet(lu) == usdg::Approx(truth) );
 }
 
 TEST_CASE("LU log absolute determinant", "[linear algebra]")
@@ -73,5 +73,5 @@ TEST_CASE("LU log absolute determinant", "[linear algebra]")
   REQUIRE_NOTHROW( lu = usdg::lu(A) );
   auto truth = log(abs(blaze::det(A)));
   
-  REQUIRE( usdg::logabsdet(lu) == Catch::Approx(truth) );
+  REQUIRE( usdg::logabsdet(lu) == usdg::Approx(truth) );
 }

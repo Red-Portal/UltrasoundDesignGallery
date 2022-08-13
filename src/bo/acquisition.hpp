@@ -30,7 +30,6 @@
 #include "../system/profile.hpp"
 #include "bayesian_optimization.hpp"
 #include "lbfgs.hpp"
-#include "spsa.hpp"
 #include "fit_gp.hpp"
 
 #include <vector>

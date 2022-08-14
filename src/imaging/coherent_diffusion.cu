@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "ncd.hpp"
+#include "coherent_diffusion.hpp"
 
 #include "utils.hpp"
 #include "cuda_utils.hpp"
@@ -128,8 +128,8 @@ namespace usdg
     img_dst(i,j) = img_src(i,j) + dt*(dj1dx + dj2dy);
   }
 
-  NCD::
-  NCD()
+  CoherentDiffusion::
+  CoherentDiffusion()
     : _img_buf1(),
     _img_buf2(),
     _J_xx(),
@@ -148,7 +148,7 @@ namespace usdg
   {}
 
   void
-  NCD::
+  CoherentDiffusion::
   preallocate(size_t n_rows, size_t n_cols)
   {
     _img_buf1.create(   n_rows, n_cols, CV_32F);
@@ -163,21 +163,21 @@ namespace usdg
     _G_y.create(        n_rows, n_cols, CV_32F);
     _j1.create(         n_rows, n_cols, CV_32F);
     _j2.create(         n_rows, n_cols, CV_32F);
-    _img_in_buf.create( n_rows, n_cols, CV_8U);
-    _img_out_buf.create(n_rows, n_cols, CV_8U);
+    _img_in_buf.create( n_rows, n_cols, CV_32F);
+    _img_out_buf.create(n_rows, n_cols, CV_32F);
     _mask_buf.create(   n_rows, n_cols, CV_8U);
   }
 
   void
-  NCD::
+  CoherentDiffusion::
   apply(cv::cuda::GpuMat const& image,
 	cv::cuda::GpuMat const& mask,
 	cv::cuda::GpuMat&       output,
 	float rho, float alpha, float s,
 	float dt, int n_iters)
   {
-    _img_buf1.setTo(cv::Scalar(0));
-    _img_buf2.setTo(cv::Scalar(0));
+    _img_buf1.setTo(cv::Scalar(0.f));
+    _img_buf2.setTo(cv::Scalar(0.f));
 
     size_t M  = static_cast<size_t>(image.rows);
     size_t N  = static_cast<size_t>(image.cols);
@@ -226,7 +226,7 @@ namespace usdg
   }
 
   void
-  NCD::
+  CoherentDiffusion::
   apply(cv::Mat const& image,
 	cv::Mat const& mask,
 	cv::Mat&       output,

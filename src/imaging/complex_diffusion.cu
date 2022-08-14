@@ -17,13 +17,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "rpncd.hpp"
+#include "complex_diffusion.hpp"
 
 #include "utils.hpp"
 #include "cuda_utils.hpp"
 
 #include <opencv4/opencv2/core/core.hpp>
 #include <opencv4/opencv2/core/cuda.hpp>
+#include <opencv4/opencv2/cudaarithm.hpp>
 
 #include <cmath>
 
@@ -84,53 +85,50 @@ namespace usdg
     float2 C_yp = fetch_pixel(coeff,  i, yp, mask, I_c);
     float2 C_ym = fetch_pixel(coeff,  i, ym, mask, I_c);
 
-    img_dst(i,j) = I_c + (dt/4*(
-			    (I_xp - I_c)*C_xp
-			    + (I_xm - I_c)*C_xm
-			    + (I_yp - I_c)*C_yp
-			    + (I_ym - I_c)*C_ym));
+    img_dst(i,j) = I_c + (
+      dt/4*((I_xp - I_c)*C_xp
+	    + (I_xm - I_c)*C_xm
+	    + (I_yp - I_c)*C_yp
+	    + (I_ym - I_c)*C_ym));
   }
 
-  RPNCD::
-  RPNCD()
-    : _mask(),
-    _img_buf1(),
+  ComplexDiffusion::
+  ComplexDiffusion()
+    : _img_buf1(),
     _img_buf2(),
-    _coeff()
+    _coeff(),
+    _img_in_buf(),
+    _img_out_buf(),
+    _mask_buf()
   {}
 
   void
-  RPNCD::
+  ComplexDiffusion::
   preallocate(size_t n_rows, size_t n_cols)
   {
-    _mask.create(n_rows, n_cols, CV_8U);
-    _img_buf1.create(n_rows, n_cols, CV_32FC2);
-    _img_buf2.create(n_rows, n_cols, CV_32FC2);
-    _coeff.create(n_rows, n_cols, CV_32FC2);
+    _img_buf1.create(   n_rows, n_cols, CV_32FC2);
+    _img_buf2.create(   n_rows, n_cols, CV_32FC2);
+    _coeff.create(      n_rows, n_cols, CV_32FC2);
+    _img_in_buf.create( n_rows, n_cols, CV_32F);
+    _img_out_buf.create(n_rows, n_cols, CV_32F);
+    _mask_buf.create(   n_rows, n_cols, CV_8U);
   }
 
   void
-  RPNCD::
-  apply(cv::Mat const& image,
-	cv::Mat const& mask,
-	cv::Mat&       output,
+  ComplexDiffusion::
+  apply(cv::cuda::GpuMat const& image,
+	cv::cuda::GpuMat const& mask,
+	cv::cuda::GpuMat&       output,
 	float k, float theta, 
 	float dt, int n_iters)
   {
-    cv::Mat planes[] = {cv::Mat_<float>(image), cv::Mat::zeros(image.size(), CV_32F)};
-    cv::Mat complex_buf;
-    cv::merge(planes, 2, complex_buf);   
+    cv::cuda::GpuMat planes[] = {
+      cv::cuda::GpuMat(image),
+      cv::cuda::GpuMat(image.size(), CV_32F, cv::Scalar(0.f))};
+    cv::cuda::merge(planes, 2, _img_buf1);
 
-    auto roi       = cv::Rect(0, 0, image.cols, image.rows);
-    auto roi_buf1  = _img_buf1(roi);
-    auto roi_buf2  = _img_buf2(roi);
-    auto roi_coeff = _coeff(roi);
-    auto roi_mask  = _mask(roi);
-    roi_buf1.upload(complex_buf);
-    roi_mask.upload(mask);
-
-    size_t M  = static_cast<size_t>(image.rows);
-    size_t N  = static_cast<size_t>(image.cols);
+    size_t M = static_cast<size_t>(image.rows);
+    size_t N = static_cast<size_t>(image.cols);
     const dim3 block(8,8);
     const dim3 grid(static_cast<unsigned int>(
 		      ceil(static_cast<float>(M)/block.x)),
@@ -139,13 +137,27 @@ namespace usdg
 
     for (size_t i = 0; i < n_iters; ++i)
     {
-      usdg::rpncd_compute_diffusivity<<<grid, block>>>(M, N, _img_buf1, _mask, _coeff, k, theta);
-      usdg::rpncd_diffuse<<<grid, block>>>(M, N, _img_buf1, _coeff, _mask, dt, _img_buf2);
+      usdg::rpncd_compute_diffusivity<<<grid, block>>>(M, N, _img_buf1, mask, _coeff, k, theta);
+      usdg::rpncd_diffuse<<<grid, block>>>(M, N, _img_buf1, _coeff, mask, dt, _img_buf2);
       cv::swap(_img_buf1, _img_buf2);
     }
     cuda_check( cudaPeekAtLastError() );
-    roi_buf1.download(complex_buf);
-    cv::split(complex_buf, planes);
+    cv::cuda::split(_img_buf1, planes);
     planes[0].copyTo(output);
+  }
+
+  void
+  ComplexDiffusion::
+  apply(cv::Mat const& image,
+	cv::Mat const& mask,
+	cv::Mat&       output,
+	float k, float theta, 
+	float dt, int n_iters)
+  {
+    _img_in_buf.upload(image);
+    _mask_buf.upload(  mask);
+    this->apply(_img_in_buf, _mask_buf, _img_out_buf,
+		k, theta, dt, n_iters);
+    _img_out_buf.download(output);
   }
 }

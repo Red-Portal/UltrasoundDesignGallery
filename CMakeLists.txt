@@ -137,15 +137,14 @@ endif()
 # Image processing core
 add_library(ipcore
     SHARED
-    src/imaging/ncd.cu
-    src/imaging/rpncd.cu
+    src/imaging/coherent_diffusion.cu
+    src/imaging/complex_diffusion.cu
     src/imaging/pipeline.cpp
     src/imaging/laplacian_pyramid.cpp
     src/imaging/gaussian_pyramid.cpp
     src/imaging/local_laplacian_pyramid.cu
     src/imaging/local_laplacian_pyramid.cpp
     src/imaging/laplacian_pyramid.cpp
-    src/imaging/edge_enhance.cu
     src/image_processing_api.cpp
     )
 

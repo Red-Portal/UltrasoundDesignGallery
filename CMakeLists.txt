@@ -139,6 +139,7 @@ add_library(ipcore
     SHARED
     src/imaging/coherent_diffusion.cu
     src/imaging/complex_diffusion.cu
+    src/imaging/complex_shock.cu
     src/imaging/pipeline.cpp
     src/imaging/laplacian_pyramid.cpp
     src/imaging/gaussian_pyramid.cpp

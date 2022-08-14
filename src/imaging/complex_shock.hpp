@@ -16,8 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __US_GALLERY_RPNCD_HPP__
-#define __US_GALLERY_RPNCD_HPP__
+#ifndef __US_GALLERY_CSHOCK_HPP__
+#define __US_GALLERY_CSHOCK_HPP__
 
 #include <opencv4/opencv2/core/core.hpp>
 #include <opencv4/opencv2/core/cuda.hpp>
@@ -26,10 +26,10 @@
 
 namespace usdg
 {
-  class ComplexDiffusion
+  class ComplexShock
   {
     /* 
-     * Ramp-Preserving nonlinear Complex Diffusion
+     * Complex Shock
      * 
      * "Image enhancement and denoising by complex diffusion processes"
      * Gilboa, Guy, et al.,
@@ -38,26 +38,33 @@ namespace usdg
   private:
     cv::cuda::GpuMat _img_buf1;
     cv::cuda::GpuMat _img_buf2;
-    cv::cuda::GpuMat _coeff;
 
     cv::cuda::GpuMat _img_in_buf;
     cv::cuda::GpuMat _img_out_buf;
     cv::cuda::GpuMat _mask_buf;
 
   public:
-    ComplexDiffusion();
+    ComplexShock();
 
     void preallocate(size_t n_rows, size_t n_cols);
 
     void apply(cv::cuda::GpuMat const& image,
 	       cv::cuda::GpuMat const& mask,
 	       cv::cuda::GpuMat&       output,
-	       float k,  float theta, float dt, int n_iters);
+	       float r,
+	       float lambda_tilde,
+	       float a,
+	       float theta,
+	       float dt, int n_iters);
 
     void apply(cv::Mat const& image,
 	       cv::Mat const& mask,
 	       cv::Mat&       output,
-	       float k,  float theta, float dt, int n_iters);
+	       float r,
+	       float lambda_tilde,
+	       float a,
+	       float theta,
+	       float dt, int n_iters);
   };
 }
 

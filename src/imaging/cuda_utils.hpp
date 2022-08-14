@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2021  Ray Kim
+ * Copyright (C) 2021-2022 Kyurae Kim
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -160,15 +160,20 @@ namespace usdg
   }
 
   __device__ __forceinline__ void
-  matrix_diffuse_impl(cv::cuda::PtrStepSzf       const img_src,
-		      cv::cuda::PtrStepSz<uchar> const mask,
-		      cv::cuda::PtrStepSzf       const D_xx,
-		      cv::cuda::PtrStepSzf       const D_xy,
-		      cv::cuda::PtrStepSzf       const D_yy,
-		      int i, int j,
-		      int xp, int xm, int yp, int ym,
-		      int M, int N, float dt,
-		      cv::cuda::PtrStepSzf img_dst)
+  standard_matrix_diffusion(cv::cuda::PtrStepSzf       const img_src,
+			    cv::cuda::PtrStepSz<uchar> const mask,
+			    cv::cuda::PtrStepSzf       const D_xx,
+			    cv::cuda::PtrStepSzf       const D_xy,
+			    cv::cuda::PtrStepSzf       const D_yy,
+			    int i, int j,
+			    int xp, int xm, int yp, int ym,
+			    int M, int N, float dt,
+			    cv::cuda::PtrStepSzf img_dst)
+    /*
+     * J. Weickert,
+     * "Nonlinear diffusion filtering,"
+     * in Handbook on Computer Vision and Applications, 1999.
+     */
   {
     float u5 = img_src(i, j);
     float u1 = fetch_pixel(img_src, xm, yp, mask, u5);
@@ -212,6 +217,60 @@ namespace usdg
 	       + c7 + c8 + c9));
   }
 
+  __device__ __forceinline__ float
+  optimized_derivative_x(cv::cuda::PtrStepSzf       const img,
+			 cv::cuda::PtrStepSz<uchar> const mask,
+			 int i, int j,
+			 int xp, int xm, int yp, int ym,
+			 int M, int N)
+  {
+    /*
+     * B. Jahne, H. Scharr, and S. Korkel,
+     * "Principles of filter design,"
+     * in Handbook on Computer Vision and Applications,
+     * Vol. 2: Signal Processing and Pattern Recognition, 1999.
+     */
+    float u      = img(i, j);
+    float u_xmyp = fetch_pixel(img, xm, yp, mask, u);
+    float u_xmym = fetch_pixel(img, xm, ym, mask, u);
+    float u_xm   = fetch_pixel(img, xm,  j, mask, u);
+    float u_xpyp = fetch_pixel(img, xp, yp, mask, u);
+    float u_xpym = fetch_pixel(img, xp, ym, mask, u);
+    float u_xp   = fetch_pixel(img, xp,  j, mask, u);
+
+    return (u_xp - u_xm)/2;
+
+    // return (-3*u_xmym - 10*u_xm -3*u_xmyp
+    // 	    + 3*u_xpym + 10*u_xp + 3*u_xpyp) / 32;
+  }
+
+  __device__ __forceinline__ float
+  optimized_derivative_y(cv::cuda::PtrStepSzf       const img,
+			 cv::cuda::PtrStepSz<uchar> const mask,
+			 int i, int j,
+			 int xp, int xm, int yp, int ym,
+			 int M, int N)
+  {
+    /*
+     * B. Jahne, H. Scharr, and S. Korkel,
+     * "Principles of filter design,"
+     * in Handbook on Computer Vision and Applications,
+     * Vol. 2: Signal Processing and Pattern Recognition, 1999.
+     */
+    float u      = img(i, j);
+    float u_xmyp = fetch_pixel(img, xm, yp, mask, u);
+    float u_xpyp = fetch_pixel(img, xp, yp, mask, u);
+    float u_yp   = fetch_pixel(img,  i, yp, mask, u);
+    float u_xmym = fetch_pixel(img, xm, ym, mask, u);
+    float u_xpym = fetch_pixel(img, xp, ym, mask, u);
+    float u_ym   = fetch_pixel(img,  i, ym, mask, u);
+
+    // return (-3*u_xmym - 10*u_ym - 3*u_xpym
+    // 	    + 3*u_xmyp + 10*u_yp + 3*u_xpyp) / 32;
+
+    return (u_yp - u_ym)/2;
+
+  }
 }
 
 #endif

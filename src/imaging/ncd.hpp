@@ -32,9 +32,9 @@ namespace usdg
     /* 
      * Non-linear Coherent Diffusion
      * 
+     *  Abd-Elmoniem, Khaled Z. et al.
      * "Real-time speckle reduction and coherence enhancement 
      *  in ultrasound imaging via nonlinear anisotropic diffusion"
-     *  Abd-Elmoniem, Khaled Z. et al.
      *  IEEE Transactions on Biomedical Engineering, 2002
      */
   private:
@@ -53,6 +53,12 @@ namespace usdg
     cv::cuda::GpuMat _D_xx;
     cv::cuda::GpuMat _D_xy;
     cv::cuda::GpuMat _D_yy;
+
+    cv::cuda::GpuMat _G_x;
+    cv::cuda::GpuMat _G_y;
+
+    cv::cuda::GpuMat _j1;
+    cv::cuda::GpuMat _j2;
 
   public:
     NCD();

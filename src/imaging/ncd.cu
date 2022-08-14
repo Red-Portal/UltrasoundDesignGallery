@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2021  Ray Kim
+ * Copyright (C) 2021-2022 Kyurae Kim
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,12 +29,14 @@
 namespace usdg
 {
   __global__ void
-  ncd_compute_structure_tensor(int M, int N,
-			       cv::cuda::PtrStepSzf       const img,
-			       cv::cuda::PtrStepSz<uchar> const mask,
-			       cv::cuda::PtrStepSzf             J_xx,
-			       cv::cuda::PtrStepSzf             J_xy,
-			       cv::cuda::PtrStepSzf             J_yy)
+  ncd_structure_tensor(int M, int N,
+		       cv::cuda::PtrStepSzf       const img,
+		       cv::cuda::PtrStepSz<uchar> const mask,
+		       cv::cuda::PtrStepSzf             J_xx,
+		       cv::cuda::PtrStepSzf             J_xy,
+		       cv::cuda::PtrStepSzf             J_yy,
+		       cv::cuda::PtrStepSzf             G_x,
+		       cv::cuda::PtrStepSzf             G_y)
   {
     const int i = blockIdx.x*blockDim.x + threadIdx.x;
     const int j = blockIdx.y*blockDim.y + threadIdx.y;
@@ -42,36 +44,34 @@ namespace usdg
     if (i >= M || j >= N || mask(i,j) == 0)
       return;
 
-    int xp = min(i+1, M-1);
-    int xm = max(i-1,   0);
-    int yp = min(j+1, N-1);
-    int ym = max(j-1,   0);
+    int xp = i+1;
+    int xm = i-1;
+    int yp = j+1;
+    int ym = j-1;
 
-    float I_c  = img(i,j);
-    float I_xp = fetch_pixel(img, xp,  j, mask, I_c);
-    float I_xm = fetch_pixel(img, xm,  j, mask, I_c);
-    float I_yp = fetch_pixel(img,  i, yp, mask, I_c);
-    float I_ym = fetch_pixel(img,  i, ym, mask, I_c);
+    float dudx = optimized_derivative_x(img, mask, i, j, xp, xm, yp, ym, M, N);
+    float dudy = optimized_derivative_y(img, mask, i, j, xp, xm, yp, ym, M, N);
 
-    float g_x   = (I_xp - I_xm) / 2;
-    float g_y   = (I_yp - I_ym) / 2;
+    G_x(i,j) = dudx;
+    G_y(i,j) = dudy;
 
-    J_xx(i,j)   = g_x*g_x;
-    J_xy(i,j)   = g_x*g_y;
-    J_yy(i,j)   = g_y*g_y;
+    J_xx(i,j) = dudx*dudx;
+    J_xy(i,j) = dudx*dudy;
+    J_yy(i,j) = dudy*dudy;
   }
 
   __global__ void
-  ncd_compute_diffusion_matrix(int M, int N,
-			       cv::cuda::PtrStepSzf const J_xx_rho,
-			       cv::cuda::PtrStepSzf const J_xy_rho,
-			       cv::cuda::PtrStepSzf const J_yy_rho,
-			       cv::cuda::PtrStepSz<uchar> const mask,
-			       float alpha,
-			       float s,
-			       cv::cuda::PtrStepSzf D_xx,
-			       cv::cuda::PtrStepSzf D_xy,
-			       cv::cuda::PtrStepSzf D_yy)
+  ncd_diffusion_matrix(int M, int N,
+		       cv::cuda::PtrStepSzf const J_xx_rho,
+		       cv::cuda::PtrStepSzf const J_xy_rho,
+		       cv::cuda::PtrStepSzf const J_yy_rho,
+		       cv::cuda::PtrStepSzf const G_x,
+		       cv::cuda::PtrStepSzf const G_y,
+		       cv::cuda::PtrStepSz<uchar> const mask,
+		       float alpha,
+		       float s,
+		       cv::cuda::PtrStepSzf j1,
+		       cv::cuda::PtrStepSzf j2)
   {
     const int i = blockIdx.x*blockDim.x + threadIdx.x;
     const int j = blockIdx.y*blockDim.y + threadIdx.y;
@@ -92,20 +92,24 @@ namespace usdg
     if (kappa < s*s)
       lambda1 = alpha*(1 - kappa/(s*s));
 
-    D_xx(i,j) = lambda1*v1x*v1x + lambda2*v2x*v2x;
-    D_xy(i,j) = lambda1*v1x*v1y + lambda2*v2x*v2y;
-    D_yy(i,j) = lambda1*v1y*v1y + lambda2*v2y*v2y;
+    float dudx = G_x(i,j);
+    float dudy = G_y(i,j);
+    float a    = lambda1*v1x*v1x + lambda2*v2x*v2x;
+    float b    = lambda1*v1x*v1y + lambda2*v2x*v2y;
+    float c    = lambda1*v1y*v1y + lambda2*v2y*v2y;
+
+    j1(i,j) = a*dudx + b*dudy;
+    j2(i,j) = b*dudx + c*dudy;
   }
 
   __global__ void
-  ncd_diffuse(int M, int N,
-	      cv::cuda::PtrStepSzf       const img_src,
-	      cv::cuda::PtrStepSz<uchar> const mask,
-	      cv::cuda::PtrStepSzf       const D_xx,
-	      cv::cuda::PtrStepSzf       const D_xy,
-	      cv::cuda::PtrStepSzf       const D_yy,
-	      float dt, 
-	      cv::cuda::PtrStepSzf       img_dst)
+  ncd_diffusion(int M, int N,
+		cv::cuda::PtrStepSzf       const img_src,
+		cv::cuda::PtrStepSz<uchar> const mask,
+		cv::cuda::PtrStepSzf       const j1,
+		cv::cuda::PtrStepSzf       const j2,
+		float dt, 
+		cv::cuda::PtrStepSzf       img_dst)
   {
     const int i = blockIdx.x*blockDim.x + threadIdx.x;
     const int j = blockIdx.y*blockDim.y + threadIdx.y;
@@ -113,17 +117,15 @@ namespace usdg
     if (i >= M || j >= N || mask(i,j) == 0)
       return;
 
-    int xp = min(i+1, M-1);
-    int xm = max(i-1,   0);
-    int yp = min(j+1, N-1);
-    int ym = max(j-1,   0);
+    int xp = i+1;
+    int xm = i-1;
+    int yp = j+1;
+    int ym = j-1;
 
-    usdg::matrix_diffuse_impl(img_src, mask,
-			      D_xx, D_xy, D_yy,
-			      i, j,
-			      xp, xm, yp, ym,
-			      M, N, dt,
-			      img_dst);
+    float dj1dx = usdg::optimized_derivative_x(j1, mask, i, j, xp, xm, yp, ym, M, N);
+    float dj2dy = usdg::optimized_derivative_y(j2, mask, i, j, xp, xm, yp, ym, M, N);
+
+    img_dst(i,j) = img_src(i,j) + dt*(dj1dx + dj2dy);
   }
 
   NCD::
@@ -137,27 +139,29 @@ namespace usdg
     _J_xx_rho(),
     _J_xy_rho(),
     _J_yy_rho(),
-    _D_xx(),
-    _D_xy(),
-    _D_yy()
+    _G_x(),
+    _G_y(),
+    _j1(),
+    _j2()
   {}
 
   void
   NCD::
   preallocate(size_t n_rows, size_t n_cols)
   {
-    _mask.create(n_rows, n_cols, CV_8U);
+    _mask.create(    n_rows, n_cols, CV_8U);
     _img_buf1.create(n_rows, n_cols, CV_32F);
     _img_buf2.create(n_rows, n_cols, CV_32F);
-    _J_xx.create(n_rows, n_cols, CV_32F);
-    _J_xy.create(n_rows, n_cols, CV_32F);
-    _J_yy.create(n_rows, n_cols, CV_32F);
+    _J_xx.create(    n_rows, n_cols, CV_32F);
+    _J_xy.create(    n_rows, n_cols, CV_32F);
+    _J_yy.create(    n_rows, n_cols, CV_32F);
     _J_xx_rho.create(n_rows, n_cols, CV_32F);
     _J_xy_rho.create(n_rows, n_cols, CV_32F);
     _J_yy_rho.create(n_rows, n_cols, CV_32F);
-    _D_xx.create(n_rows, n_cols, CV_32F);
-    _D_xy.create(n_rows, n_cols, CV_32F);
-    _D_yy.create(n_rows, n_cols, CV_32F);
+    _G_x.create(     n_rows, n_cols, CV_32F);
+    _G_y.create(     n_rows, n_cols, CV_32F);
+    _j1.create(      n_rows, n_cols, CV_32F);
+    _j2.create(      n_rows, n_cols, CV_32F);
   }
 
   void
@@ -182,7 +186,7 @@ namespace usdg
     roi_mask.upload(mask);
 
     auto gaussian_filter = cv::cuda::createGaussianFilter(
-      CV_32F, CV_32F, cv::Size(9, 9), rho);
+      CV_32F, CV_32F, cv::Size(5, 5), rho);
 
     const dim3 block(8,8);
     const dim3 grid(static_cast<unsigned int>(
@@ -190,32 +194,31 @@ namespace usdg
 		    static_cast<unsigned int>(
 		      ceil(static_cast<float>(N)/block.y)));
 
-    usdg::ncd_compute_structure_tensor<<<grid,block>>>(
-      M, N, _img_buf1, _mask, _J_xx, _J_xy, _J_yy);
-    cuda_check( cudaPeekAtLastError() );
-
-    gaussian_filter->apply(_J_xx, _J_xx_rho);
-    gaussian_filter->apply(_J_xy, _J_xy_rho);
-    gaussian_filter->apply(_J_yy, _J_yy_rho);
-
-    ncd_compute_diffusion_matrix<<<grid, block>>>(
-      M, N,
-      _J_xx_rho, _J_xy_rho, _J_yy_rho,
-      _mask,
-      alpha, s,
-      _D_xx, _D_xy, _D_yy);
-    cuda_check( cudaPeekAtLastError() );
-
     for (size_t i = 0; i < n_iters; ++i)
     {
-      usdg::ncd_diffuse<<<grid,block>>>(M, N,
-					_img_buf1,
-					_mask,
-					_D_xx,
-					_D_xy,
-					_D_yy,
-					dt,
-					_img_buf2);
+      usdg::ncd_structure_tensor<<<grid,block>>>(
+	M, N, _img_buf1, _mask, _J_xx, _J_xy, _J_yy, _G_x, _G_y);
+      
+      gaussian_filter->apply(_J_xx, _J_xx_rho);
+      gaussian_filter->apply(_J_xy, _J_xy_rho);
+      gaussian_filter->apply(_J_yy, _J_yy_rho);
+
+      ncd_diffusion_matrix<<<grid, block>>>(
+	M, N,
+	_J_xx_rho, _J_xy_rho, _J_yy_rho,
+	_G_x, _G_y,
+	_mask,
+	alpha, s,
+	_j1, _j2);
+
+      usdg::ncd_diffusion<<<grid,block>>>(
+	M, N,
+	_img_buf1,
+	_mask,
+	_j1, _j2,
+	dt,
+	_img_buf2);
+
       cv::swap(_img_buf1, _img_buf2);
     }
     cuda_check( cudaPeekAtLastError() );

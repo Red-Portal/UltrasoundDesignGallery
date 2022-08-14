@@ -38,7 +38,6 @@ namespace usdg
      *  IEEE Transactions on Biomedical Engineering, 2002
      */
   private:
-    cv::cuda::GpuMat _mask;
     cv::cuda::GpuMat _img_buf1;
     cv::cuda::GpuMat _img_buf2;
 
@@ -60,14 +59,23 @@ namespace usdg
     cv::cuda::GpuMat _j1;
     cv::cuda::GpuMat _j2;
 
+    cv::cuda::GpuMat _img_in_buf;
+    cv::cuda::GpuMat _img_out_buf;
+    cv::cuda::GpuMat _mask_buf;
+
   public:
     NCD();
 
     void preallocate(size_t n_rows, size_t n_cols);
 
-    void apply(cv::Mat const& image,
-	       cv::Mat const& mask,
-	       cv::Mat&       output,
+    void apply(cv::cuda::GpuMat const& image,
+	       cv::cuda::GpuMat const& mask,
+	       cv::cuda::GpuMat&       output,
+	       float rho,  float alpha, float s, float dt, int n_iters);
+
+    void apply(cv::Mat  const& image,
+	       cv::Mat  const& mask,
+	       cv::Mat&        output,
 	       float rho,  float alpha, float s, float dt, int n_iters);
   };
 }

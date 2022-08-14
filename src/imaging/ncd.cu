@@ -130,8 +130,7 @@ namespace usdg
 
   NCD::
   NCD()
-    : _mask(),
-    _img_buf1(),
+    : _img_buf1(),
     _img_buf2(),
     _J_xx(),
     _J_xy(),
@@ -142,33 +141,38 @@ namespace usdg
     _G_x(),
     _G_y(),
     _j1(),
-    _j2()
+    _j2(),
+    _img_in_buf(),
+    _img_out_buf(),
+    _mask_buf()
   {}
 
   void
   NCD::
   preallocate(size_t n_rows, size_t n_cols)
   {
-    _mask.create(    n_rows, n_cols, CV_8U);
-    _img_buf1.create(n_rows, n_cols, CV_32F);
-    _img_buf2.create(n_rows, n_cols, CV_32F);
-    _J_xx.create(    n_rows, n_cols, CV_32F);
-    _J_xy.create(    n_rows, n_cols, CV_32F);
-    _J_yy.create(    n_rows, n_cols, CV_32F);
-    _J_xx_rho.create(n_rows, n_cols, CV_32F);
-    _J_xy_rho.create(n_rows, n_cols, CV_32F);
-    _J_yy_rho.create(n_rows, n_cols, CV_32F);
-    _G_x.create(     n_rows, n_cols, CV_32F);
-    _G_y.create(     n_rows, n_cols, CV_32F);
-    _j1.create(      n_rows, n_cols, CV_32F);
-    _j2.create(      n_rows, n_cols, CV_32F);
+    _img_buf1.create(   n_rows, n_cols, CV_32F);
+    _img_buf2.create(   n_rows, n_cols, CV_32F);
+    _J_xx.create(       n_rows, n_cols, CV_32F);
+    _J_xy.create(       n_rows, n_cols, CV_32F);
+    _J_yy.create(       n_rows, n_cols, CV_32F);
+    _J_xx_rho.create(   n_rows, n_cols, CV_32F);
+    _J_xy_rho.create(   n_rows, n_cols, CV_32F);
+    _J_yy_rho.create(   n_rows, n_cols, CV_32F);
+    _G_x.create(        n_rows, n_cols, CV_32F);
+    _G_y.create(        n_rows, n_cols, CV_32F);
+    _j1.create(         n_rows, n_cols, CV_32F);
+    _j2.create(         n_rows, n_cols, CV_32F);
+    _img_in_buf.create( n_rows, n_cols, CV_8U);
+    _img_out_buf.create(n_rows, n_cols, CV_8U);
+    _mask_buf.create(   n_rows, n_cols, CV_8U);
   }
 
   void
   NCD::
-  apply(cv::Mat const& image,
-	cv::Mat const& mask,
-	cv::Mat&       output,
+  apply(cv::cuda::GpuMat const& image,
+	cv::cuda::GpuMat const& mask,
+	cv::cuda::GpuMat&       output,
 	float rho, float alpha, float s,
 	float dt, int n_iters)
   {
@@ -178,12 +182,8 @@ namespace usdg
     size_t M  = static_cast<size_t>(image.rows);
     size_t N  = static_cast<size_t>(image.cols);
 
-    auto roi       = cv::Rect(0, 0, N, M);
-    auto roi_buf1  = _img_buf1(roi);
-    auto roi_buf2  = _img_buf2(roi);
-    auto roi_mask  = _mask(roi);
-    roi_buf1.upload(image);
-    roi_mask.upload(mask);
+    image.copyTo(_img_buf1);
+    image.copyTo(_img_buf2);
 
     auto gaussian_filter = cv::cuda::createGaussianFilter(
       CV_32F, CV_32F, cv::Size(5, 5), rho);
@@ -197,7 +197,7 @@ namespace usdg
     for (size_t i = 0; i < n_iters; ++i)
     {
       usdg::ncd_structure_tensor<<<grid,block>>>(
-	M, N, _img_buf1, _mask, _J_xx, _J_xy, _J_yy, _G_x, _G_y);
+	M, N, _img_buf1, mask, _J_xx, _J_xy, _J_yy, _G_x, _G_y);
       
       gaussian_filter->apply(_J_xx, _J_xx_rho);
       gaussian_filter->apply(_J_xy, _J_xy_rho);
@@ -207,14 +207,14 @@ namespace usdg
 	M, N,
 	_J_xx_rho, _J_xy_rho, _J_yy_rho,
 	_G_x, _G_y,
-	_mask,
+	mask,
 	alpha, s,
 	_j1, _j2);
 
       usdg::ncd_diffusion<<<grid,block>>>(
 	M, N,
 	_img_buf1,
-	_mask,
+	mask,
 	_j1, _j2,
 	dt,
 	_img_buf2);
@@ -222,6 +222,24 @@ namespace usdg
       cv::swap(_img_buf1, _img_buf2);
     }
     cuda_check( cudaPeekAtLastError() );
-    roi_buf2.download(output);
+    _img_buf1.copyTo(output);
+  }
+
+  void
+  NCD::
+  apply(cv::Mat const& image,
+	cv::Mat const& mask,
+	cv::Mat&       output,
+	float rho, float alpha, float s,
+	float dt, int n_iters)
+  {
+    _img_in_buf.upload(image);
+    _mask_buf.upload(  mask);
+    this->apply(_img_in_buf,
+		_mask_buf,
+		_img_out_buf,
+		rho, alpha, s,
+		dt, n_iters);
+    _img_out_buf.download(output);
   }
 }

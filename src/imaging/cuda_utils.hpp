@@ -238,10 +238,8 @@ namespace usdg
     float u_xpym = fetch_pixel(img, xp, ym, mask, u);
     float u_xp   = fetch_pixel(img, xp,  j, mask, u);
 
-    return (u_xp - u_xm)/2;
-
-    // return (-3*u_xmym - 10*u_xm -3*u_xmyp
-    // 	    + 3*u_xpym + 10*u_xp + 3*u_xpyp) / 32;
+    return (-3*u_xmym - 10*u_xm -3*u_xmyp
+	    + 3*u_xpym + 10*u_xp + 3*u_xpyp) / 32;
   }
 
   __device__ __forceinline__ float
@@ -265,11 +263,8 @@ namespace usdg
     float u_xpym = fetch_pixel(img, xp, ym, mask, u);
     float u_ym   = fetch_pixel(img,  i, ym, mask, u);
 
-    // return (-3*u_xmym - 10*u_ym - 3*u_xpym
-    // 	    + 3*u_xmyp + 10*u_yp + 3*u_xpyp) / 32;
-
-    return (u_yp - u_ym)/2;
-
+    return (-3*u_xmym - 10*u_ym - 3*u_xpym
+	    + 3*u_xmyp + 10*u_yp + 3*u_xpyp) / 32;
   }
 }
 

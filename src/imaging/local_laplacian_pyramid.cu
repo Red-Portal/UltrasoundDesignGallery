@@ -24,124 +24,44 @@
 #include <opencv4/opencv2/core/core.hpp>
 #include <opencv4/opencv2/core/cuda.hpp>
 
+#include <iostream>
+
 #include <cmath>
 
 namespace usdg
 {
   __global__ void
-  pixelwise_fourier_series(int M, int N,
-			   float omega,
-			   cv::cuda::PtrStepSzf       const img,
-			   cv::cuda::PtrStepSz<uchar> const mask,
-			   cv::cuda::PtrStepSzf             img_cos,
-			   cv::cuda::PtrStepSzf             img_sin)
+  remap_image_impl(int M, int N,
+		   cv::cuda::PtrStepSzf       const img,
+		   cv::cuda::PtrStepSz<uchar> const mask,
+		   float g,
+		   float alpha,
+		   float beta,
+		   float sigma_r2,
+		   float I_range,
+		   cv::cuda::PtrStepSzf img_remap_out)
   {
     const int i = blockIdx.x*blockDim.x + threadIdx.x;
     const int j = blockIdx.y*blockDim.y + threadIdx.y;
 
     if (i >= M || j >= N || mask(i,j) == 0)
       return;
-
-    float pixel = img(i,j);
     
-    img_cos(i,j) = cos(omega*pixel);
-    img_sin(i,j) = sin(omega*pixel);
-  }
+    float pixel  = img(i,j);
+    float delta  = pixel - g;
+    float delta2 = delta*delta;
 
-  void
-  GaussianLocalLaplacianPyramid::
-  compute_fourier_series(cv::cuda::GpuMat const& img_in,
-			 cv::cuda::GpuMat const& mask,
-			 float omega,
-			 int T,
-			 cv::cuda::GpuMat& img_cos_out,
-			 cv::cuda::GpuMat& img_sin_out) const
-  {
-    size_t M         = static_cast<size_t>(img_in.rows);
-    size_t N         = static_cast<size_t>(img_in.cols);
-
-    const dim3 block(8,8);
-    const dim3 grid(static_cast<unsigned int>(
-		      ceil(static_cast<float>(M)/block.x)),
-		    static_cast<unsigned int>(
-		      ceil(static_cast<float>(N)/block.y)));
-
-    usdg::pixelwise_fourier_series<<<grid,block>>>(
-      M, N, omega, img_in, mask, img_cos_out, img_sin_out);
-
-    cuda_check( cudaPeekAtLastError() );
+    img_remap_out(i,j) = delta*(alpha*exp(delta2/(-2*sigma_r2))*beta + (beta - 1)) + pixel;
   }
 
   __global__ void
-  pixelwise_fourier_series(int M, int N,
-			   float alpha_tilde,
-			   float omega,
-			   float m,
-			   cv::cuda::PtrStepSzf       const G,
-			   cv::cuda::PtrStepSzf       const G_cos,
-			   cv::cuda::PtrStepSzf       const G_sin,
-			   cv::cuda::PtrStepSzf       const G_cos_up,
-			   cv::cuda::PtrStepSzf       const G_sin_up,
-			   cv::cuda::PtrStepSz<uchar> const mask,
-			   cv::cuda::PtrStepSzf       L_fourier_recon)
-  {
-    const int i = blockIdx.x*blockDim.x + threadIdx.x;
-    const int j = blockIdx.y*blockDim.y + threadIdx.y;
-
-    if (i >= M || j >= N || mask(i,j) == 0)
-      return;
-
-    float pixel = G(i,j);
-    float cosG  = cos(pixel*omega);
-    float sinG  = sin(pixel*omega);
-
-    float recon = alpha_tilde*(
-      (cosG*G_sin(i,j) - sinG*G_cos(i,j))
-      - (cosG*G_sin_up(i,j) - sinG*G_cos_up(i,j)));
-
-    L_fourier_recon(i,j) += m*recon;
-  }
-
-  void
-  GaussianLocalLaplacianPyramid::
-  fourier_recon_accumulate(float alpha_tilde,
-			   float omega,
-			   float m,
-			   cv::cuda::GpuMat const& G,
-			   cv::cuda::GpuMat const& G_cos,
-			   cv::cuda::GpuMat const& G_sin,
-			   cv::cuda::GpuMat const& G_cos_up,
-			   cv::cuda::GpuMat const& G_sin_up,
-			   cv::cuda::GpuMat const& mask,
-			   cv::cuda::GpuMat& L_fourier_recon) const
-  {
-    size_t M         = static_cast<size_t>(G.rows);
-    size_t N         = static_cast<size_t>(G.cols);
-
-    const dim3 block(8,8);
-    const dim3 grid(static_cast<unsigned int>(
-		      ceil(static_cast<float>(M)/block.x)),
-		    static_cast<unsigned int>(
-		      ceil(static_cast<float>(N)/block.y)));
-
-    usdg::pixelwise_fourier_series<<<grid,block>>>(
-      M, N, alpha_tilde, omega, m,
-      G, G_cos, G_sin, G_cos_up, G_sin_up, mask,
-      L_fourier_recon);
-
-    cuda_check( cudaPeekAtLastError() );
-  }
-
-  __global__ void
-  pixelwise_firstlayer_fourier_series(int M, int N,
-				      float alpha_tilde,
-				      float omega,
-				      float m,
+  interpolate_laplacian_pyramids_impl(int M, int N,
+				      int n_quants, 
 				      cv::cuda::PtrStepSzf       const G,
-				      cv::cuda::PtrStepSzf       const G_cos,
-				      cv::cuda::PtrStepSzf       const G_sin,
+				      cv::cuda::PtrStepSzf*      const L_quants,
 				      cv::cuda::PtrStepSz<uchar> const mask,
-				      cv::cuda::PtrStepSzf       L_fourier_recon)
+				      float delta,
+				      cv::cuda::PtrStepSzf L_out)
   {
     const int i = blockIdx.x*blockDim.x + threadIdx.x;
     const int j = blockIdx.y*blockDim.y + threadIdx.y;
@@ -149,28 +69,49 @@ namespace usdg
     if (i >= M || j >= N || mask(i,j) == 0)
       return;
 
-    float pixel = G(i,j);
-    float cosG  = cos(pixel*omega);
-    float sinG  = sin(pixel*omega);
+    float g     = G(i,j);
+    float alpha = 0.0f;
+    int q_idx   = floor(g / delta);
+    int q_l_idx = 0;
+    int q_h_idx = 0;
 
-    float recon = alpha_tilde*(sinG*G_cos(i,j) - cosG*G_sin(i,j));
+    if (q_idx < 0)
+    {
+      q_l_idx = 0;
+      q_h_idx = 0;
+      alpha   = 1.0f;
+    }
+    else if (q_idx + 1 > n_quants - 1)
+    {
+      q_l_idx = n_quants - 1;
+      q_h_idx = n_quants - 1;
+      alpha   = 0.0f;
+    }
+    else
+    {
+      q_l_idx = q_idx;
+      q_h_idx = q_idx + 1;
+      alpha   = 1 - (g - (q_idx*delta))/delta;
+    }
 
-    L_fourier_recon(i,j) += m*recon;
+    float l_l = L_quants[q_l_idx](i,j);
+    float l_h = L_quants[q_h_idx](i,j);
+    L_out(i,j) = alpha*l_l + (1 - alpha)*l_h;
   }
 
   void
-  GaussianLocalLaplacianPyramid::
-  fourier_firstlayer_accumulate(float alpha_tilde,
-				float omega,
-				float m,
-				cv::cuda::GpuMat const& G,
-				cv::cuda::GpuMat const& G_cos,
-				cv::cuda::GpuMat const& G_sin,
-				cv::cuda::GpuMat const& mask,
-				cv::cuda::GpuMat& L_fourier_recon) const
+  FastLocalLaplacianPyramid::
+  remap_image(cv::cuda::GpuMat const& img,
+	      cv::cuda::GpuMat const& mask,
+	      float g,
+	      float alpha,
+	      float beta,
+	      float sigma_range,
+	      float I_range,
+	      cv::cuda::GpuMat& img_remap_out) const
   {
-    size_t M         = static_cast<size_t>(G.rows);
-    size_t N         = static_cast<size_t>(G.cols);
+    size_t M = static_cast<size_t>(img.rows);
+    size_t N = static_cast<size_t>(img.cols);
 
     const dim3 block(8,8);
     const dim3 grid(static_cast<unsigned int>(
@@ -178,10 +119,48 @@ namespace usdg
 		    static_cast<unsigned int>(
 		      ceil(static_cast<float>(N)/block.y)));
 
-    usdg::pixelwise_firstlayer_fourier_series<<<grid,block>>>(
-      M, N, alpha_tilde, omega, m,
-      G, G_cos, G_sin, mask,
-      L_fourier_recon);
+    float sigma_r2 = sigma_range*sigma_range;
+    usdg::remap_image_impl<<<grid,block>>>(
+      M, N, img, mask, g, alpha, beta, sigma_r2, I_range, img_remap_out);
+
+    cuda_check( cudaPeekAtLastError() );
+  }
+
+  void
+  FastLocalLaplacianPyramid::
+  interpolate_laplacian_pyramids(std::vector<usdg::LaplacianPyramid>& L_quants,
+				 cv::cuda::GpuMat const& G,
+				 cv::cuda::GpuMat const& mask,
+				 size_t level,
+				 float I_range,
+				 cv::cuda::GpuMat& L_out) const
+  {
+
+    size_t M = static_cast<size_t>(G.rows);
+    size_t N = static_cast<size_t>(G.cols);
+
+    const dim3 block(8,8);
+    const dim3 grid(static_cast<unsigned int>(
+		      ceil(static_cast<float>(M)/block.x)),
+		    static_cast<unsigned int>(
+		      ceil(static_cast<float>(N)/block.y)));
+
+    size_t n_quants = L_quants.size();
+    auto L_l_ptrs   = std::vector<cv::cuda::PtrStepSzf>(n_quants);
+    for (size_t n = 0; n < n_quants; ++n)
+    {
+      L_l_ptrs[n] = L_quants[n].L(level);
+    }
+
+    size_t L_l_ptrs_bytes = sizeof(cv::cuda::PtrStepSzf)*n_quants;
+    cv::cuda::PtrStepSzf* L_l_ptrs_dev = nullptr;
+    cudaMalloc(&L_l_ptrs_dev, L_l_ptrs_bytes);
+    cudaMemcpy(L_l_ptrs_dev, L_l_ptrs.data(), L_l_ptrs_bytes, cudaMemcpyHostToDevice);
+    cuda_check( cudaPeekAtLastError() );
+
+    float delta = I_range / (n_quants - 1);
+    usdg::interpolate_laplacian_pyramids_impl<<<grid,block>>>(
+      M, N, n_quants, G, L_l_ptrs_dev, mask, delta, L_out);
 
     cuda_check( cudaPeekAtLastError() );
   }

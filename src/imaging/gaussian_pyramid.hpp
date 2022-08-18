@@ -36,16 +36,17 @@ namespace usdg
     cv::cuda::GpuMat _img_buffer;
 
   public:
-    GaussianPyramid(size_t n_levels,
-		    float decimation_ratio);
+    GaussianPyramid(size_t n_levels);
 
     void preallocate(size_t n_rows, size_t n_cols);
 
     void apply(cv::Mat const& img,
-	       float dec_sigma);
+	       float dec_ratio,
+	       float sigma);
 
     void apply(cv::cuda::GpuMat const& img,
-	       float dec_sigma);
+	       float dec_ratio,
+	       float sigma);
 
     inline cv::cuda::GpuMat&
     G(size_t idx)

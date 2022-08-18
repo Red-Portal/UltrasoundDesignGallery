@@ -20,6 +20,7 @@
 #define __US_GALLERY_LOCAL_LAPLACIAN_PYRAMID_HPP__
 
 #include "gaussian_pyramid.hpp"
+#include "laplacian_pyramid.hpp"
 
 #include <opencv4/opencv2/core/core.hpp>
 #include <opencv4/opencv2/core/cuda.hpp>
@@ -30,96 +31,67 @@
 #include <cmath>
 #include <cstddef>
 
-
 namespace usdg
 {
-  class GaussianLocalLaplacianPyramid
+  class FastLocalLaplacianPyramid
   {
   private:
-    float _decimation_ratio;
-    size_t _n_fourier;
-    std::vector<cv::cuda::GpuMat> _masks;
-    std::vector<cv::cuda::GpuMat> _L;
+    usdg::LaplacianPyramid _L;
 
+    size_t _n_quants;
+    usdg::GaussianPyramid  _G;
+    std::vector<cv::cuda::GpuMat> _masks;
+    std::vector<usdg::LaplacianPyramid> _L_quants;
+
+    cv::cuda::GpuMat _remap_buffer;
     cv::cuda::GpuMat _img_buffer;
     cv::cuda::GpuMat _mask_buffer;
 
-    cv::cuda::GpuMat _G_up_buffer;
-    cv::cuda::GpuMat _I_cos;
-    cv::cuda::GpuMat _I_sin;
-    cv::cuda::GpuMat _G_cos_up;
-    cv::cuda::GpuMat _G_sin_up;
-
-    usdg::GaussianPyramid _G;
-    usdg::GaussianPyramid _G_cos;
-    usdg::GaussianPyramid _G_sin;
+    void
+    remap_image(cv::cuda::GpuMat const& img,
+		cv::cuda::GpuMat const& mask,
+		float g,
+		float alpha,
+		float beta,
+		float sigma_range,
+		float I_range,
+		cv::cuda::GpuMat& L_out) const;
 
     void
-    fourier_firstlayer_accumulate(float alpha_tilde,
-				  float omega,
-				  float m,
-				  cv::cuda::GpuMat const& G,
-				  cv::cuda::GpuMat const& G_cos,
-				  cv::cuda::GpuMat const& G_sin,
-				  cv::cuda::GpuMat const& mask,
-				  cv::cuda::GpuMat& L_fourier_recon) const;
-
-    void
-    fourier_recon_accumulate(float alpha_tilde,
-			     float omega,
-			     float m,
-			     cv::cuda::GpuMat const& G,
-			     cv::cuda::GpuMat const& G_cos,
-			     cv::cuda::GpuMat const& G_sin,
-			     cv::cuda::GpuMat const& G_cos_up,
-			     cv::cuda::GpuMat const& G_sin_up,
-			     cv::cuda::GpuMat const& mask,
-			     cv::cuda::GpuMat& L_fourier_recon) const;
-
-    void
-    compute_fourier_series(cv::cuda::GpuMat const& img_in,
-			   cv::cuda::GpuMat const& mask,
-			   float omega,
-			   int T,
-			   cv::cuda::GpuMat& img_cos_out,
-			   cv::cuda::GpuMat& img_sin_out) const;
+    interpolate_laplacian_pyramids(std::vector<usdg::LaplacianPyramid>& L_quants,
+				   cv::cuda::GpuMat const& G,
+				   cv::cuda::GpuMat const& mask,
+				   size_t level,
+				   float I_range,
+				   cv::cuda::GpuMat& L_out) const;
 
   public:
-    GaussianLocalLaplacianPyramid(size_t n_scales,
-				  size_t n_fourier,
-				  float decimation_ratio);
+    FastLocalLaplacianPyramid(size_t n_scales, size_t n_fourier);
 
     void preallocate(size_t n_rows, size_t n_cols);
 
     void apply(cv::cuda::GpuMat const& img,
 	       cv::cuda::GpuMat const& mask,
-	       float dec_sigma);
+	       float alpha,
+	       float beta,
+	       float sigma_range);
 
     void apply(cv::Mat const& img,
 	       cv::Mat const& mask,
-	       float dec_sigma);
+	       float alpha,
+	       float beta,
+	       float sigma_range);
 
     inline cv::cuda::GpuMat&
-    G(size_t idx)
+    L(size_t idx)
     {
-      return _G.G(idx);
-    }
-
-    inline cv::Mat
-    fuck(size_t idx)
-    {
-      auto n_rows = _L[idx].rows;
-      auto n_cols = _L[idx].cols;
-      auto out    = cv::Mat();
-      out.create(n_rows, n_cols, CV_32F);
-      _L[idx].download(out);
-      return out;
+      return _L.L(idx);
     }
 
     inline cv::cuda::GpuMat&
     mask(size_t idx)
     {
-      return _masks[idx];
+      return _L_quants[0].mask(idx);
     }
   };
 }

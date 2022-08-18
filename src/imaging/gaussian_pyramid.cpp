@@ -28,14 +28,12 @@
 namespace usdg
 {
   GaussianPyramid::
-  GaussianPyramid(size_t n_levels,
-		  float decimation_ratio)
+  GaussianPyramid(size_t n_levels)
     : _G(n_levels),
-      _decimation_ratio(decimation_ratio),
       _img_buffer()
   {
-    if (decimation_ratio <= 1)
-      throw std::runtime_error("Decimation ratio should be larger than 1");
+    // if (decimation_ratio <= 1)
+    //   throw std::runtime_error("Decimation ratio should be larger than 1");
   }
 
   void
@@ -51,11 +49,10 @@ namespace usdg
 
   void
   GaussianPyramid::
-  apply(cv::cuda::GpuMat const& image, float sigma)
+  apply(cv::cuda::GpuMat const& image,
+	float decimation_ratio,
+	float sigma)
   {
-    size_t n_rows = image.rows;
-    size_t n_cols = image.cols;
-
     image.copyTo(_G[0]);
     for (size_t l = 1; l < _G.size(); ++l)
     {
@@ -65,9 +62,11 @@ namespace usdg
 
   void
   GaussianPyramid::
-  apply(cv::Mat const& image, float sigma)
+  apply(cv::Mat const& image,
+	float decimation_ratio,
+	float sigma)
   {
     _img_buffer.upload(image);
-    this->apply(_img_buffer, sigma);
+    this->apply(_img_buffer, decimation_ratio, sigma);
   }
 }

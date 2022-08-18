@@ -138,7 +138,7 @@ namespace usdg
 
     size_t M = static_cast<size_t>(image.rows);
     size_t N = static_cast<size_t>(image.cols);
-    const dim3 block(8,8);
+    const dim3 block(4,4);
     const dim3 grid(static_cast<unsigned int>(
 		      ceil(static_cast<float>(M)/block.x)),
 		    static_cast<unsigned int>(

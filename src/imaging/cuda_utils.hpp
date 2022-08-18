@@ -135,6 +135,18 @@ namespace usdg
     }
   }
 
+  __device__ __forceinline__ float minmod(float2 x, float2 y)
+  { 
+    if(x.x*y.x > 0)
+    {
+      return sign(x.x)*min(sqrtf(x.x*x.x + x.y*x.y), sqrtf(y.x*y.x + y.y*y.y));
+    }
+    else
+    {
+      return 0.0;
+    }
+  }
+
   __device__ __forceinline__ float
   fetch_pixel(cv::cuda::PtrStepSzf img,
 	      int i, int j,

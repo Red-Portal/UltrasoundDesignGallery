@@ -26,7 +26,7 @@ namespace usdg
   template <typename Float>
   inline void
   logcompress(cv::Mat& img,
-	      cv::Mat& mask,
+	      cv::Mat const& mask,
 	      Float in_max_val,
 	      Float out_max_val,
 	      Float dynamic_range);
@@ -34,7 +34,7 @@ namespace usdg
   template <>
   inline void
   logcompress<float>(cv::Mat& img,
-		     cv::Mat& mask,
+		     cv::Mat const& mask,
 		     float in_max_val,
 		     float out_max_val,
 		     float dynamic_range)
@@ -62,7 +62,7 @@ namespace usdg
 
   inline void
   logcompress(cv::Mat& img,
-	      cv::Mat& mask,
+	      cv::Mat const& mask,
 	      double in_max_val,
 	      double out_max_val,
 	      double dynamic_range)

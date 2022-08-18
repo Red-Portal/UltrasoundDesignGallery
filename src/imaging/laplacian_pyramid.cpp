@@ -18,7 +18,8 @@
 
 #include "laplacian_pyramid.hpp"
 
-#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/cudawarping.hpp>
+#include <opencv2/cudaarithm.hpp>
 
 #include <stdexcept>
 #include <iostream>
@@ -29,33 +30,65 @@ namespace usdg
 {
   LaplacianPyramid::
   LaplacianPyramid(size_t n_scales)
-    : _L(n_scales), _G(n_scales), _masks(n_scales), _blur_buffer()
+    : _L(n_scales),
+      _masks(n_scales),
+      _G_l(),
+      _G_l_next(),
+      _G_l_next_up()
   { }
 
   void
   LaplacianPyramid::
-  apply(cv::Mat const& image,
-	cv::Mat const& mask,
+  preallocate(size_t n_rows, size_t n_cols)
+  {
+    _G_l.create(        n_rows, n_cols, CV_32F);
+    _G_l_next.create(   n_rows, n_cols, CV_32F);
+    _G_l_next_up.create(n_rows, n_cols, CV_32F);
+
+    auto n_scales = _L.size();
+    for (size_t l = 0; l < n_scales; ++l)
+    {
+      _L[l].create(    n_rows, n_cols, CV_32F);
+      _masks[l].create(n_rows, n_cols, CV_8U);
+    }
+  }
+
+  void
+  LaplacianPyramid::
+  apply(cv::cuda::GpuMat const& image,
+	cv::cuda::GpuMat const& mask,
 	float decimation_ratio,
 	float sigma)
   {
-    if (decimation_ratio <= 1)
-      throw std::runtime_error("Decimation ratio should be larger than 1");
+    (void)decimation_ratio;
+    (void)sigma;
+    (void)mask;
+    //if (decimation_ratio <= 1)
+    //  throw std::runtime_error("Decimation ratio should be larger than 1");
 
-    size_t M = image.rows;
-    size_t N = image.cols;
+    size_t n_levels = _L.size();
 
-    image.copyTo(_G[0]);
-    mask.copyTo(_masks[0]);
-    for (size_t i = 1; i < _G.size(); ++i)
+    image.copyTo(_G_l);
+    for (size_t l = 0; l < n_levels-1; ++l)
     {
-      size_t M_dec = static_cast<size_t>(ceil(M/pow(decimation_ratio, i)));
-      size_t N_dec = static_cast<size_t>(ceil(N/pow(decimation_ratio, i)));
-      cv::GaussianBlur(_G[i-1], _blur_buffer, cv::Size(5, 5), sigma, sigma);
-      _L[i-1] = _G[i-1] - _blur_buffer;
-      cv::resize(_blur_buffer, _G[i],     cv::Size(N_dec, M_dec));
-      cv::resize(mask,         _masks[i], cv::Size(N_dec, M_dec));
+      cv::cuda::pyrDown(_G_l, _G_l_next);
+      cv::cuda::resize(_G_l_next, _G_l_next_up, _G_l.size());
+      cv::cuda::resize(mask,      _masks[l],    _G_l.size());
+      cv::cuda::subtract(_G_l, _G_l_next_up,  _L[l], _masks[l]);
+      cv::swap(_G_l_next, _G_l);
     }
-    _G.back().copyTo(_L.back());
+    cv::swap(_G_l_next, _G_l);
+    _G_l_next.copyTo(_L.back());
+    cv::cuda::resize(mask, _masks.back(), _L.back().size());
   }
+
+  // void
+  // LaplacianPyramid::
+  // apply(cv::Mat const& image,
+  // 	float decimation_ratio,
+  // 	float sigma)
+  // {
+  //   _img_buffer.upload(image);
+  //   this->apply(_img_buffer, decimation_ratio, sigma);
+  // }
 }

@@ -91,6 +91,8 @@ int main()
     }
     ImGui::End();
 
+    std::cout << *ui << std::endl;
+
     window.clear();
     ImGui::SFML::Render(window);
     window.display();

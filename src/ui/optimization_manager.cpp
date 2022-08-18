@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2021  Ray Kim
+ * Copyright (C) 2021-2022 Kyurae Kim
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ namespace usdg
 
   OptimizationManager::
   OptimizationManager()
-    : _prng(1u),
+    : _prng(8u),
       _lock(),
       _n_dims(custom_ip_dimension()),
       _x(),

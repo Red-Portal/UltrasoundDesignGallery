@@ -34,6 +34,7 @@ namespace usdg
     std::vector<cv::cuda::GpuMat> _L;
     std::vector<cv::cuda::GpuMat> _masks;
     cv::cuda::GpuMat _G_l;
+    cv::cuda::GpuMat _G_l_blur;
     cv::cuda::GpuMat _G_l_next;
     cv::cuda::GpuMat _G_l_next_up;
   

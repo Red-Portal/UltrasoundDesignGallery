@@ -20,6 +20,7 @@
 
 //#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/cudawarping.hpp>
+#include <opencv4/opencv2/cudafilters.hpp>
 
 #include <stdexcept>
 
@@ -30,17 +31,16 @@ namespace usdg
   GaussianPyramid::
   GaussianPyramid(size_t n_levels)
     : _G(n_levels),
+      _G_l_blur(),
       _img_buffer()
-  {
-    // if (decimation_ratio <= 1)
-    //   throw std::runtime_error("Decimation ratio should be larger than 1");
-  }
+  { }
 
   void
   GaussianPyramid::
   preallocate(size_t n_rows, size_t n_cols)
   {
     _G[0].create(n_rows, n_cols, CV_32F);
+    _G_l_blur.create(n_rows, n_cols, CV_32F);
     for (size_t i = 1; i < _G.size(); ++i)
     {
       _G[i].create(n_rows, n_cols, CV_32F);
@@ -53,10 +53,23 @@ namespace usdg
 	float decimation_ratio,
 	float sigma)
   {
+    if (decimation_ratio <= 1)
+      throw std::runtime_error("Decimation ratio should be larger than 1");
+
+    float n_rows    = image.rows;
+    float n_cols    = image.cols;
+    auto filter = cv::cuda::createGaussianFilter(
+      CV_32F, CV_32F, cv::Size(5, 5), static_cast<double>(sigma));
+
     image.copyTo(_G[0]);
-    for (size_t l = 1; l < _G.size(); ++l)
+    for (size_t l = 0; l < _G.size()-1; ++l)
     {
-      cv::cuda::pyrDown(_G[l-1], _G[l]);
+      float lth_dec_ratio = powf(decimation_ratio, l+1);
+      size_t M_dec        = static_cast<size_t>(ceil(n_rows/lth_dec_ratio));
+      size_t N_dec        = static_cast<size_t>(ceil(n_cols/lth_dec_ratio));
+
+      filter->apply(_G[l], _G_l_blur);
+      cv::cuda::resize(_G_l_blur, _G[l+1], cv::Size(N_dec, M_dec), cv::INTER_NEAREST);
     }
   }
 

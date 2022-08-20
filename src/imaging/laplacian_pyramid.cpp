@@ -20,9 +20,9 @@
 
 #include <opencv2/cudawarping.hpp>
 #include <opencv2/cudaarithm.hpp>
+#include <opencv4/opencv2/cudafilters.hpp>
 
 #include <stdexcept>
-#include <iostream>
 
 #include <cmath>
 
@@ -42,6 +42,7 @@ namespace usdg
   preallocate(size_t n_rows, size_t n_cols)
   {
     _G_l.create(        n_rows, n_cols, CV_32F);
+    _G_l_blur.create(   n_rows, n_cols, CV_32F);
     _G_l_next.create(   n_rows, n_cols, CV_32F);
     _G_l_next_up.create(n_rows, n_cols, CV_32F);
 
@@ -60,26 +61,33 @@ namespace usdg
 	float decimation_ratio,
 	float sigma)
   {
-    (void)decimation_ratio;
-    (void)sigma;
-    (void)mask;
-    //if (decimation_ratio <= 1)
-    //  throw std::runtime_error("Decimation ratio should be larger than 1");
+    if (decimation_ratio <= 1)
+      throw std::runtime_error("Decimation ratio should be larger than 1");
 
+    float n_rows    = image.rows;
+    float n_cols    = image.cols;
     size_t n_levels = _L.size();
+
+    auto filter = cv::cuda::createGaussianFilter(
+      CV_32F, CV_32F, cv::Size(5, 5), static_cast<double>(sigma));
 
     image.copyTo(_G_l);
     for (size_t l = 0; l < n_levels-1; ++l)
     {
-      cv::cuda::pyrDown(_G_l, _G_l_next);
-      cv::cuda::resize(_G_l_next, _G_l_next_up, _G_l.size());
-      cv::cuda::resize(mask,      _masks[l],    _G_l.size());
-      cv::cuda::subtract(_G_l, _G_l_next_up,  _L[l], _masks[l]);
+      float lth_dec_ratio = powf(decimation_ratio, l+1);
+      size_t M_dec = static_cast<size_t>(ceil(n_rows/lth_dec_ratio));
+      size_t N_dec = static_cast<size_t>(ceil(n_cols/lth_dec_ratio));
+
+      filter->apply(_G_l, _G_l_blur);
+
+      cv::cuda::resize(_G_l_blur, _G_l_next,    cv::Size(N_dec, M_dec), cv::INTER_NEAREST);
+      cv::cuda::resize(_G_l_next, _G_l_next_up, _G_l.size(),            cv::INTER_NEAREST);
+      cv::cuda::subtract(_G_l, _G_l_next_up,  _L[l]);
       cv::swap(_G_l_next, _G_l);
     }
     cv::swap(_G_l_next, _G_l);
     _G_l_next.copyTo(_L.back());
-    cv::cuda::resize(mask, _masks.back(), _L.back().size());
+    cv::cuda::resize(mask, _masks.back(), _L.back().size(), cv::INTER_NEAREST);
   }
 
   // void

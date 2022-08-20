@@ -32,6 +32,7 @@ namespace usdg
   {
   private:
     std::vector<cv::cuda::GpuMat> _G;
+    cv::cuda::GpuMat _G_l_blur;
     float _decimation_ratio;
     cv::cuda::GpuMat _img_buffer;
 

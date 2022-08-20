@@ -91,7 +91,7 @@ namespace usdg
     inline cv::cuda::GpuMat&
     mask(size_t idx)
     {
-      return _L_quants[0].mask(idx);
+      return _masks[idx];
     }
   };
 }

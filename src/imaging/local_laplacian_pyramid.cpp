@@ -17,15 +17,11 @@
  */
 
 #include "local_laplacian_pyramid.hpp"
-//#include "cuda_utils.hpp"
 
 #include <opencv2/cudawarping.hpp>
 #include <opencv2/cudaarithm.hpp>
 
-//#include <opencv4/opencv2/highgui.hpp>
-
 #include <stdexcept>
-#include <iostream>
 #include <algorithm>
 
 #include <cmath>
@@ -67,14 +63,21 @@ namespace usdg
     _G.preallocate(n_rows, n_cols);
     _L.preallocate(n_rows, n_cols);
 
-    auto imag_init = cv::cuda::GpuMat(n_rows, n_cols, CV_32F, cv::Scalar(0));
-    auto mask_init = cv::cuda::GpuMat(n_rows, n_cols, CV_8U,  cv::Scalar(1));
-    _G.apply(imag_init, 2.0, 2.0);
-    _L.apply(imag_init, mask_init, 2.0, 2.0);
+    // auto imag_init = cv::cuda::GpuMat(n_rows, n_cols, CV_32F, cv::Scalar(0));
+    // auto mask_init = cv::cuda::GpuMat(n_rows, n_cols, CV_8U,  cv::Scalar(1));
+    // _G.apply(imag_init, 2.0, 2.0);
+    // _L.apply(imag_init, mask_init, 2.0, 2.0);
 
     for (size_t n = 0; n < _n_quants; ++n)
     {
       _L_quants[n].preallocate(n_rows, n_cols);
+    }
+
+    for (size_t l = 0; l < _G.levels(); ++l)
+    {
+      _masks[l].create(static_cast<int>(n_rows),
+		       static_cast<int>(n_cols),
+		       CV_8U);
     }
   }
 
@@ -93,8 +96,14 @@ namespace usdg
 
     _G.apply(image, 2.0, 2.0);
 
+    for (size_t l = 0; l < n_levels; ++l)
+    {
+      cv::cuda::resize(mask, _masks[l], _G.G(l).size(), cv::INTER_NEAREST);
+    }
+
     for (size_t n = 0; n < _n_quants; ++n)
     {
+      auto start = std::chrono::steady_clock::now();
       float g = I_min + n*(I_range/(_n_quants - 1));
       this->remap_image(image,
 			mask,
@@ -109,9 +118,10 @@ namespace usdg
 
     for (size_t l = 0; l < n_levels - 1; ++l)
     {
+      _L.L(l).create(_G.G(l).rows, _G.G(l).cols, CV_32F);
       this->interpolate_laplacian_pyramids(_L_quants,
 					   _G.G(l),
-					   _L.mask(l),
+					   _masks[l],
 					   l,
 					   I_range,
 					   _L.L(l));

@@ -153,7 +153,7 @@ namespace usdg
     }
     cuda_check( cudaPeekAtLastError() );
     cv::cuda::split(_img_buf1, planes);
-    planes[0].copyTo(output);
+    planes[0].copyTo(output, mask);
   }
 
   void

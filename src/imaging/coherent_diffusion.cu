@@ -222,7 +222,7 @@ namespace usdg
       cv::swap(_img_buf1, _img_buf2);
     }
     cuda_check( cudaPeekAtLastError() );
-    _img_buf1.copyTo(output);
+    _img_buf1.copyTo(output, mask);
   }
 
   void

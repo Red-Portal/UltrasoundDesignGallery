@@ -81,7 +81,7 @@ After opening a sequence, you can freely interact with the UI as shown in the il
 ## License
 
 ```
-    Copyright (C) 2021 Ray Kim
+    Copyright (C) 2021-2022 Kyurae Kim
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

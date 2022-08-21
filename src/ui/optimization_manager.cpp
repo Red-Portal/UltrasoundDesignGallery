@@ -37,7 +37,7 @@ namespace usdg
 
   OptimizationManager::
   OptimizationManager()
-    : _prng(8u),
+    : _prng(0u),
       _lock(),
       _n_dims(custom_ip_dimension()),
       _x(),
@@ -100,6 +100,7 @@ namespace usdg
     betas[0] = beta_lb;
     betas[1] = beta_ub;
     _optimizer.push_data(_x, _xi, betas, alpha);
+    _iteration += 1;
 
     if(_iteration < n_init)
     {
@@ -137,7 +138,6 @@ namespace usdg
       _x_opt = std::move(x_opt);
       _lock.unlock();
     }
-    _iteration += 1;
   }
 
   void
@@ -244,6 +244,7 @@ namespace usdg
 
       auto x_blaze  = blaze::DynamicVector<double>(x.size());
       auto xi_blaze = blaze::DynamicVector<double>(xi.size());
+      xi_blaze     /= blaze::max(blaze::abs(xi_blaze)); 
       std::copy(x.begin(),  x.end(),  x_blaze.begin());
       std::copy(xi.begin(), xi.end(), xi_blaze.begin());
       _presets.emplace_back(std::move(x_blaze), std::move(xi_blaze));
@@ -272,6 +273,13 @@ namespace usdg
   iteration()
   {
     return _iteration;
+  }
+
+  void
+  OptimizationManager::
+  reset_prng(size_t seed_key)
+  {
+    _prng = usdg::Random123(seed_key);
   }
 }
 

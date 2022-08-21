@@ -119,6 +119,8 @@ namespace usdg
       _frame_index(0),
       _n_average(2),
       _play_video(false),
+      _show_raw_img(false),
+      _show_opt_img(false),
 
       _render_buffer(),
       _back_buffer(),
@@ -127,6 +129,7 @@ namespace usdg
       _buffer_lock(),
 
       _parameter(param_init),
+      _parameter_opt(param_init),
       _parameter_lock(),
       _imageproc_thread(),
       _terminate_thread(false),
@@ -134,10 +137,6 @@ namespace usdg
       _image_processing(static_cast<size_t>(_envelopes[0].rows),
 			static_cast<size_t>(_envelopes[0].cols)),
       _image_processing_lock(),
-
-      _preview_buffer(),
-      _preview_sprite(),
-      _show_preview(false),
 
       _play_icon(),
       _pause_icon(),
@@ -163,8 +162,6 @@ namespace usdg
     _back_buffer   = cv::Mat(env_rows, env_cols, CV_8UC4);
     _front_buffer.create(static_cast<unsigned int>(env_cols),
 			 static_cast<unsigned int>(env_rows));
-    _preview_buffer.create(static_cast<unsigned int>(env_cols),
-			   static_cast<unsigned int>(env_rows));
     _imageproc_thread = std::thread([this, env_rows, env_cols]
     {
       auto parameter_local = blaze::DynamicVector<double>();
@@ -177,13 +174,27 @@ namespace usdg
       while(!_terminate_thread.load())
       {
 	_parameter_lock.lock();
-	parameter_local = _parameter;
+	if (_show_opt_img.load())
+	{
+	  parameter_local = _parameter_opt;
+	}
+	else
+	{
+	  parameter_local = _parameter;
+	}
 	_parameter_lock.unlock();
 
 	this->frame_averaging(_envelopes, log_image, _frame_index, _n_average.load());
 
 	_image_processing_lock.lock();
-	_image_processing.apply(log_image, _mask, output_gray, parameter_local);
+	if (_show_raw_img.load())
+	{
+	  output_gray = log_image;
+	}
+	else
+	{
+	  _image_processing.apply(log_image, _mask, output_gray, parameter_local);
+	}
 	_image_processing_lock.unlock();
 
 	output_gray /= _dynamic_range.load();
@@ -257,24 +268,6 @@ namespace usdg
     }
     ImGui::End();
 
-    if(_show_preview)
-    {
-      if(ImGui::Begin("Preview Best Setting"))
-      {
-	auto buffer_size =  _preview_buffer.getSize();
-	auto window_size = ImGui::GetWindowSize();
-	auto x_scale     = window_size.x / static_cast<float>(buffer_size.x);
-	auto y_scale     = window_size.y / static_cast<float>(buffer_size.y);
-	auto total_scale = std::min(x_scale, y_scale);
-
-	_preview_buffer.setSmooth(true);
-	_preview_sprite.setTexture(_preview_buffer);
-	_preview_sprite.setScale(total_scale, total_scale);
-	ImGui::Image(_preview_sprite);
-      }
-      ImGui::End();
-    }
-
     if(ImGui::Begin("Video Control"))
     {
       int n_average_local = static_cast<int>(_n_average.load());
@@ -292,6 +285,65 @@ namespace usdg
       int frame_rate_local = static_cast<int>(_frame_rate.load());
       ImGui::SliderInt("frame rate (fps)", &frame_rate_local, 1, 40);
       _frame_rate.store(static_cast<size_t>(frame_rate_local));
+
+      float len_button = 50;
+      char const* label_raw_toggle  = "Raw";
+      auto col_button         = ImGui::GetColorU32(ImGuiCol_Button,        0.3);
+      auto col_button_hovered = ImGui::GetColorU32(ImGuiCol_ButtonHovered, 0.3);
+      auto col_button_active  = ImGui::GetColorU32(ImGuiCol_ButtonActive,  0.3);
+      //col_button.Value.x         /= 5;
+      //col_button_hovered.Value.x /= 5;
+      //col_button_active.Value.x  /= 5;
+
+      if (_show_raw_img.load())
+      {
+	if (ImGui::Button(label_raw_toggle, ImVec2(len_button, 0.0)))
+	{
+	  _show_raw_img.store(false);
+	  _show_opt_img.store(false);
+	}
+      }
+      else
+      {
+	ImGui::PushID(label_raw_toggle);
+	ImGui::PushStyleColor(ImGuiCol_Button,        col_button);
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, col_button_hovered);
+	ImGui::PushStyleColor(ImGuiCol_ButtonActive,  col_button_active);
+	ImGui::Button(label_raw_toggle, ImVec2(len_button, 0.0));
+	if (ImGui::IsItemClicked(0))
+	{
+	  _show_raw_img.store(true);
+	  _show_opt_img.store(false);
+	}
+	ImGui::PopStyleColor(3);
+	ImGui::PopID();
+      }
+
+      ImGui::SameLine();
+
+      char const* label_opt_toggle  = "Opt";
+      if (_show_opt_img.load()) {
+	if (ImGui::Button(label_opt_toggle, ImVec2(len_button, 0.0)))
+	{
+	  _show_raw_img.store(false);
+	  _show_opt_img.store(false);
+	}
+      }
+      else
+      {
+	ImGui::PushID(label_opt_toggle);
+	ImGui::PushStyleColor(ImGuiCol_Button,        col_button);
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, col_button_hovered);
+	ImGui::PushStyleColor(ImGuiCol_ButtonActive,  col_button_active);
+	ImGui::Button(label_opt_toggle, ImVec2(len_button, 0.0));
+	if (ImGui::IsItemClicked(0))
+	{
+	  _show_raw_img.store(false);
+	  _show_opt_img.store(true);
+	}
+	ImGui::PopStyleColor(3);
+	ImGui::PopID();
+      }
 
       if (ImGui::ImageButton(_play_icon)) {
 	_play_video.store(true);
@@ -331,25 +383,8 @@ namespace usdg
   VideoPlayer::
   update_preview(blaze::DynamicVector<double> const& param)
   {
-    int env_cols  = _envelopes[0].cols;
-    int env_rows  = _envelopes[0].rows;
-
-    auto output_gray  = cv::Mat(env_rows, env_cols, CV_32FC1);
-    auto output_quant = cv::Mat(env_rows, env_cols, CV_8UC1);
-    auto output_rgba  = cv::Mat(env_rows, env_cols, CV_8UC4);
-    auto log_image    = cv::Mat(env_rows, env_cols, CV_32FC1);
-
-    _image_processing_lock.lock();
-    _image_processing.apply(log_image, _mask, output_gray, param);
-    _image_processing_lock.unlock();
-
-    this->dynamic_range_adjustment(output_gray, _mask,
-				   _dynamic_range.load(),
-				   _reject.load());
-    this->quantize(output_gray, output_quant);
-
-    cv::cvtColor(output_quant, output_rgba, cv::COLOR_GRAY2RGBA);
-    _preview_buffer.update(output_rgba.ptr());
+    std::lock_guard<std::mutex> guard(_parameter_lock);
+    _parameter_opt = param;
   }
 
   void
@@ -372,10 +407,10 @@ namespace usdg
     _image_processing_lock.unlock();
   }
 
-  void
-  VideoPlayer::
-  toggle_preview()
-  {
-    _show_preview = !_show_preview;
-  }
+  // void
+  // VideoPlayer::
+  // toggle_preview()
+  // {
+  //   _show_preview = !_show_preview;
+  // }
 }

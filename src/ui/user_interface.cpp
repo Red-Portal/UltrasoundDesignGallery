@@ -182,12 +182,6 @@ namespace usdg
 	{
 	  usdg::toggle_view(_param_value_view);
 	}
-
-	if (ImGui::MenuItem("Preview Best Setting"))
-	{
-	  if (_video_player)
-	    _video_player->toggle_preview();
-	}
 	ImGui::EndMenu();
       }
 

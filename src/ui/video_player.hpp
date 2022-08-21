@@ -46,6 +46,8 @@ namespace usdg
     std::atomic<size_t>          _frame_index;
     std::atomic<size_t>          _n_average;
     std::atomic<bool>            _play_video;
+    std::atomic<bool>            _show_raw_img;
+    std::atomic<bool>            _show_opt_img;
 
     cv::Mat                      _render_buffer;
     cv::Mat                      _back_buffer;
@@ -54,6 +56,7 @@ namespace usdg
     std::mutex                   _buffer_lock;
 
     blaze::DynamicVector<double> _parameter;
+    blaze::DynamicVector<double> _parameter_opt;
     std::mutex                   _parameter_lock;
     std::thread                  _imageproc_thread;
     std::atomic<bool>            _terminate_thread;
@@ -61,9 +64,9 @@ namespace usdg
     usdg::CustomImageProcessing  _image_processing;
     std::mutex                   _image_processing_lock;
 
-    sf::Texture                  _preview_buffer;
-    sf::Sprite                   _preview_sprite;
-    bool                         _show_preview;
+    // sf::Texture                  _preview_buffer;
+    // sf::Sprite                   _preview_sprite;
+    // bool                         _show_preview;
 
     sf::Texture _play_icon;
     sf::Texture _pause_icon;
@@ -95,8 +98,6 @@ namespace usdg
 
     void export_files(std::string const& export_path,
 		      blaze::DynamicVector<double> const& best_param);
-
-    void toggle_preview();
   };
 }
 

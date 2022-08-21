@@ -39,6 +39,7 @@ namespace usdg
   {
   private:
     usdg::Random123              _prng;
+    size_t                       _seed_key;
     std::mutex                   _lock;
 
     size_t                       _n_dims;
@@ -80,6 +81,8 @@ namespace usdg
     bool is_optimizing();
 
     size_t iteration();
+
+    void reset_prng(size_t seed_key);
   };
 }
 

@@ -19,6 +19,8 @@
 #include <iostream>
 #include <optional>
 
+#include <unistd.h>
+
 #include <imgui.h>
 #include <imgui-SFML.h>
 #include <SFML/Graphics/RenderWindow.hpp>
@@ -91,7 +93,7 @@ int main()
     }
     ImGui::End();
 
-    std::cout << *ui << std::endl;
+    //std::cout << *ui << std::endl;
 
     window.clear();
     ImGui::SFML::Render(window);

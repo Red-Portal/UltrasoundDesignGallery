@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <string>
+#include <iostream>
 
 #include <opencv4/opencv2/core/utility.hpp>
 
@@ -31,7 +32,7 @@ namespace usdg
 {
   size_t const llf_beta_idx   = 0;
   size_t const llf_sigma_idx  = 1;
-  //size_t const cshock_a_idx   = 3;
+  //size_t const cshock_a_idx   = 2;
   size_t const ncd1_alpha_idx = 2;
   size_t const ncd1_s_idx     = 3;
   size_t const ncd2_alpha_idx = 4;
@@ -74,7 +75,7 @@ namespace usdg
     auto param_names = std::vector<std::string>(custom_ip_dimension());
     param_names[llf_beta_idx]   = "LLF edge gain";
     param_names[llf_sigma_idx]  = "LLF edge detail threshold";
-    //param_names[cshock_a_idx]   = "L3 Shock filter strength";
+    //param_names[cshock_a_idx]   = "L3 shock strength";
     param_names[ncd1_s_idx]     = "L2 NCD threshold";
     param_names[ncd1_alpha_idx] = "L2 NCD alpha";
     param_names[ncd2_s_idx]     = "L1 NCD threshold";
@@ -87,14 +88,14 @@ namespace usdg
   custom_ip_transform_range(blaze::DynamicVector<double> const& param)
   {
     auto param_trans = blaze::DynamicVector<float>(param.size());
-    param_trans[llf_beta_idx]   = linear_interpolate(param[llf_beta_idx],    0.0,  2.0);
-    param_trans[llf_sigma_idx]  = linear_interpolate(param[llf_sigma_idx],   0.1,  30.0);
-    //param_trans[cshock_a_idx]   = linear_interpolate(param[cshock_a_idx],   0.01,   0.9);
-    param_trans[ncd1_s_idx]     = linear_interpolate(param[ncd1_s_idx],        0,    30);
-    param_trans[ncd1_alpha_idx] = linear_interpolate(param[ncd1_alpha_idx],  0.0,   0.2);
-    param_trans[ncd2_s_idx]     = linear_interpolate(param[ncd2_s_idx],        0,    30);
-    param_trans[ncd2_alpha_idx] = linear_interpolate(param[ncd2_alpha_idx],  0.0,   0.2);
-    param_trans[rpncd_k_idx]    = exp_interpolate(   param[rpncd_k_idx],    1e-2,   4.0);
+    param_trans[llf_beta_idx]   = linear_interpolate(param[llf_beta_idx],    1.0,  3.0);
+    param_trans[llf_sigma_idx]  = linear_interpolate(param[llf_sigma_idx],   0.1, 40.0);
+    //param_trans[cshock_a_idx]   = linear_interpolate(param[cshock_a_idx],    0.5, 0.9);
+    param_trans[ncd1_alpha_idx] = linear_interpolate(param[ncd1_alpha_idx],  0.0,  0.2);
+    param_trans[ncd1_s_idx]     = linear_interpolate(param[ncd1_s_idx],      0  , 30.0);
+    param_trans[ncd2_alpha_idx] = linear_interpolate(param[ncd2_alpha_idx],  0.0,  0.2);
+    param_trans[ncd2_s_idx]     = linear_interpolate(param[ncd2_s_idx],      0  , 30.0);
+    param_trans[rpncd_k_idx]    = exp_interpolate(   param[rpncd_k_idx],    1e-2,  4.0);
     return param_trans;
   }
 
@@ -119,7 +120,6 @@ namespace usdg
       float llf_beta   = param_trans[llf_beta_idx];
       float llf_sigma  = param_trans[llf_sigma_idx];
       float cshock_a   = 0.9;
-      //float cshock_a   = param_trans[cshock_a_idx];
       float ncd1_alpha = param_trans[ncd1_alpha_idx];
       float ncd1_s     = param_trans[ncd1_s_idx];
       float ncd2_alpha = param_trans[ncd2_alpha_idx];
@@ -130,17 +130,17 @@ namespace usdg
       auto output_scaled = cv::Mat();
       _process.apply(input_scaled,
 		     mask,
-		     output_scaled,
+		     output,
 		     llf_alpha,
 		     llf_beta,
 		     llf_sigma,
-		     cshock_a,
+		     0.0,
 		     ncd1_alpha,
 		     ncd1_s,
 		     ncd2_alpha,
 		     ncd2_s,
 		     rpncd_k);
-      output = output_scaled/255;
+      output /= 255;
     }
   };
 }

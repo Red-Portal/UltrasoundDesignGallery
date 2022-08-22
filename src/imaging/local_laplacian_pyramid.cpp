@@ -98,7 +98,7 @@ namespace usdg
 
     for (size_t l = 0; l < n_levels; ++l)
     {
-      cv::cuda::resize(mask, _masks[l], _G.G(l).size(), cv::INTER_NEAREST);
+      cv::cuda::resize(mask, _masks[l], _G.G(l).size(), cv::INTER_LINEAR);
     }
 
     for (size_t n = 0; n < _n_quants; ++n)

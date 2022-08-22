@@ -32,7 +32,6 @@ namespace usdg
   {
   private:
     std::vector<cv::cuda::GpuMat> _L;
-    std::vector<cv::cuda::GpuMat> _masks;
     cv::cuda::GpuMat _G_l;
     cv::cuda::GpuMat _G_l_blur;
     cv::cuda::GpuMat _G_l_next;
@@ -56,12 +55,6 @@ namespace usdg
     L(size_t idx)
     {
       return _L[idx];
-    }
-
-    inline cv::cuda::GpuMat&
-    mask(size_t idx)
-    {
-      return _masks[idx];
     }
   };
 }

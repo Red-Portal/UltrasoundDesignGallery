@@ -31,7 +31,6 @@ namespace usdg
   LaplacianPyramid::
   LaplacianPyramid(size_t n_scales)
     : _L(n_scales),
-      _masks(n_scales),
       _G_l(),
       _G_l_next(),
       _G_l_next_up()
@@ -45,13 +44,6 @@ namespace usdg
     _G_l_blur.create(   n_rows, n_cols, CV_32F);
     _G_l_next.create(   n_rows, n_cols, CV_32F);
     _G_l_next_up.create(n_rows, n_cols, CV_32F);
-
-    auto n_scales = _L.size();
-    for (size_t l = 0; l < n_scales; ++l)
-    {
-      _L[l].create(    n_rows, n_cols, CV_32F);
-      _masks[l].create(n_rows, n_cols, CV_8U);
-    }
   }
 
   void
@@ -80,14 +72,13 @@ namespace usdg
 
       filter->apply(_G_l, _G_l_blur);
 
-      cv::cuda::resize(_G_l_blur, _G_l_next,    cv::Size(N_dec, M_dec), cv::INTER_NEAREST);
-      cv::cuda::resize(_G_l_next, _G_l_next_up, _G_l.size(),            cv::INTER_NEAREST);
+      cv::cuda::resize(_G_l_blur, _G_l_next,    cv::Size(N_dec, M_dec), cv::INTER_LINEAR);
+      cv::cuda::resize(_G_l_next, _G_l_next_up, _G_l.size(),            cv::INTER_LINEAR);
       cv::cuda::subtract(_G_l, _G_l_next_up,  _L[l]);
       cv::swap(_G_l_next, _G_l);
     }
     cv::swap(_G_l_next, _G_l);
     _G_l_next.copyTo(_L.back());
-    cv::cuda::resize(mask, _masks.back(), _L.back().size(), cv::INTER_NEAREST);
   }
 
   // void

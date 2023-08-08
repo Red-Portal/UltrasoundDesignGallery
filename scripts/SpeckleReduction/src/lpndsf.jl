@@ -1,80 +1,4 @@
 
-function pmad_coef(x, k)
-    r = (x / k)
-    1 / (1 + r*r)
-end
-
-function pmad_filtered(img, Δt, mse_threshold, k; mask=trues(size(img)...))
-    M = size(img, 1)
-    N = size(img, 2)
-
-    img_src = deepcopy(img)
-    img_dst = zeros(Float32, M, N)
-    G_x     = zeros(Float32, M, N)
-    G_y     = zeros(Float32, M, N)
-
-    σ   = 1.0
-    k_σ = 7
-    smooth_kernel = ImageFiltering.Kernel.gaussian((σ, σ), (k_σ, k_σ))
-    filter_type   = ImageFiltering.Algorithm.FIR()
-    border_type   = "replicate"
-
-    prog = ProgressMeter.ProgressThresh(mse_threshold, "MSE of ΔI:")
-    for t = 1:100
-        for j = 1:N
-            for i = 1:M
-                if (!mask[i,j])
-                    continue
-                end
-                nx = max(i - 1, 1)
-                px = min(i + 1, M)
-                ny = max(j - 1, 1)
-                py = min(j + 1, N)
-
-                I_c = img_src[i,j]
-                px  = fetch_pixel(img_src, i+1, j,   mask, I_c)
-                nx  = fetch_pixel(img_src, i-1, j,   mask, I_c)
-                py  = fetch_pixel(img_src, i,   j+1, mask, I_c)
-                ny  = fetch_pixel(img_src, i,   j-1, mask, I_c)
-
-                G_x[i,j] = (px - nx)/2
-                G_y[i,j] = (py - ny)/2
-            end
-        end
-        G_x_σ    = ImageFiltering.imfilter(G_x, smooth_kernel, border_type, filter_type)
-        G_y_σ    = ImageFiltering.imfilter(G_y, smooth_kernel, border_type, filter_type)
-        G_mag    = sqrt.(G_x_σ.*G_x_σ + G_y_σ.*G_y_σ)
-        for j = 1:N
-            for i = 1:M
-                if (!mask[i,j])
-                    continue
-                end
-                I_c = img_src[i,j]
-                I_e = fetch_pixel(img_src, i+1, j,   mask, I_c)
-                I_w = fetch_pixel(img_src, i-1, j,   mask, I_c)
-                I_s = fetch_pixel(img_src, i,   j+1, mask, I_c)
-                I_n = fetch_pixel(img_src, i,   j-1, mask, I_c)
-
-                C_w = pmad_coef(G_mag[i, j], k)
-                C_e = pmad_coef(G_mag[i, j], k)
-                C_n = pmad_coef(G_mag[i, j], k)
-                C_s = pmad_coef(G_mag[i, j], k)
-
-                img_dst[i,j] = (img_src[i,j] + Δt*(C_w*I_w + C_e*I_e + C_n*I_n + C_s*I_s)) /
-                    (1 + Δt*(C_w + C_e + C_n + C_s))
-            end
-        end
-        ΔI  = (img_src[mask] - img_dst[mask])
-        mse = mean(ΔI.*ΔI)
-        ProgressMeter.update!(prog, mse)
-        if (mse < mse_threshold)
-            break
-        end
-        @swap!(img_src, img_dst)
-    end
-    img_dst
-end
-
 function minmod(x, y)
     if (x*y > 0)
         sign(x)*min(abs(x), abs(y))
@@ -83,7 +7,9 @@ function minmod(x, y)
     end
 end
 
-function pmad_shock(img, guide, Δt, mse_threshold, r, k; mask=trues(size(img)...))
+function pmad_shock(img, guide, Δt, mse_threshold, r, k;
+                    σ=1.0,
+                    mask=trues(size(img)...))
     M = size(img, 1)
     N = size(img, 2)
 
@@ -93,16 +19,15 @@ function pmad_shock(img, guide, Δt, mse_threshold, r, k; mask=trues(size(img)..
     I_ηη    = zeros(Float32, M, N)
     G_x     = zeros(Float32, M, N)
     G_y     = zeros(Float32, M, N)
-    G_w     = zeros(Float32, M, N)
-    G_e     = zeros(Float32, M, N)
-    G_s     = zeros(Float32, M, N)
-    G_n     = zeros(Float32, M, N)
+    C_w     = zeros(Float32, M, N)
+    C_e     = zeros(Float32, M, N)
+    C_s     = zeros(Float32, M, N)
+    C_n     = zeros(Float32, M, N)
     G_xx    = zeros(Float32, M, N)
     G_yy    = zeros(Float32, M, N)
     G_xy    = zeros(Float32, M, N)
-    G_mag   = zeros(Float32, M, N)
+    ∇L_mag  = zeros(Float32, M, N)
 
-    σ   = 1.0
     k_σ = 7
     smooth_kernel = ImageFiltering.Kernel.gaussian((σ, σ), (k_σ, k_σ))
     filter_type   = ImageFiltering.Algorithm.FIR()
@@ -115,7 +40,7 @@ function pmad_shock(img, guide, Δt, mse_threshold, r, k; mask=trues(size(img)..
             if (!mask[i,j])
                 continue
             end
-            I_c = fetch_pixel(guide, i,   j,   mask, 0.0)
+            I_c = guide[i, j]
             px  = fetch_pixel(guide, i+1, j,   mask, I_c)
             nx  = fetch_pixel(guide, i-1, j,   mask, I_c)
             py  = fetch_pixel(guide, i,   j+1, mask, I_c)
@@ -138,6 +63,7 @@ function pmad_shock(img, guide, Δt, mse_threshold, r, k; mask=trues(size(img)..
             G_xy[i,j] = 0.5*(px - nx)
         end
     end
+
     for i = 1:M
         for j = 1:N
             if (!mask[i,j])
@@ -151,6 +77,24 @@ function pmad_shock(img, guide, Δt, mse_threshold, r, k; mask=trues(size(img)..
 
     I_ηη_σ = ImageFiltering.imfilter(I_ηη, smooth_kernel, border_type, filter_type)
     ∇G_mag = sqrt.(G_x.*G_x + G_y.*G_y)
+
+    for j = 1:N
+        for i = 1:M
+            if (!mask[i,j])
+                continue
+            end
+            I_c = guide[i,j]
+            I_e = fetch_pixel(guide, i+1, j,   mask, I_c)
+            I_w = fetch_pixel(guide, i-1, j,   mask, I_c)
+            I_s = fetch_pixel(guide, i,   j+1, mask, I_c)
+            I_n = fetch_pixel(guide, i,   j-1, mask, I_c)
+
+            C_w[i,j] = pmad_weight(abs(I_w - I_c), k)
+            C_e[i,j] = pmad_weight(abs(I_e - I_c), k)
+            C_n[i,j] = pmad_weight(abs(I_n - I_c), k)
+            C_s[i,j] = pmad_weight(abs(I_s - I_c), k)
+        end
+    end
 
     for t = 1:100
         for j = 1:N
@@ -170,7 +114,7 @@ function pmad_shock(img, guide, Δt, mse_threshold, r, k; mask=trues(size(img)..
 
                 Dx = minmod(Δ₊x, Δ₋x)
                 Dy = minmod(Δ₊y, Δ₋y)
-                G_mag[i,j] = sqrt(Dx.*Dx + Dy.*Dy)
+                ∇L_mag[i,j] = sqrt(Dx.*Dx + Dy.*Dy)
             end
         end
 
@@ -179,52 +123,16 @@ function pmad_shock(img, guide, Δt, mse_threshold, r, k; mask=trues(size(img)..
                 if (!mask[i,j])
                     continue
                 end
-                nx = max(i - 1, 1)
-                px = min(i + 1, M)
-                ny = max(j - 1, 1)
-                py = min(j + 1, N)
+                I_c = img_src[i, j]
+                I_e = fetch_pixel(img_src, i+1, j,   mask, I_c)
+                I_w = fetch_pixel(img_src, i-1, j,   mask, I_c)
+                I_s = fetch_pixel(img_src, i,   j+1, mask, I_c)
+                I_n = fetch_pixel(img_src, i,   j-1, mask, I_c)
 
-                I_w = img_src[nx, j]
-                I_e = img_src[px, j]
-                I_n = img_src[i, ny]
-                I_s = img_src[i, py]
-                I_c = img_src[i, j ]
-
-                G_w[i,j] = I_w - I_c
-                G_e[i,j] = I_e - I_c
-                G_n[i,j] = I_n - I_c
-                G_s[i,j] = I_s - I_c
-            end
-        end
-
-        G_w_σ = ImageFiltering.imfilter(G_w, smooth_kernel, border_type, filter_type)
-        G_s_σ = ImageFiltering.imfilter(G_s, smooth_kernel, border_type, filter_type)
-        G_e_σ = ImageFiltering.imfilter(G_e, smooth_kernel, border_type, filter_type)
-        G_n_σ = ImageFiltering.imfilter(G_n, smooth_kernel, border_type, filter_type)
-
-        for j = 1:N
-            for i = 1:M
-                if (!mask[i,j])
-                    continue
-                end
-                nx = max(i - 1, 1)
-                px = min(i + 1, M)
-                ny = max(j - 1, 1)
-                py = min(j + 1, N)
-
-                I_w = img_src[nx, j]
-                I_e = img_src[px, j]
-                I_n = img_src[i, ny]
-                I_s = img_src[i, py]
-
-                C_w = pmad_coef(abs(G_w_σ[i,j]), k)
-                C_e = pmad_coef(abs(G_e_σ[i,j]), k)
-                C_n = pmad_coef(abs(G_n_σ[i,j]), k)
-                C_s = pmad_coef(abs(G_s_σ[i,j]), k)
-                dshock = (1 - pmad_coef(∇G_mag[i,j], k))*sign(I_ηη_σ[i,j])*G_mag[i, j]
+                dshock = (1 - pmad_weight(∇G_mag[i,j], k))*sign(I_ηη_σ[i,j])*∇L_mag[i, j]
                 img_dst[i,j] = (img_src[i,j] + Δt*(
-                    C_w*I_w + C_e*I_e + C_n*I_n + C_s*I_s - r*dshock)) /
-                    (1 + Δt*(C_w + C_e + C_n + C_s))
+                    C_w[i,j]*I_w + C_e[i,j]*I_e + C_n[i,j]*I_n + C_s[i,j]*I_s - r*dshock)) /
+                    (1 + Δt*(C_w[i,j] + C_e[i,j] + C_n[i,j] + C_s[i,j]))
             end
         end
         ΔI  = (img_src[mask] - img_dst[mask])
@@ -238,7 +146,6 @@ function pmad_shock(img, guide, Δt, mse_threshold, r, k; mask=trues(size(img)..
     img_dst
 end
 
-
 function lpndsf(img, Δt, mse_threshold, k, r; mask=trues(size(img)...))
 #=
     Laplacian Pyramid-based Nonlinear Diffusion and Shock Filter
@@ -246,7 +153,7 @@ function lpndsf(img, Δt, mse_threshold, k, r; mask=trues(size(img)...))
     "Multiscale Nonlinear Diffusion and Shock Filter for Ultrasound Image Enhancement"
     Fan Zhang et al., CVPR 2006
 =##
-    G_pyramid = Images.gaussian_pyramid(img, 4, 2, 3)
+    G_pyramid = Images.gaussian_pyramid(img, 4, 2, 1.0)
     L_pyramid = deepcopy(G_pyramid)
 
     for i = 1:3
@@ -254,17 +161,28 @@ function lpndsf(img, Δt, mse_threshold, k, r; mask=trues(size(img)...))
     end
     L_pyramid[4] = G_pyramid[4]
 
+    n_iters = 100
+
     mask_resize = Images.imresize(mask, size(G_pyramid[1])) .> 0.0
-    G_denoised  = pmad_filtered(G_pyramid[1], Δt, mse_threshold, k[1]; mask=mask_resize)
-    L_pyramid[1] = pmad_shock(L_pyramid[1], G_denoised, Δt, mse_threshold, r[1], k[1]; mask=mask_resize)
+    G_denoised  = pmad(G_pyramid[1], Δt, n_iters, k[1];
+                       mse_threshold=mse_threshold,
+                       mask=mask_resize)
+    L_pyramid[1] = pmad_shock(L_pyramid[1], G_denoised, Δt, mse_threshold, r[1], k[1];
+                              mask=mask_resize)
 
     mask_resize  = Images.imresize(mask, size(G_pyramid[2])) .> 0.0
-    G_denoised   = pmad_filtered(G_pyramid[2], Δt, mse_threshold, k[2]; mask=mask_resize)
-    L_pyramid[2] = pmad_shock(L_pyramid[2], G_denoised, Δt, mse_threshold, r[2], k[2]; mask=mask_resize)
+    G_denoised   = pmad(G_pyramid[2], Δt, n_iters, k[2];
+                        mse_threshold=mse_threshold,
+                        mask=mask_resize)
+    L_pyramid[2] = pmad_shock(L_pyramid[2], G_denoised, Δt, mse_threshold, r[2], k[2];
+                              mask=mask_resize)
 
     mask_resize  = Images.imresize(mask, size(G_pyramid[3])) .> 0.0
-    G_denoised   = pmad_filtered(G_pyramid[3], Δt, mse_threshold, k[3]; mask=mask_resize)
-    L_pyramid[3] = pmad_shock(L_pyramid[3], G_denoised, Δt, mse_threshold, r[3], k[3]; mask=mask_resize)
+    G_denoised   = pmad(G_pyramid[3], Δt, n_iters, k[3];
+                        mse_threshold=mse_threshold,
+                        mask=mask_resize)
+    L_pyramid[3] = pmad_shock(L_pyramid[3], G_denoised, Δt, mse_threshold, r[3], k[3];
+                              mask=mask_resize)
 
     for i = 3:-1:1
         L_pyramid[i] += Images.imresize(L_pyramid[i+1], size(L_pyramid[i])...)

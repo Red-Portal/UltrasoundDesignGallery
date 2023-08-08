@@ -30,7 +30,7 @@ function susan(img, r::Int, T::Real)
 end
 
 function susan_pm(img, Δt, n_iters, σ, susan_r, susan_T;
-             mask=trues(size(img)...))
+                  mask=trues(size(img)...))
 #=
     SUSAN-Controlled Anisotropic Diffusion
 
@@ -54,6 +54,9 @@ function susan_pm(img, Δt, n_iters, σ, susan_r, susan_T;
     ProgressMeter.@showprogress for t = 1:n_iters
         img_src_σ = ImageFiltering.imfilter(img_src, smooth_σ_kernel, border_type, filter_type)
         G_mag     = susan(img_src_σ, susan_r, susan_T)
+
+        return G_mag
+
         k         = C*median(abs.(G_mag[mask] .- median(G_mag[mask])))
         k         = max(k, 1e-3)
         coeff     = exp.(- (G_mag ./ (4*k*k)).^2)

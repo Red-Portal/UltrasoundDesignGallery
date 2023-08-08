@@ -34,6 +34,11 @@ function eigenbasis_2d(A11, A12, A22)
     end 
 end
 
+function pmad_weight(x, k)
+    r = (x / k)
+    1 / (1 + r*r)
+end
+
 function tukey_biweight(x, σ)
     if(abs(x) < σ)
         r = x / σ

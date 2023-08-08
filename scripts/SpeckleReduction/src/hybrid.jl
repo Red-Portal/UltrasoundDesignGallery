@@ -74,7 +74,7 @@ function ribnml(img::Array{T},
         x0     = img_src[x0_idx]
         μ_x0   = μ[i]
 
-        @simd for j in LocalFilters.cartesianregion(i - k_g_max, i - k_g_min)
+        for j in LocalFilters.cartesianregion(i - k_g_max, i - k_g_min)
             x_idx = LocalFilters.cartesianregion(j - k_l_max, j - k_l_min)
             x     = img_src[x_idx]
             μ_x   = μ[j]

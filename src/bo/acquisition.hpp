@@ -619,6 +619,64 @@ namespace usdg
     }
     return { std::move(x_next), std::move(xi_next), std::move(x_opt), y_opt };
   }
+
+  // class PCD {};
+
+  // template <>
+  // template <typename Rng, typename BudgetType>
+  // inline std::tuple<blaze::DynamicVector<double>,
+  // 		    blaze::DynamicVector<double>,
+  // 		    blaze::DynamicVector<double>,
+  // 		    double>
+  // BayesianOptimization<usdg::PCD>::
+  // next_query(Rng& prng,
+  // 	     size_t,
+  // 	     size_t,
+  // 	     BudgetType budget,
+  // 	     blaze::DynamicVector<double> const& linescales,
+  // 	     usdg::Profiler* profiler,
+  // 	     spdlog::logger* logger) const
+  // {
+  //   if(logger)
+  //   {
+  //     logger->info("Finding next Bayesian optimization query with expected improvement and the Koyama scheme: {}",
+  // 		   usdg::file_name(__FILE__));
+  //   }
+  //   if(profiler)
+  //   {
+  //     profiler->start("next_query"s);
+  //     profiler->start("fit_gp"s);
+  //   }
+
+  //   auto data_mat = this->_data.data_matrix();
+  //   auto gp       = fit_gp(prng, this->_data, data_mat, linescales, logger);
+
+  //   if(profiler)
+  //   {
+  //     profiler->stop("fit_gp"s);
+  //     profiler->start("optimize_acquisition"s);
+  //   }
+
+  //   size_t n_dims       = this->_n_dims;
+  //   auto [x_opt, y_opt] = usdg::find_best_x_lbfgs(prng, data_mat, gp,
+  // 						  n_dims, budget, logger);
+  //   // auto x_next         = usdg::find_x_ei_lbfgs(prng, gp, data_mat, y_opt,
+  //   // 						this->_n_dims, budget, logger);
+
+  //   // auto delta   = x_opt - x_next;
+  //   // auto xi_next = blaze::evaluate(delta / blaze::max(blaze::abs(delta)));
+
+  //   if(profiler)
+  //   {
+  //     profiler->stop("optimize_acquisition"s);
+  //     profiler->stop("next_query"s);
+  //   }
+  //   if(logger)
+  //   {
+  //     logger->info("Found next Bayesian optimization query.");
+  //   }
+  //   return { std::move(x_next), std::move(xi_next), std::move(x_opt), y_opt };
+  // }
 }
 
 #endif

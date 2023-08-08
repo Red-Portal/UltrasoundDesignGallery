@@ -207,8 +207,8 @@ test_cascaded_laplacian(cv::Mat const& image, cv::Mat const& mask)
   auto start  = std::chrono::steady_clock::now();
   {
     float llf_alpha  = -1.;
-    float llf_beta   = 1.3;
-    float llf_sigma  = 20.;
+    float llf_beta   = 1.0;
+    float llf_sigma  = 30.;
     float cshock_a   = 0.9;
     float ncd1_alpha = 0.05;
     float ncd1_s     = 1.;
@@ -236,10 +236,12 @@ test_cascaded_laplacian(cv::Mat const& image, cv::Mat const& mask)
 
 int main()
 {
-  //auto image_fname = std::string("../data/selections/cardiac1/cardiac1_2.pfm");
-  //auto mask_fname  = std::string("../data/selections/cardiac1/cardiac1_1.png");
-  auto image_fname = std::string("../data/selections/liver1/liver2_1.pfm");
-  auto mask_fname  = std::string("../data/selections/liver1/liver2_1.png");
+  //auto image_fname = std::string("../data/selections/cardiac2/cardiac5_2.pfm");
+  //auto mask_fname  = std::string("../data/selections/cardiac2/cardiac5_1.png");
+  auto image_fname = std::string("../data/selections/cardiac1/cardiac1_2.pfm");
+  auto mask_fname  = std::string("../data/selections/cardiac1/cardiac1_1.png");
+  //auto image_fname = std::string("../data/selections/liver1/liver2_1.pfm");
+  //auto mask_fname  = std::string("../data/selections/liver1/liver2_1.png");
   //auto image_fname = std::string("../data/results/liver1_clpda/processed_0.pfm");
   //auto mask_fname  = std::string("../data/results/liver1_clpda/processed_0.pfm");
 
@@ -255,6 +257,8 @@ int main()
   image *= 255;
 
   auto res = test_cascaded_laplacian(image, mask);
+
+  cv::imwrite("result.png", res);
 
   image /= 255;
   res   /= 255;

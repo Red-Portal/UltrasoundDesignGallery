@@ -19,9 +19,6 @@
 #ifndef __US_GALLERY_METRICS_HPP__
 #define __US_GALLERY_METRICS_HPP__
 
-#include <vector>
-#include <cmath>
-
 #include <opencv4/opencv2/core/core.hpp>
 #include <opencv4/opencv2/core/cuda.hpp>
 #include <opencv4/opencv2/cudafilters.hpp>
@@ -29,22 +26,89 @@
 #include <opencv4/opencv2/cudaarithm.hpp>
 #include <opencv4/opencv2/quality/qualityssim.hpp>
 
-#include <opencv4/opencv2/highgui.hpp>
+#include <vector>
+#include <cmath>
 
 namespace usdg
 {
   namespace metrics
   {
     inline cv::Scalar
-    mssim(cv::Mat const& i1,
-	  cv::Mat const& i2)
+    ssim(cv::Mat const& i1,
+	 cv::Mat const& i2,
+	 float peak_value=1.0)
     /* 
      * Adapted from 
      * https://docs.opencv.org/master/dd/d3d/tutorial_gpu_basics_similarity.html 
      */
     {
-      auto ssim_ptr = cv::quality::QualitySSIM::create(i1);
-      return ssim_ptr->compute(i2);
+      float C1 = powf(0.01f*peak_value, 2);
+      float C2 = powf(0.03f*peak_value, 2);
+      /***************************** INITS **********************************/
+      cv::cuda::GpuMat gI1, gI2, gs1, tmp1,tmp2;
+
+      gI1.upload(i1);
+      gI2.upload(i2);
+
+      gI1.convertTo(tmp1, CV_MAKE_TYPE(CV_32F, gI1.channels()));
+      gI2.convertTo(tmp2, CV_MAKE_TYPE(CV_32F, gI2.channels()));
+
+      std::vector<cv::cuda::GpuMat> vI1, vI2;
+      cv::cuda::split(tmp1, vI1);
+      cv::cuda::split(tmp2, vI2);
+      cv::Scalar mssim;
+
+      cv::Ptr<cv::cuda::Filter> gauss = cv::cuda::createGaussianFilter(
+	vI2[0].type(), -1, cv::Size(11, 11), 1.5);
+
+      for( size_t i = 0; i < static_cast<size_t>(gI1.channels()); ++i )
+      {
+	cv::cuda::GpuMat I2_2, I1_2, I1_I2;
+
+	cv::cuda::multiply(vI2[i], vI2[i], I2_2);        // I2^2
+	cv::cuda::multiply(vI1[i], vI1[i], I1_2);        // I1^2
+	cv::cuda::multiply(vI1[i], vI2[i], I1_I2);       // I1 * I2
+
+	/*************************** END INITS **********************************/
+	cv::cuda::GpuMat mu1, mu2;   // PRELIMINARY COMPUTING
+	gauss->apply(vI1[i], mu1);
+	gauss->apply(vI2[i], mu2);
+
+	cv::cuda::GpuMat mu1_2, mu2_2, mu1_mu2;
+	cv::cuda::multiply(mu1, mu1, mu1_2);
+	cv::cuda::multiply(mu2, mu2, mu2_2);
+	cv::cuda::multiply(mu1, mu2, mu1_mu2);
+
+	cv::cuda::GpuMat sigma1_2, sigma2_2, sigma12;
+
+	gauss->apply(I1_2, sigma1_2);
+	cv::cuda::subtract(sigma1_2, mu1_2, sigma1_2); // sigma1_2 -= mu1_2;
+
+	gauss->apply(I2_2, sigma2_2);
+	cv::cuda::subtract(sigma2_2, mu2_2, sigma2_2); // sigma2_2 -= mu2_2;
+
+	gauss->apply(I1_I2, sigma12);
+	cv::cuda::subtract(sigma12, mu1_mu2, sigma12); // sigma12 -= mu1_mu2;
+
+	///////////////////////////////// FORMULA ////////////////////////////////
+	cv::cuda::GpuMat t1, t2, t3;
+
+	mu1_mu2.convertTo(t1, -1, 2, C1); // t1 = 2 * mu1_mu2 + C1;
+	sigma12.convertTo(t2, -1, 2, C2); // t2 = 2 * sigma12 + C2;
+	cv::cuda::multiply(t1, t2, t3);        // t3 = ((2*mu1_mu2 + C1).*(2*sigma12 + C2))
+
+	cv::cuda::addWeighted(mu1_2, 1.0, mu2_2, 1.0, C1, t1);       // t1 = mu1_2 + mu2_2 + C1;
+	cv::cuda::addWeighted(sigma1_2, 1.0, sigma2_2, 1.0, C2, t2); // t2 = sigma1_2 + sigma2_2 + C2;
+	cv::cuda::multiply(t1, t2, t1);                              // t1 =((mu1_2 + mu2_2 + C1).*(sigma1_2 + sigma2_2 + C2))
+
+	cv::cuda::GpuMat ssim_map;
+	cv::cuda::divide(t3, t1, ssim_map);      // ssim_map =  t3./t1;
+
+	cv::Scalar s = cv::cuda::sum(ssim_map);
+	mssim.val[i] = s.val[0] / (ssim_map.rows * ssim_map.cols);
+
+      }
+      return mssim;
     }
 
     inline double
